@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_black"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:gravity="center"
+        android:layout_gravity="center_horizontal">
+
+        <!-- Título centralizado com botão de voltar à esquerda -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp">
+            <ImageButton
+                android:id="@+id/botaoVoltar"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@android:color/transparent"
+                android:src="@android:drawable/ic_menu_revert"
+                android:contentDescription="Voltar"
+                android:tint="@color/bronze_gold"
+                android:layout_gravity="start"
+                android:layout_marginEnd="8dp"/>
+            <TextView
+                android:id="@+id/titleText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Detalhes do paciente"
+                android:textColor="@color/bronze_gold"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_gravity="center_horizontal"/>
+        </LinearLayout>
+
+        <!-- Foto centralizada -->
+        <FrameLayout
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="20dp">
+            <ImageView
+                android:id="@+id/fotoPacienteImageView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_account_circle"
+                android:padding="0dp"/>
+            <ImageButton
+                android:id="@+id/adicionarFotoButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="4dp"
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_add"
+                android:tint="@color/bronze_gold"
+                android:contentDescription="Adicionar foto"/>
+        </FrameLayout>
+
+        <!-- Dados pessoais com margens consistentes -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/nomePacienteLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Nome"
+            app:boxStrokeColor="@color/bronze_gold"
+            app:hintTextColor="@color/bronze_gold"
+            android:layout_marginTop="8dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/nomePacienteText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:enabled="false"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/cpfPacienteLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="CPF"
+            app:boxStrokeColor="@color/bronze_gold"
+            app:hintTextColor="@color/bronze_gold"
+            android:layout_marginTop="8dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/cpfPacienteText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:enabled="false"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/dataNascimentoLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Data de nascimento"
+            app:boxStrokeColor="@color/bronze_gold"
+            app:hintTextColor="@color/bronze_gold"
+            android:layout_marginTop="8dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/dataNascimentoText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:enabled="false"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Telefone + WhatsApp centralizado -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp">
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/telefoneLayout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Telefone"
+                app:boxStrokeColor="@color/bronze_gold"
+                app:hintTextColor="@color/bronze_gold">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/telefoneText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:enabled="false"/>
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/enviarWhatsappButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                app:icon="@drawable/ic_whatsapp"
+                app:iconTint="@android:color/white"
+                app:iconSize="24dp"
+                app:backgroundTint="#25D366"
+                app:cornerRadius="20dp"
+                android:layout_marginStart="8dp"
+                android:layout_gravity="top"/>
+        </LinearLayout>
+
+        <!-- Botões principais centralizados e padronizados -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/compartilharPacienteButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="Compartilhar"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/bronze_gold"
+                app:cornerRadius="24dp"
+                android:paddingLeft="0dp"
+                android:paddingRight="0dp"
+                android:layout_marginEnd="8dp"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/anexarFotoButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="Anexar foto"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/bronze_gold"
+                app:cornerRadius="24dp"
+                android:paddingLeft="0dp"
+                android:paddingRight="0dp"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center"/>
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLaudos"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Laudos"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:textSize="15sp"
+            app:icon="@android:drawable/ic_menu_agenda"
+            app:iconTint="@color/white"
+            app:backgroundTint="@color/bronze_gold"
+            app:cornerRadius="24dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:foreground="?attr/selectableItemBackground"
+            android:gravity="center"
+            android:layout_gravity="center_horizontal"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/anexarConversaButton"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Anexar conversa"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:textSize="15sp"
+            app:backgroundTint="@color/bronze_gold"
+            app:cornerRadius="24dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:foreground="?attr/selectableItemBackground"
+            android:gravity="center"
+            android:layout_gravity="center_horizontal"/>
+
+        <!-- Botões Salvar e Cancelar lado a lado -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/salvarPacienteButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="SALVAR"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/bronze_gold"
+                app:cornerRadius="24dp"
+                android:layout_marginEnd="8dp"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/cancelarEdicaoButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="CANCELAR"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                app:backgroundTint="@android:color/darker_gray"
+                app:cornerRadius="24dp"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center"/>
+        </LinearLayout>
+
+        <!-- Separação visual antes das anotações -->
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/bronze_gold" android:layout_marginTop="20dp" android:layout_marginBottom="12dp"/>
+
+        <!-- Nova Anotação centralizada -->
+        <TextView
+            android:id="@+id/novaAnotacaoTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Anotações da Sessão"
+            android:textColor="@color/bronze_gold"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="32dp"/>
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/anotacaoLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Anotação"
+            app:boxStrokeColor="@color/bronze_gold"
+            app:hintTextColor="@color/bronze_gold">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/anotacaoEditText"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:gravity="top"
+                android:inputType="textMultiLine"
+                android:textColor="@color/white"
+                android:textColorHint="@color/bronze_gold_light"/>
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/salvarAnotacaoButton"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:text="SALVAR ANOTAÇÃO"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:padding="4dp"
+            app:backgroundTint="@color/bronze_gold"/>
+
+        <!-- Histórico de Anotações centralizado -->
+        <TextView
+            android:id="@+id/historicoAnotacoesTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Histórico de Anotações"
+            android:textColor="@color/bronze_gold"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="32dp"/>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/anotacoesRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Mensagens WhatsApp centralizadas -->
+        <TextView
+            android:id="@+id/historicoMensagensTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mensagens enviadas pelo app"
+            android:textColor="@color/bronze_gold"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="32dp"/>
+        <LinearLayout
+            android:id="@+id/layoutMensagemWhatsapp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/mensagemWhatsappEditText"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:hint="Mensagem para WhatsApp"
+                android:textColor="@color/white"
+                android:textColorHint="@color/bronze_gold_light"
+                android:padding="8dp"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/selecionarTemplateButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                app:icon="@drawable/ic_format_quote"
+                app:iconTint="@android:color/white"
+                app:iconSize="24dp"
+                app:backgroundTint="@color/bronze_gold"
+                app:cornerRadius="20dp"
+                android:layout_marginStart="8dp"
+                android:layout_gravity="top"
+                android:contentDescription="Selecionar modelo de mensagem"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/enviarWhatsappButton2"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                app:icon="@drawable/ic_whatsapp"
+                app:iconTint="@android:color/white"
+                app:iconSize="24dp"
+                app:backgroundTint="#25D366"
+                app:cornerRadius="20dp"
+                android:layout_marginStart="8dp"
+                android:layout_gravity="top"/>
+        </LinearLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/mensagensRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="32dp"/>
+
+        <!-- Botões Editar/Excluir no final, centralizados -->
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/bronze_gold" android:layout_marginTop="24dp" android:layout_marginBottom="12dp"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="0dp"
+            android:layout_marginBottom="16dp">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/editarPacienteButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="EDITAR"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/bronze_gold"
+                app:cornerRadius="24dp"
+                android:layout_marginEnd="8dp"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/excluirPacienteButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="EXCLUIR"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                app:backgroundTint="@android:color/darker_gray"
+                app:cornerRadius="24dp"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView> 

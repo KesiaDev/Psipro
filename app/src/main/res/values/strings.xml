@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AppPisc</string>
+    <string name="new_appointment">Nova consulta</string>
+    <string name="edit_appointment">Editar consulta</string>
+    <string name="save">Salvar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="delete">Excluir</string>
+    <string name="delete_appointment">Excluir consulta</string>
+    <string name="delete_appointment_confirmation">Tem certeza que deseja excluir esta consulta?</string>
+    <string name="fill_required_fields">Preencha todos os campos obrigatórios</string>
+    <string name="select_patient">Selecionar paciente</string>
+    <string name="no_patients_registered">Nenhum paciente cadastrado</string>
+    <string name="fill_all_fields">Por favor, preencha todos os campos obrigatórios</string>
+    <string name="search_patients">Buscar pacientes...</string>
+    <string name="view_details">Ver detalhes</string>
+    <string name="schedule_appointment">Agendar consulta</string>
+    
+    <!-- Cadastro de Paciente -->
+    <string name="patient_registration">Cadastro de paciente</string>
+    <string name="personal_data">Dados pessoais</string>
+    <string name="full_name">Nome completo</string>
+    <string name="cpf">CPF</string>
+    <string name="birth_date">Data de nascimento</string>
+    <string name="phone">Telefone</string>
+    <string name="clinical_info">Informações clínicas</string>
+    <string name="clinical_history">Histórico clínico</string>
+    <string name="medications">Medicamentos em uso</string>
+    <string name="allergies">Alergias</string>
+    <string name="patient_saved">Paciente cadastrado com sucesso!</string>
+    <string name="invalid_birth_date">Data de nascimento inválida</string>
+    <string name="fill_name">Por favor, preencha o nome</string>
+    <string name="fill_cpf">Por favor, preencha o CPF corretamente</string>
+    <string name="fill_birth_date">Por favor, preencha a data de nascimento corretamente</string>
+    <string name="fill_phone">Por favor, preencha o telefone corretamente</string>
+
+    <!-- Detalhes do Paciente -->
+    <string name="patient_details">Detalhes do paciente</string>
+    <string name="notes">Anotações</string>
+    <string name="add_note">Adicionar anotação</string>
+    <string name="note_saved">Anotação salva com sucesso</string>
+    <string name="error_saving_note">Erro ao salvar anotação: %1$s</string>
+    <string name="enter_note">Por favor, insira uma anotação</string>
+    <string name="error_loading_patient">Erro ao carregar paciente</string>
+
+    <string name="appointment_title">Título da consulta</string>
+    <string name="appointment_description">Descrição</string>
+    <string name="patient_name">Nome do paciente</string>
+    <string name="patient_phone">Telefone do paciente</string>
+    <string name="appointment_date">Data da consulta</string>
+    <string name="start_time">Hora de início</string>
+    <string name="end_time">Hora de término</string>
+    <string name="enable_reminder">Ativar lembrete</string>
+    <string name="reminder_minutes">Minutos antes do lembrete</string>
+    <string name="today">Hoje</string>
+    <string name="appointment_deleted">Consulta excluída com sucesso</string>
+    <string name="error_deleting_appointment">Erro ao excluir consulta</string>
+    <string name="appointment_conflict">Já existe uma consulta agendada neste horário</string>
+    <string name="appointment_updated">Consulta atualizada com sucesso</string>
+    <string name="error_updating_appointment">Erro ao atualizar consulta</string>
+    <string name="appointment_created">Consulta criada com sucesso</string>
+    <string name="error_creating_appointment">Erro ao criar consulta</string>
+    <string name="home">Início</string>
+    <string name="schedule">Agenda</string>
+    <string name="patients">Pacientes</string>
+    <string name="welcome_message">Bem-vindo(a) ao AppPisc</string>
+    <string name="today_summary">Resumo do dia</string>
+    <string name="today_appointments">Consultas de hoje</string>
+    <string name="no_appointments_today">Nenhuma consulta agendada para hoje</string>
+    <string name="logout">Sair</string>
+
+    <string name="patient_group">Grupo</string>
+    <string name="select_group">Selecione o grupo</string>
+    <string name="financial_info">Informações Financeiras</string>
+    <string name="session_value">Valor da Sessão</string>
+    <string name="billing_day">Dia da Cobrança</string>
+    <string name="enable_billing_reminder">Ativar lembrete mensal de cobrança</string>
+    <string name="financial_responsible">Responsável Financeiro</string>
+    <string name="responsible_name">Nome do responsável</string>
+    <string name="responsible_whatsapp">WhatsApp do responsável</string>
+    <string name="responsible_email">E-mail do responsável</string>
+    <string name="responsible_cpf">CPF do responsável</string>
+    <string name="emergency_contact">Contato de Emergência</string>
+    <string name="contact_name">Nome do contato</string>
+    <string name="contact_whatsapp">WhatsApp do contato</string>
+    <string name="additional_info">Dados Adicionais</string>
+    <string name="gender">Gênero</string>
+    <string name="birthplace">Naturalidade</string>
+    <string name="education">Escolaridade</string>
+    <string name="profession">Profissão</string>
+    <string name="referral">Encaminhamento</string>
+    <string name="marital_status">Estado Civil</string>
+</resources>
