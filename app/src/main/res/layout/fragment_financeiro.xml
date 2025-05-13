@@ -12,60 +12,79 @@
         android:padding="16dp">
 
         <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:text="Financeiro"
             android:textColor="@color/bronze_gold"
             android:textSize="24sp"
             android:textStyle="bold"
+            android:gravity="center"
             android:layout_marginBottom="16dp"/>
 
         <!-- Resumo/Balanço -->
         <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:text="Resumo"
             android:textColor="@color/bronze_gold"
             android:textSize="18sp"
             android:textStyle="bold"
+            android:gravity="center"
             android:layout_marginBottom="8dp"/>
 
         <TextView
             android:id="@+id/financeiroResumo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:text="Total recebido: R$ 0,00\nA receber: R$ 0,00\nSessões: 0"
             android:textColor="@color/white"
+            android:textSize="16sp"
+            android:gravity="center"
             android:layout_marginBottom="16dp"/>
 
         <!-- Botões de relatórios -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnExportar"
+            style="@style/Widget.MaterialComponents.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Exportar resultados"
             android:textColor="@color/black"
             android:backgroundTint="@color/bronze_gold"
+            android:textStyle="bold"
             android:layout_marginBottom="8dp"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRelatorioIR"
+            style="@style/Widget.MaterialComponents.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Relatório para IR"
             android:textColor="@color/black"
             android:backgroundTint="@color/bronze_gold"
+            android:textStyle="bold"
             android:layout_marginBottom="8dp"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRelatorioSessoes"
+            style="@style/Widget.MaterialComponents.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Relatório de Sessões"
             android:textColor="@color/black"
             android:backgroundTint="@color/bronze_gold"
+            android:textStyle="bold"
             android:layout_marginBottom="16dp"/>
 
         <!-- Lista de registros financeiros (placeholder) -->
         <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:text="Registros financeiros"
             android:textColor="@color/bronze_gold"
             android:textSize="18sp"
             android:textStyle="bold"
+            android:gravity="center"
             android:layout_marginBottom="8dp"/>
 
         <androidx.recyclerview.widget.RecyclerView

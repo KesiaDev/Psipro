@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_black">
+
+    <!-- Cabeçalho com mês e navegação -->
+    <LinearLayout
+        android:id="@+id/headerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp"
+        android:background="@color/background_black">
+
+        <ImageButton
+            android:id="@+id/btnPrevMonth"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_chevron_left"
+            android:tint="@color/bronze_gold"/>
+
+        <TextView
+            android:id="@+id/txtMonth"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Maio 2025"
+            android:textColor="@color/bronze_gold"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"/>
+
+        <ImageButton
+            android:id="@+id/btnNextMonth"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_chevron_right"
+            android:tint="@color/bronze_gold"/>
+    </LinearLayout>
+
+    <!-- Linha de dias da semana -->
+    <LinearLayout
+        android:id="@+id/weekDaysLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@id/headerLayout"
+        android:layout_marginTop="4dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:gravity="center">
+        <!-- Os botões dos dias serão adicionados dinamicamente via código -->
+    </LinearLayout>
+
+    <!-- Grade de horários e compromissos -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="64dp"
+        android:fillViewport="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        <LinearLayout
+            android:id="@+id/scheduleGridLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+            <!-- Colunas dos dias e horários serão preenchidas via adapter -->
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Botão flutuante para adicionar compromisso -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddAppointment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="24dp"
+        android:contentDescription="Adicionar compromisso"
+        app:srcCompat="@drawable/ic_add"
+        app:backgroundTint="@color/bronze_gold"/>
+
+    <!-- Navegação inferior -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigationView"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_gravity="bottom"
+        android:background="@color/background_card_dark"
+        app:itemIconTint="@color/bronze_gold"
+        app:itemTextColor="@color/bronze_gold"
+        app:menu="@menu/bottom_nav_menu"/>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout> 

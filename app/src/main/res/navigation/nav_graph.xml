@@ -29,4 +29,28 @@
         android:label="Financeiro"
         tools:layout="@layout/fragment_financeiro" />
 
+    <fragment
+        android:id="@+id/nav_notificacoes"
+        android:name="com.example.apppisc.ui.fragments.NotificacoesFragment"
+        android:label="Notificações"
+        tools:layout="@layout/fragment_notificacoes" />
+
+    <fragment
+        android:id="@+id/nav_configuracoes"
+        android:name="com.example.apppisc.ui.fragments.ConfiguracoesFragment"
+        android:label="Configurações"
+        tools:layout="@layout/fragment_configuracoes" />
+
+    <fragment
+        android:id="@+id/nav_suporte"
+        android:name="com.example.apppisc.ui.fragments.SuporteFragment"
+        android:label="Suporte"
+        tools:layout="@layout/fragment_suporte" />
+
+    <fragment
+        android:id="@+id/nav_aniversariantes"
+        android:name="com.example.apppisc.ui.fragments.BirthdayFragment"
+        android:label="Aniversariantes"
+        tools:layout="@layout/fragment_birthday" />
+
 </navigation> 

@@ -7,14 +7,15 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.apppisc.R
 
-class FinanceiroAdapter(private val registros: List<FinanceiroRegistro>) :
-    RecyclerView.Adapter<FinanceiroAdapter.FinanceiroViewHolder>() {
+class FinanceiroAdapter(
+    private val registros: List<FinanceiroRegistro>,
+    private val onItemClick: ((FinanceiroRegistro) -> Unit)? = null,
+    private val onItemLongClick: ((FinanceiroRegistro) -> Unit)? = null
+) : RecyclerView.Adapter<FinanceiroAdapter.FinanceiroViewHolder>() {
 
     class FinanceiroViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val descricao: TextView = view.findViewById(R.id.itemDescricao)
-        val valor: TextView = view.findViewById(R.id.itemValor)
-        val data: TextView = view.findViewById(R.id.itemData)
-        val status: TextView = view.findViewById(R.id.itemStatus)
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FinanceiroViewHolder {
@@ -26,9 +27,12 @@ class FinanceiroAdapter(private val registros: List<FinanceiroRegistro>) :
     override fun onBindViewHolder(holder: FinanceiroViewHolder, position: Int) {
         val registro = registros[position]
         holder.descricao.text = registro.descricao
-        holder.valor.text = "R$ %.2f".format(registro.valor)
-        holder.data.text = registro.data
-        holder.status.text = registro.status
+
+        holder.itemView.setOnClickListener { onItemClick?.invoke(registro) }
+        holder.itemView.setOnLongClickListener {
+            onItemLongClick?.invoke(registro)
+            true
+        }
     }
 
     override fun getItemCount() = registros.size

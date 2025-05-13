@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_black"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Cabeçalho -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="12dp">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_arrow_back"
+                android:tint="@color/bronze_gold"
+                android:contentDescription="Voltar" />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Dados do Paciente"
+                android:textColor="@color/bronze_gold"
+                android:textSize="17sp"
+                android:textStyle="normal"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Seção: Informações -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="4dp">
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_person"
+                android:tint="@color/bronze_gold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="  Informações"
+                android:textColor="@color/bronze_gold"
+                android:textSize="13sp"
+                android:textStyle="normal"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+
+        <Spinner
+            android:id="@+id/spinnerGrupo"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:background="@color/surface_black"
+            android:layout_marginTop="6dp"
+            android:padding="8dp"
+            android:popupBackground="@color/background_black"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark" />
+
+        <EditText
+            android:id="@+id/edtNome"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:hint="Nome"
+            android:textColor="@color/white"
+            android:textColorHint="@color/text_secondary"
+            android:background="@color/surface_black"
+            android:padding="8dp"
+            android:layout_marginTop="6dp"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif" />
+
+        <!-- WhatsApp com bandeira -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp">
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_brazil_flag"
+                android:contentDescription="Brasil" />
+            <EditText
+                android:id="@+id/edtTelefone"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:hint="WhatsApp"
+                android:textColor="@color/white"
+                android:textColorHint="@color/text_secondary"
+                android:background="@color/surface_black"
+                android:padding="8dp"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif"
+                android:inputType="phone" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/edtLinkVideo"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:hint="Link de video chamada"
+            android:textColor="@color/white"
+            android:textColorHint="@color/text_secondary"
+            android:background="@color/surface_black"
+            android:padding="8dp"
+            android:layout_marginTop="6dp"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif"
+            android:inputType="textUri" />
+
+        <EditText
+            android:id="@+id/edtEmail"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:hint="Email"
+            android:textColor="@color/white"
+            android:textColorHint="@color/text_secondary"
+            android:background="@color/surface_black"
+            android:padding="8dp"
+            android:layout_marginTop="6dp"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif"
+            android:inputType="textEmailAddress" />
+
+        <EditText
+            android:id="@+id/edtCpf"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:hint="CPF"
+            android:textColor="@color/white"
+            android:textColorHint="@color/text_secondary"
+            android:background="@color/surface_black"
+            android:padding="8dp"
+            android:layout_marginTop="6dp"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/edtRg"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:hint="RG"
+            android:textColor="@color/white"
+            android:textColorHint="@color/text_secondary"
+            android:background="@color/surface_black"
+            android:padding="8dp"
+            android:layout_marginTop="6dp"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif"
+            android:inputType="number" />
+
+        <!-- Seção: Endereço -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="12dp">
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_location"
+                android:tint="@color/bronze_gold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="  Endereço"
+                android:textColor="@color/bronze_gold"
+                android:textSize="13sp"
+                android:textStyle="normal"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/edtCep"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:hint="CEP"
+            android:textColor="@color/white"
+            android:textColorHint="@color/text_secondary"
+            android:background="@color/surface_black"
+            android:padding="8dp"
+            android:layout_marginTop="6dp"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif"
+            android:inputType="number" />
+        <EditText
+            android:id="@+id/edtEndereco"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:hint="Endereço"
+            android:textColor="@color/white"
+            android:textColorHint="@color/text_secondary"
+            android:background="@color/surface_black"
+            android:padding="8dp"
+            android:layout_marginTop="6dp"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif" />
+        <EditText
+            android:id="@+id/edtNumero"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:hint="Número"
+            android:textColor="@color/white"
+            android:textColorHint="@color/text_secondary"
+            android:background="@color/surface_black"
+            android:padding="8dp"
+            android:layout_marginTop="6dp"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif" />
+        <EditText
+            android:id="@+id/edtBairro"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:hint="Bairro"
+            android:textColor="@color/white"
+            android:textColorHint="@color/text_secondary"
+            android:background="@color/surface_black"
+            android:padding="8dp"
+            android:layout_marginTop="6dp"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <EditText
+                android:id="@+id/edtCidade"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:hint="Cidade"
+                android:textColor="@color/white"
+                android:textColorHint="@color/text_secondary"
+                android:background="@color/surface_black"
+                android:padding="8dp"
+                android:layout_marginTop="6dp"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif" />
+            <Space
+                android:layout_width="8dp"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/edtEstado"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:hint="Estado"
+                android:textColor="@color/white"
+                android:textColorHint="@color/text_secondary"
+                android:background="@color/surface_black"
+                android:padding="8dp"
+                android:layout_marginTop="6dp"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif" />
+        </LinearLayout>
+        <EditText
+            android:id="@+id/edtComplemento"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:hint="Complemento"
+            android:textColor="@color/white"
+            android:textColorHint="@color/text_secondary"
+            android:background="@color/surface_black"
+            android:padding="8dp"
+            android:layout_marginTop="6dp"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif" />
+
+        <!-- Seção: Financeiro -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="12dp">
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_account_balance_wallet"
+                android:tint="@color/bronze_gold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="  Financeiro"
+                android:textColor="@color/bronze_gold"
+                android:textSize="13sp"
+                android:textStyle="normal"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="6dp">
+            <EditText
+                android:id="@+id/edtValorSessao"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:hint="Valor por sessão"
+                android:textColor="@color/white"
+                android:textColorHint="@color/text_secondary"
+                android:background="@color/surface_black"
+                android:padding="8dp"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif"
+                android:inputType="numberDecimal" />
+            <Space
+                android:layout_width="8dp"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/edtDiaCobranca"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:hint="Dia de Cobrança"
+                android:textColor="@color/white"
+                android:textColorHint="@color/text_secondary"
+                android:background="@color/surface_black"
+                android:padding="8dp"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif"
+                android:inputType="number" />
+        </LinearLayout>
+        <Switch
+            android:id="@+id/switchLembreteCobranca"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Enviar lembrete mensal de cobrança"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="6dp" />
+
+        <TextView
+            android:id="@+id/txtAtencaoCobranca"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Atenção: Cobrança automática ativada. Mantenha os registros financeiros do seu paciente atualizados."
+            android:textColor="@color/bronze_gold_light"
+            android:background="#22B08D57"
+            android:padding="10dp"
+            android:layout_marginTop="10dp"
+            android:textSize="12sp"
+            android:fontFamily="sans-serif"
+            android:visibility="gone" />
+
+        <!-- Botão Salvar -->
+        <Button
+            android:id="@+id/btnSalvarDados"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:text="Salvar"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textStyle="normal"
+            android:textSize="14sp"
+            android:backgroundTint="@color/bronze_gold"
+            android:layout_marginTop="18dp"
+            android:layout_marginBottom="18dp"
+            android:fontFamily="sans-serif-medium"
+            android:background="@drawable/rounded_button_bronze" />
+
+    </LinearLayout>
+</ScrollView> 

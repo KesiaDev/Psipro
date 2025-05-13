@@ -79,6 +79,13 @@
             android:name=".ui.ReportsActivity"
             android:exported="false"
             android:label="Relatórios" />
+
+        <activity android:name=".ui.screens.WhatsAppHistoryActivity" />
+        
+        <activity
+            android:name=".DadosPessoaisActivity"
+            android:exported="false"
+            android:label="Dados Pessoais" />
         
     </application>
 

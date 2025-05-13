@@ -14,6 +14,17 @@ data class Patient(
     val cpf: String,
     val birthDate: Date,
     val phone: String,
+    val email: String = "",
+    val cep: String = "",
+    val endereco: String = "",
+    val numero: String = "",
+    val bairro: String = "",
+    val cidade: String = "",
+    val estado: String = "",
+    val complemento: String = "",
+    val sessionValue: Double = 0.0,
+    val diaCobranca: Int = 1,
+    val lembreteCobranca: Boolean = false,
     @TypeConverters(EncryptionConverter::class)
     val clinicalHistory: String?,
     @TypeConverters(EncryptionConverter::class)

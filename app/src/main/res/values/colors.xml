@@ -20,4 +20,6 @@
     <color name="bronze_gold_dark">#8C6B3F</color>
     <color name="background_card_dark">#232323</color>
     <color name="transparent">#00000000</color>
+    <color name="green">#4CAF50</color>
+    <color name="red">#F44336</color>
 </resources>

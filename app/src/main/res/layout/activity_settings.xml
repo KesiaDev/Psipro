@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Texto padrão do lembrete do WhatsApp"
+        android:text="Texto Padrão Do Lembrete Do WhatsApp"
         android:textSize="18sp"
         android:layout_marginBottom="12dp"/>
 

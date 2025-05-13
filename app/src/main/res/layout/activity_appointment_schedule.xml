@@ -28,6 +28,17 @@
             android:orientation="vertical"
             android:padding="16dp">
 
+            <TextView
+                android:id="@+id/titleText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Agenda de Consultas"
+                android:textColor="@color/bronze_gold"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_gravity="center_horizontal"/>
+
             <CalendarView
                 android:id="@+id/calendarView"
                 android:layout_width="match_parent"
@@ -52,20 +63,18 @@
                 android:visibility="gone" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/exportarCsvButton"
-                android:layout_width="match_parent"
+                android:id="@+id/exportarButton"
+                style="@style/Widget.MaterialComponents.Button"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Exportar CSV"
-                app:backgroundTint="@color/gold"
-                android:layout_marginTop="8dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/exportarPdfButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Exportar PDF"
-                app:backgroundTint="@color/gold"
-                android:layout_marginTop="8dp" />
+                android:text="Exportar Dados"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:backgroundTint="@color/bronze_gold"
+                app:cornerRadius="24dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"/>
 
         </LinearLayout>
 

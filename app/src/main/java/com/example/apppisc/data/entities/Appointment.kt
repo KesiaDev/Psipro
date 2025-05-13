@@ -49,6 +49,8 @@ data class Appointment(
     val status: AppointmentStatus = AppointmentStatus.SCHEDULED,
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),
+    // Valor da sessão
+    val sessionValue: Double = 0.0,
     // Recorrência
     val recurrenceType: RecurrenceType = RecurrenceType.NONE, // Tipo de recorrência
     val recurrenceInterval: Int? = null, // Ex: a cada X dias/semanas/meses
@@ -58,7 +60,9 @@ data class Appointment(
     // Confirmação de presença
     val isConfirmed: Boolean? = null, // true = confirmado, false = faltou, null = não respondido
     val confirmationDate: Date? = null, // data/hora da confirmação
-    val absenceReason: String? = null // motivo da ausência
+    val absenceReason: String? = null, // motivo da ausência
+    // Cor do agendamento
+    val colorHex: String = "#FFF9C4" // Amarelo suave padrão
 )
 
 fun generateRecurrenceDates(

@@ -8,8 +8,25 @@ import androidx.fragment.app.Fragment
 import com.example.apppisc.R
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import com.example.apppisc.data.repository.FinancialRecordRepository
+import com.example.apppisc.data.entities.FinancialRecord
+import com.example.apppisc.ui.fragments.FinanceiroAdapter
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
+import com.example.apppisc.viewmodel.PatientViewModel
 
+@AndroidEntryPoint
 class FinanceiroFragment : Fragment() {
+    @Inject lateinit var financialRecordRepository: FinancialRecordRepository
+    private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
+    private val patientViewModel: PatientViewModel by viewModels()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
@@ -19,22 +36,74 @@ class FinanceiroFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Exemplo de dados mockados
-        val totalRecebido = 1500.00
-        val aReceber = 300.00
-        val sessoes = 12
-
-        val resumoText = "Total recebido: R$ %.2f\nA receber: R$ %.2f\nSessões: %d".format(totalRecebido, aReceber, sessoes)
-        view.findViewById<android.widget.TextView>(R.id.financeiroResumo)?.text = resumoText
-
-        // Lista de registros mockados
-        val registros = listOf(
-            FinanceiroRegistro("Sessão 01", 120.0, "01/05/2024", "Pago"),
-            FinanceiroRegistro("Sessão 02", 120.0, "08/05/2024", "Pendente"),
-            FinanceiroRegistro("Sessão 03", 120.0, "15/05/2024", "Pago")
-        )
         val recyclerView = view.findViewById<RecyclerView>(R.id.financeiroRecyclerView)
         recyclerView?.layoutManager = LinearLayoutManager(requireContext())
-        recyclerView?.adapter = FinanceiroAdapter(registros)
+
+        lifecycleScope.launch {
+            financialRecordRepository.getAll().collectLatest { records ->
+                val totalRecebido = records.filter { it.status == "Pago" }.sumOf { it.amount }
+                val aReceber = records.filter { it.status == "A Receber" || it.status == "Pendente" }.sumOf { it.amount }
+                val sessoes = records.size
+                val resumoText = "Total recebido: R$ %.2f\nA receber: R$ %.2f\nSessões: %d".format(totalRecebido, aReceber, sessoes)
+                view.findViewById<android.widget.TextView>(R.id.financeiroResumo)?.text = resumoText
+
+                // Buscar todos os pacientes para mapear id -> nome
+                val pacientes = patientViewModel.patients.value
+                val pacienteMap = pacientes.associateBy { it.id }
+
+                val registros = records.map { rec ->
+                    val pacienteNome = pacienteMap[rec.patientId]?.name ?: "Paciente desconhecido"
+                    val dataSessao = dateFormat.format(rec.date)
+                    val dataPagamento = rec.paymentDate?.let { dateFormat.format(it) }
+                    val descricaoLinha1 = pacienteNome
+                    val descricaoLinha2 = "${rec.description} realizada em $dataSessao"
+                    val descricaoLinha3 = buildString {
+                        append("R$ %.2f".format(rec.amount))
+                        append("  •  ")
+                        append(rec.status)
+                        if (rec.status == "Pago" && dataPagamento != null) {
+                            append(" em $dataPagamento")
+                        }
+                    }
+                    FinanceiroRegistro(
+                        id = rec.id,
+                        descricao = "$descricaoLinha1\n$descricaoLinha2\n$descricaoLinha3",
+                        valor = rec.amount,
+                        data = dataSessao,
+                        status = rec.status
+                    )
+                }
+                recyclerView?.adapter = FinanceiroAdapter(
+                    registros,
+                    onItemClick = { registro ->
+                        // Diálogo de edição/exclusão
+                        showEditDeleteDialog(registro, records)
+                    }
+                )
+            }
+        }
+    }
+
+    private fun showEditDeleteDialog(registro: FinanceiroRegistro, records: List<FinancialRecord>) {
+        val record = records.find { it.id == registro.id } ?: return
+        val context = requireContext()
+        val builder = androidx.appcompat.app.AlertDialog.Builder(context)
+        val input = android.widget.EditText(context)
+        input.setText(registro.valor.toString())
+        builder.setTitle("Editar valor da sessão")
+        builder.setView(input)
+        builder.setPositiveButton("Salvar") { _, _ ->
+            val novoValor = input.text.toString().toDoubleOrNull() ?: registro.valor
+            lifecycleScope.launch {
+                financialRecordRepository.update(record.copy(amount = novoValor))
+            }
+        }
+        builder.setNegativeButton("Excluir") { _, _ ->
+            lifecycleScope.launch {
+                financialRecordRepository.delete(record)
+            }
+        }
+        builder.setNeutralButton("Cancelar", null)
+        builder.show()
     }
 } 

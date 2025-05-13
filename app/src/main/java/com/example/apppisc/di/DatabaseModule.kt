@@ -33,4 +33,7 @@ object DatabaseModule {
     ): EncryptionManager {
         return EncryptionManager(context)
     }
+
+    @Provides
+    fun provideProntuarioDao(db: AppDatabase) = db.prontuarioDao()
 } 

@@ -3,17 +3,17 @@
     <item
         android:id="@+id/navigation_home"
         android:icon="@drawable/ic_home"
-        android:title="@string/home" />
+        android:title="Início" />
 
     <item
         android:id="@+id/navigation_schedule"
         android:icon="@drawable/ic_calendar"
-        android:title="@string/schedule" />
+        android:title="Agenda" />
 
     <item
         android:id="@+id/navigation_patients"
         android:icon="@drawable/ic_people"
-        android:title="@string/patients" />
+        android:title="Pacientes" />
 
     <item
         android:id="@+id/nav_financeiro"

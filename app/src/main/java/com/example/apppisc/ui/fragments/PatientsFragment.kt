@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import dagger.hilt.android.AndroidEntryPoint
 import com.google.android.material.snackbar.Snackbar
+import androidx.navigation.fragment.findNavController
+import com.example.apppisc.R
 
 @AndroidEntryPoint
 class PatientsFragment : Fragment() {
@@ -48,10 +50,15 @@ class PatientsFragment : Fragment() {
                 startActivity(intent)
             },
             onScheduleClick = { patient ->
-                val intent = Intent(requireContext(), com.example.apppisc.ui.AppointmentScheduleActivity::class.java)
-                intent.putExtra("patient_id", patient.id)
-                intent.putExtra("patient_name", patient.name)
-                startActivity(intent)
+                // Navegar para a Agenda (ScheduleFragment)
+                parentFragment?.parentFragmentManager?.let { fm ->
+                    // Tenta obter o NavController do fragmento pai
+                    val navController = findNavController()
+                    navController.navigate(R.id.navigation_schedule)
+                } ?: run {
+                    // Fallback: tenta obter o NavController da Activity
+                    requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottom_navigation)?.selectedItemId = R.id.navigation_schedule
+                }
             }
         )
         binding.patientsRecyclerView.layoutManager = LinearLayoutManager(requireContext())

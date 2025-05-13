@@ -90,4 +90,6 @@
     <string name="profession">Profissão</string>
     <string name="referral">Encaminhamento</string>
     <string name="marital_status">Estado Civil</string>
+    <string name="navigation_drawer_open">Abrir menu</string>
+    <string name="navigation_drawer_close">Fechar menu</string>
 </resources>

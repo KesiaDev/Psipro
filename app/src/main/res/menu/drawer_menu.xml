@@ -1,0 +1,11 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/nav_dashboard" android:title="Dashboard" android:icon="@drawable/ic_home" />
+    <item android:id="@+id/nav_agenda" android:title="Agenda" android:icon="@drawable/ic_calendar" />
+    <item android:id="@+id/nav_pacientes" android:title="Pacientes" android:icon="@drawable/ic_people" />
+    <item android:id="@+id/nav_financeiro" android:title="Financeiro" android:icon="@drawable/ic_attach_money" />
+    <item android:id="@+id/nav_notificacoes" android:title="Notificações" android:icon="@drawable/ic_notifications" />
+    <item android:id="@+id/nav_aniversariantes" android:title="Aniversariantes" android:icon="@drawable/ic_cake" />
+    <item android:id="@+id/nav_configuracoes" android:title="Configurações" android:icon="@drawable/ic_settings" />
+    <item android:id="@+id/nav_suporte" android:title="Suporte" android:icon="@drawable/ic_support" />
+    <item android:id="@+id/nav_sair" android:title="Sair" android:icon="@drawable/ic_logout" />
+</menu> 

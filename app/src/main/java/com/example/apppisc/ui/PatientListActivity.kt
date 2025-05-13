@@ -37,8 +37,8 @@ class PatientListActivity : SecureActivity() {
         setupRecyclerView()
         setupSearch()
         observePatients()
-        binding.fabAddPatient.setOnClickListener {
-            android.widget.Toast.makeText(this, "FAB clicado", android.widget.Toast.LENGTH_SHORT).show()
+        binding.addPatientButton.setOnClickListener {
+            android.widget.Toast.makeText(this, "FAB Clicado", android.widget.Toast.LENGTH_SHORT).show()
             startActivity(Intent(this, CadastroPacienteActivity::class.java))
         }
     }

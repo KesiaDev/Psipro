@@ -7,9 +7,11 @@ import com.example.apppisc.data.dao.PatientDao
 import com.example.apppisc.data.dao.PatientNoteDao
 import com.example.apppisc.data.dao.PatientMessageDao
 import com.example.apppisc.data.dao.PatientReportDao
+import com.example.apppisc.data.dao.FinancialRecordDao
 import com.example.apppisc.data.repository.AppointmentRepository
 import com.example.apppisc.data.repository.PatientRepository
 import com.example.apppisc.data.repositories.PatientMessageRepository
+import com.example.apppisc.data.repository.FinancialRecordRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -58,4 +60,12 @@ object AppModule {
     @Provides
     @Singleton
     fun provideAppointmentDao(db: AppDatabase): AppointmentDao = db.appointmentDao()
+
+    @Provides
+    @Singleton
+    fun provideFinancialRecordDao(db: AppDatabase): FinancialRecordDao = db.financialRecordDao()
+
+    @Provides
+    @Singleton
+    fun provideFinancialRecordRepository(dao: FinancialRecordDao): FinancialRecordRepository = FinancialRecordRepository(dao)
 } 

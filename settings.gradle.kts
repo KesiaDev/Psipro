@@ -20,5 +20,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "AppPisc"
-include(":app")
- 
+include(":app", ":compose")

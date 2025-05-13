@@ -2,36 +2,27 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/background_black">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- Container para ComposeView da agenda semanal -->
+    <FrameLayout
+        android:id="@+id/composeAgendaContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16dp">
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:layout_gravity="fill_vertical"/>
 
-        <CalendarView
-            android:id="@+id/calendarView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent"/>
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/appointmentsRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@id/calendarView"
-            app:layout_constraintBottom_toBottomOf="parent"/>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
+    <!-- Botão flutuante para adicionar compromisso -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/addAppointmentFab"
+        android:id="@+id/fabAddAppointment"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:contentDescription="@string/new_appointment"
-        app:srcCompat="@drawable/ic_add"/>
+        android:layout_margin="24dp"
+        android:contentDescription="Adicionar compromisso"
+        app:srcCompat="@drawable/ic_add"
+        app:backgroundTint="@color/bronze_gold"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout> 

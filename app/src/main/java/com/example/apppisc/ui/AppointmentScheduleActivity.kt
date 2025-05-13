@@ -43,6 +43,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import android.content.Context
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.example.apppisc.utils.MessageTemplateManager
+import com.example.apppisc.data.repository.FinancialRecordRepository
+import com.example.apppisc.data.entities.FinancialRecord
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class AppointmentScheduleActivity : SecureActivity() {
@@ -54,6 +57,7 @@ class AppointmentScheduleActivity : SecureActivity() {
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     private var selectedDate = Calendar.getInstance()
     private var selectedPatient: Patient? = null
+    @Inject lateinit var financialRecordRepository: FinancialRecordRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,8 +75,7 @@ class AppointmentScheduleActivity : SecureActivity() {
         setupCalendarView()
         setupFab()
         observeAppointments()
-        setupExportarCsvButton()
-        setupExportarPdfButton()
+        setupExportarButton()
     }
 
     private fun setupRecyclerView() {
@@ -374,6 +377,18 @@ class AppointmentScheduleActivity : SecureActivity() {
                         },
                         onSuccess = { id ->
                             Toast.makeText(this, R.string.appointment_created, Toast.LENGTH_SHORT).show()
+                            // --- INTEGRAR FINANCEIRO ---
+                            lifecycleScope.launch {
+                                val valorSessao = selectedPatient?.sessionValue ?: 0.0
+                                val record = FinancialRecord(
+                                    patientId = selectedPatient!!.id,
+                                    description = newAppointment.title,
+                                    amount = valorSessao,
+                                    date = newAppointment.date,
+                                    status = "Pendente"
+                                )
+                                financialRecordRepository.insert(record)
+                            }
                             // Seleção de template de mensagem para WhatsApp
                             val templates = MessageTemplateManager.getTemplates(this)
                             val patientName = newAppointment.patientName ?: "Paciente"
@@ -481,92 +496,98 @@ class AppointmentScheduleActivity : SecureActivity() {
         // Em breve: buscar e exibir todas as ocorrências da série
     }
 
-    private fun setupExportarCsvButton() {
-        binding.exportarCsvButton.setOnClickListener {
+    private fun setupExportarButton() {
+        binding.exportarButton.setOnClickListener {
             val consultas = adapter.currentList
             if (consultas.isNullOrEmpty()) {
                 Toast.makeText(this, "Nenhuma consulta para exportar.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            val csvHeader = "Paciente,Data,Horário,Descrição\n"
-            val csvBody = consultas.joinToString(separator = "\n") { consulta ->
-                "\"${consulta.patientName}\"," +
-                "${dateFormat.format(consulta.date)}," +
-                "${consulta.startTime} - ${consulta.endTime}," +
-                "\"${consulta.description.orEmpty()}\""
-            }
-            val csv = csvHeader + csvBody
-            try {
-                val fileName = "agenda_${System.currentTimeMillis()}.csv"
-                val file = java.io.File(cacheDir, fileName)
-                file.writeText(csv)
-                val uri = androidx.core.content.FileProvider.getUriForFile(
-                    this,
-                    "$packageName.provider",
-                    file
-                )
-                val intent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/csv"
-                    putExtra(Intent.EXTRA_STREAM, uri)
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            val formatos = arrayOf("CSV", "PDF")
+            AlertDialog.Builder(this)
+                .setTitle("Exportar agenda")
+                .setItems(formatos) { _, which ->
+                    when (which) {
+                        0 -> exportarAgendaCsv(consultas)
+                        1 -> exportarAgendaPdf(consultas)
+                    }
                 }
-                startActivity(Intent.createChooser(intent, "Exportar agenda em CSV"))
-            } catch (e: Exception) {
-                Toast.makeText(this, "Erro ao exportar CSV: ${e.message}", Toast.LENGTH_LONG).show()
-            }
+                .show()
         }
     }
 
-    private fun setupExportarPdfButton() {
-        binding.exportarPdfButton.setOnClickListener {
-            val consultas = adapter.currentList
-            if (consultas.isNullOrEmpty()) {
-                Toast.makeText(this, "Nenhuma consulta para exportar.", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+    private fun exportarAgendaCsv(consultas: List<Appointment>) {
+        val csvHeader = "Paciente,Data,Horário,Descrição\n"
+        val csvBody = consultas.joinToString(separator = "\n") { consulta ->
+            "\"${consulta.patientName}\"," +
+            "${dateFormat.format(consulta.date)}," +
+            "${consulta.startTime} - ${consulta.endTime}," +
+            "\"${consulta.description.orEmpty()}\""
+        }
+        val csv = csvHeader + csvBody
+        try {
+            val fileName = "agenda_${System.currentTimeMillis()}.csv"
+            val file = java.io.File(cacheDir, fileName)
+            file.writeText(csv)
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                this,
+                "$packageName.provider",
+                file
+            )
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/csv"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            try {
-                val fileName = "agenda_${System.currentTimeMillis()}.pdf"
-                val file = java.io.File(cacheDir, fileName)
-                val pdfDocument = android.graphics.pdf.PdfDocument()
-                val paint = android.graphics.Paint()
-                val pageInfo = android.graphics.pdf.PdfDocument.PageInfo.Builder(595, 842, 1).create()
-                val page = pdfDocument.startPage(pageInfo)
-                val canvas = page.canvas
-                var y = 40
-                paint.textSize = 18f
-                paint.isFakeBoldText = true
-                canvas.drawText("Agenda de Consultas", 40f, y.toFloat(), paint)
-                y += 40
-                paint.textSize = 12f
-                paint.isFakeBoldText = false
-                consultas.forEach { consulta ->
-                    val texto = "Paciente: ${consulta.patientName} | Data: ${dateFormat.format(consulta.date)} | Horário: ${consulta.startTime} - ${consulta.endTime}"
-                    canvas.drawText(texto, 40f, y.toFloat(), paint)
+            startActivity(Intent.createChooser(intent, "Exportar agenda em CSV"))
+        } catch (e: Exception) {
+            Toast.makeText(this, "Erro ao exportar CSV: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun exportarAgendaPdf(consultas: List<Appointment>) {
+        try {
+            val fileName = "agenda_${System.currentTimeMillis()}.pdf"
+            val file = java.io.File(cacheDir, fileName)
+            val pdfDocument = android.graphics.pdf.PdfDocument()
+            val paint = android.graphics.Paint()
+            val pageInfo = android.graphics.pdf.PdfDocument.PageInfo.Builder(595, 842, 1).create()
+            val page = pdfDocument.startPage(pageInfo)
+            val canvas = page.canvas
+            var y = 40
+            paint.textSize = 18f
+            paint.isFakeBoldText = true
+            canvas.drawText("Agenda de Consultas", 40f, y.toFloat(), paint)
+            y += 40
+            paint.textSize = 12f
+            paint.isFakeBoldText = false
+            consultas.forEach { consulta ->
+                val texto = "Paciente: ${consulta.patientName} | Data: ${dateFormat.format(consulta.date)} | Horário: ${consulta.startTime} - ${consulta.endTime}"
+                canvas.drawText(texto, 40f, y.toFloat(), paint)
+                y += 18
+                if (!consulta.description.isNullOrBlank()) {
+                    canvas.drawText("Descrição: ${consulta.description}", 60f, y.toFloat(), paint)
                     y += 18
-                    if (!consulta.description.isNullOrBlank()) {
-                        canvas.drawText("Descrição: ${consulta.description}", 60f, y.toFloat(), paint)
-                        y += 18
-                    }
-                    y += 10
-                    if (y > 800) { /* Nova página se necessário */ }
                 }
-                pdfDocument.finishPage(page)
-                file.outputStream().use { pdfDocument.writeTo(it) }
-                pdfDocument.close()
-                val uri = androidx.core.content.FileProvider.getUriForFile(
-                    this,
-                    "$packageName.provider",
-                    file
-                )
-                val intent = Intent(Intent.ACTION_SEND).apply {
-                    type = "application/pdf"
-                    putExtra(Intent.EXTRA_STREAM, uri)
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                }
-                startActivity(Intent.createChooser(intent, "Exportar agenda em PDF"))
-            } catch (e: Exception) {
-                Toast.makeText(this, "Erro ao exportar PDF: ${e.message}", Toast.LENGTH_LONG).show()
+                y += 10
+                if (y > 800) { /* Nova página se necessário */ }
             }
+            pdfDocument.finishPage(page)
+            file.outputStream().use { pdfDocument.writeTo(it) }
+            pdfDocument.close()
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                this,
+                "$packageName.provider",
+                file
+            )
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "application/pdf"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(intent, "Exportar agenda em PDF"))
+        } catch (e: Exception) {
+            Toast.makeText(this, "Erro ao exportar PDF: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 

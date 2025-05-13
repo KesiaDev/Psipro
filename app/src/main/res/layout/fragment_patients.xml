@@ -43,6 +43,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:contentDescription="@string/patient_registration"
-        app:srcCompat="@drawable/ic_add"/>
+        app:srcCompat="@drawable/ic_add"
+        app:backgroundTint="@color/bronze_gold"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout> 
