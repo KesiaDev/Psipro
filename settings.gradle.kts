@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AppPisc"
+rootProject.name = "Psipro"
 include(":app", ":compose")

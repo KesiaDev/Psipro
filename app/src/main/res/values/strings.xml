@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AppPisc</string>
+    <string name="app_name">Psipro</string>
     <string name="new_appointment">Nova consulta</string>
     <string name="edit_appointment">Editar consulta</string>
     <string name="save">Salvar</string>
@@ -60,10 +60,10 @@
     <string name="error_updating_appointment">Erro ao atualizar consulta</string>
     <string name="appointment_created">Consulta criada com sucesso</string>
     <string name="error_creating_appointment">Erro ao criar consulta</string>
-    <string name="home">Início</string>
+    <string name="home">Dashboard</string>
     <string name="schedule">Agenda</string>
     <string name="patients">Pacientes</string>
-    <string name="welcome_message">Bem-vindo(a) ao AppPisc</string>
+    <string name="welcome_message">Bem-vindo(a) ao Psipro</string>
     <string name="today_summary">Resumo do dia</string>
     <string name="today_appointments">Consultas de hoje</string>
     <string name="no_appointments_today">Nenhuma consulta agendada para hoje</string>
@@ -92,4 +92,37 @@
     <string name="marital_status">Estado Civil</string>
     <string name="navigation_drawer_open">Abrir menu</string>
     <string name="navigation_drawer_close">Fechar menu</string>
+
+    <!-- Help Screen -->
+    <string name="help">Ajuda</string>
+    
+    <!-- FAQ Questions -->
+    <string name="faq_question_1">Como adicionar um novo paciente?</string>
+    <string name="faq_answer_1">Para adicionar um novo paciente, clique no botão \"+\" na tela inicial e preencha os dados necessários no formulário de cadastro.</string>
+    
+    <string name="faq_question_2">Como agendar uma consulta?</string>
+    <string name="faq_answer_2">Na tela de detalhes do paciente, clique no botão \"Agendar Consulta\" e selecione a data e horário desejados.</string>
+    
+    <string name="faq_question_3">Como fazer backup dos dados?</string>
+    <string name="faq_answer_3">O backup é feito automaticamente quando você está conectado à internet. Você também pode fazer backup manual nas configurações do aplicativo.</string>
+    
+    <string name="faq_question_4">Como recuperar minha senha?</string>
+    <string name="faq_answer_4">Na tela de login, clique em \"Esqueci minha senha\" e siga as instruções enviadas para seu e-mail cadastrado.</string>
+    
+    <string name="faq_question_5">Como alterar minhas informações de perfil?</string>
+    <string name="faq_answer_5">Acesse o menu lateral, clique em \"Meu Perfil\" e edite as informações desejadas.</string>
+
+    <!-- Privacy Policy -->
+    <string name="privacy_policy">Política de Privacidade</string>
+    <string name="terms_of_use">Termos de Uso</string>
+    <string name="accept_terms">Ao continuar, você concorda com nossos Termos de Uso e Política de Privacidade</string>
+
+    <string name="skip">Pular</string>
+    <string name="next">Próximo</string>
+    <string name="email">E-mail</string>
+    <string name="recover_password">Recuperar Senha</string>
+    <string name="password_recovery">Recuperar Senha</string>
+    <string name="fill_email">Por favor, preencha o e-mail</string>
+    <string name="recovery_email_sent">E-mail de recuperação enviado com sucesso</string>
+    <string name="error_recovery">Erro ao recuperar senha. Tente novamente.</string>
 </resources>

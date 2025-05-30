@@ -13,7 +13,10 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
-            android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar" />
+            android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
+            app:titleTextColor="@color/bronze_gold"
+            app:subtitleTextColor="@color/bronze_gold"
+            app:navigationIconTint="@color/bronze_gold"/>
 
     </com.google.android.material.appbar.AppBarLayout>
 

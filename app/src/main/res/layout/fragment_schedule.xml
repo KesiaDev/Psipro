@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_black">
+    android:background="@color/background_general">
 
     <!-- Container para ComposeView da agenda semanal -->
     <FrameLayout
@@ -12,17 +12,7 @@
         android:layout_height="match_parent"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
-        android:layout_gravity="fill_vertical"/>
-
-    <!-- Botão flutuante para adicionar compromisso -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAddAppointment"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="24dp"
-        android:contentDescription="Adicionar compromisso"
-        app:srcCompat="@drawable/ic_add"
-        app:backgroundTint="@color/bronze_gold"/>
+        android:layout_gravity="fill_vertical"
+        android:background="@color/bronze_gold"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout> 

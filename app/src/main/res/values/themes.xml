@@ -1,43 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.AppPisc" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/bronze_gold</item>
+    <style name="Theme.Psipro" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/gold</item>
-        <item name="colorPrimaryVariant">@color/gold_dark</item>
-        <item name="colorOnPrimary">@color/black</item>
-        
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/gold_light</item>
-        <item name="colorSecondaryVariant">@color/gold_dark</item>
-        <item name="colorOnSecondary">@color/black</item>
-        
-        <!-- Status bar and Navigation bar -->
-        <item name="android:statusBarColor">@color/black</item>
-        <item name="android:navigationBarColor">@color/black</item>
-        
-        <!-- Background colors -->
-        <item name="android:windowBackground">@color/background_black</item>
-        <item name="colorSurface">@color/surface_black</item>
-        <item name="colorOnSurface">@color/white</item>
-        
-        <!-- Text colors -->
-        <item name="android:textColorPrimary">@color/white</item>
-        <item name="android:textColorSecondary">@color/text_secondary</item>
-        
-        <!-- Input fields -->
+        <item name="colorPrimaryVariant">@color/bronze_gold_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/gold</item>
+        <item name="colorSecondaryVariant">@color/bronze_gold_dark</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="android:windowBackground">@color/background_general</item>
+        <item name="colorSurface">@color/card_background</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="textColorPrimary">@color/text_primary</item>
+        <item name="textColorSecondary">@color/text_secondary</item>
+        <item name="colorBackground">@color/background_general</item>
+        <item name="colorError">@color/red</item>
+        <item name="android:statusBarColor">@color/gold</item>
+        <item name="android:navigationBarColor">@color/gold</item>
+        <item name="android:windowLightStatusBar">true</item>
         <item name="textInputStyle">@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox</item>
-
-        <!-- Toolbar theme -->
         <item name="toolbarStyle">@style/Widget.MaterialComponents.Toolbar.Primary</item>
         <item name="actionBarTheme">@style/ThemeOverlay.MaterialComponents.Dark.ActionBar</item>
         <item name="actionBarPopupTheme">@style/ThemeOverlay.MaterialComponents.Light</item>
-
-        <!-- Bottom Navigation theme -->
         <item name="bottomNavigationStyle">@style/Widget.MaterialComponents.BottomNavigationView</item>
-
-        <!-- Font family -->
         <item name="fontFamily">@font/nunito</item>
+        <item name="colorOutline">@color/border</item>
+    </style>
+
+    <style name="Theme.Psipro.NoActionBar" parent="Theme.Psipro">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
     </style>
 </resources>

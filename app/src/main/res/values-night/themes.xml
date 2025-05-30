@@ -1,20 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.AppPisc" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <style name="Theme.Psipro" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/bronze_gold</item>
         <item name="colorPrimaryVariant">@color/bronze_gold_dark</item>
-        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorOnPrimary">@color/bronze_gold</item>
         <item name="colorSecondary">@color/bronze_gold_light</item>
         <item name="colorSecondaryVariant">@color/bronze_gold_dark</item>
         <item name="colorOnSecondary">@color/black</item>
         <item name="android:colorBackground">@color/background_black</item>
+        <item name="colorBackground">@color/background_black</item>
+        <item name="colorOnBackground">@color/white</item>
         <item name="colorSurface">@color/surface_black</item>
         <item name="colorOnSurface">@color/text_primary</item>
-        <item name="android:textColorPrimary">@color/text_primary</item>
-        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="colorError">@color/error_red</item>
+        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorSecondary">@color/bronze_gold_light</item>
         <item name="android:statusBarColor">@color/black</item>
         <item name="android:navigationBarColor">@color/black</item>
         <item name="fontFamily">@font/nunito</item>
+        <item name="colorOutline">@color/bronze_gold</item>
+        <item name="textColorPrimary">@color/white</item>
+        <item name="textColorSecondary">@color/bronze_gold_light</item>
+    </style>
+
+    <style name="Theme.Psipro.NoActionBar" parent="Theme.Psipro">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
     </style>
 </resources>

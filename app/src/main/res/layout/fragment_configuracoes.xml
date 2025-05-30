@@ -87,7 +87,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="Notificações"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/black" />
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/darkModeSwitch"
@@ -95,7 +95,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="Modo Escuro"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/black" />
 
             </LinearLayout>
 
@@ -130,7 +130,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="Versão 1.0.0"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/black" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/privacyPolicyButton"

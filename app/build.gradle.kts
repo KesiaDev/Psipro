@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.apppisc"
+    namespace = "com.example.psipro"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.apppisc"
+        applicationId = "com.example.psipro"  // <- novo ID aqui
         minSdk = 24
         targetSdk = 35
         versionCode = 1
@@ -16,6 +16,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
 
     buildTypes {
         release {

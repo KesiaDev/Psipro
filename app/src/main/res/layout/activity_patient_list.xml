@@ -15,7 +15,10 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
-            app:title="Lista de Pacientes" />
+            app:title="Lista de Pacientes"
+            app:titleTextColor="@color/bronze_gold"
+            app:subtitleTextColor="@color/bronze_gold"
+            app:navigationIconTint="@color/bronze_gold"/>
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -34,6 +37,9 @@
             android:textSize="24sp"
             android:textStyle="bold"
             android:gravity="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             android:layout_gravity="center_horizontal"/>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -42,14 +48,22 @@
             android:layout_height="wrap_content"
             android:hint="Buscar paciente"
             app:startIconDrawable="@android:drawable/ic_menu_search"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            app:startIconTint="@color/white"
+            style="@style/SearchInputLayout"
+            app:boxBackgroundColor="@color/bronze_gold"
+            app:boxStrokeColor="@color/bronze_gold_dark"
+            app:boxStrokeWidth="0dp"
+            app:boxStrokeWidthFocused="2dp"
             app:layout_constraintTop_toTopOf="parent">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/searchEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text" />
+                android:inputType="text"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
+                android:textCursorDrawable="@null" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -86,7 +100,10 @@
             android:backgroundTint="@color/bronze_gold"
             app:cornerRadius="24dp"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp"/>
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/patientsRecyclerView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

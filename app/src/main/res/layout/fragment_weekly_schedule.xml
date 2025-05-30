@@ -23,17 +23,6 @@
             android:src="@drawable/ic_chevron_left"
             android:tint="@color/bronze_gold"/>
 
-        <TextView
-            android:id="@+id/txtMonth"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Maio 2025"
-            android:textColor="@color/bronze_gold"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:gravity="center"/>
-
         <ImageButton
             android:id="@+id/btnNextMonth"
             android:layout_width="40dp"

@@ -3,25 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_black"
+    android:background="?attr/colorBackground"
     android:fillViewport="true">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/voltarButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            app:icon="@drawable/ic_arrow_back"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            android:backgroundTint="@color/transparent"
-            android:layout_marginTop="8dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
 
         <TextView
             android:id="@+id/titleText"
@@ -29,118 +19,65 @@
             android:layout_height="wrap_content"
             android:text="Cadastro de Paciente"
             android:textColor="@color/bronze_gold"
-            android:textSize="24sp"
+            android:textSize="26sp"
             android:textStyle="bold"
-            android:gravity="center"
-            android:layout_gravity="center_horizontal"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="24dp"/>
+            android:layout_marginBottom="24dp"
+            android:gravity="center"/>
 
-        <!-- Dados Pessoais -->
-        <TextView
-            android:id="@+id/dadosPessoaisTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/personal_data"
-            android:textColor="@color/bronze_gold"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            app:layout_constraintTop_toBottomOf="@id/titleText"
-            android:layout_marginTop="16dp"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginBottom="16dp"/>
-
+        <!-- Nome Completo -->
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/nomeLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/LoginInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/full_name"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/dadosPessoaisTitle"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
+            android:layout_marginTop="12dp">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/nomeEditText"
+                style="@style/LoginInputEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
+                android:hint="Nome completo"/>
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- CPF -->
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/cpfLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/LoginInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/cpf"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/nomeLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
+            android:layout_marginTop="12dp">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/cpfEditText"
+                style="@style/LoginInputEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="number"
-                android:maxLength="14"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
+                android:hint="CPF"/>
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Data de Nascimento -->
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/dataNascimentoLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/LoginInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/birth_date"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/cpfLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
+            android:layout_marginTop="12dp">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/dataNascimentoEditText"
+                style="@style/LoginInputEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="number"
-                android:maxLength="10"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
+                android:hint="Data de nascimento"/>
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Telefone -->
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/telefoneLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/LoginInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/phone"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/dataNascimentoLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
+            android:layout_marginTop="12dp">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/telefoneEditText"
+                style="@style/LoginInputEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="phone"
-                android:maxLength="15"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
+                android:hint="Telefone"/>
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Informações Clínicas -->
@@ -148,118 +85,26 @@
             android:id="@+id/infoClinicasTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/clinical_info"
+            android:text="Informações clínicas"
             android:textColor="@color/bronze_gold"
             android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintTop_toBottomOf="@id/telefoneLayout"
             android:layout_marginTop="16dp"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginBottom="16dp"/>
-
+            android:layout_marginBottom="8dp"/>
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/historicoLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/LoginInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/clinical_history"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/infoClinicasTitle"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
+            android:layout_marginTop="12dp">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/historicoEditText"
-                android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:gravity="top"
-                android:inputType="textMultiLine"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/medicamentosLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/medications"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/historicoLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/medicamentosEditText"
-                android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:gravity="top"
-                android:inputType="textMultiLine"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/alergiasLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/allergies"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/medicamentosLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/alergiasEditText"
-                android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:gravity="top"
-                android:inputType="textMultiLine"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Grupo do Paciente -->
-        <TextView
-            android:id="@+id/grupoTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/patient_group"
-            android:textColor="@color/bronze_gold"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            app:layout_constraintTop_toBottomOf="@id/alergiasLayout"
-            android:layout_marginTop="16dp"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginBottom="16dp"/>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/grupoLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/select_group"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/grupoTitle"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <AutoCompleteTextView
-                android:id="@+id/grupoAutoComplete"
+                style="@style/LoginInputEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="none"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
+                android:hint="Informações clínicas"
+                android:minLines="3"
+                android:maxLines="6"
+                android:gravity="top|start"/>
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Informações Financeiras -->
@@ -267,389 +112,98 @@
             android:id="@+id/financeiroTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/financial_info"
+            android:text="Informações financeiras"
             android:textColor="@color/bronze_gold"
             android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintTop_toBottomOf="@id/grupoLayout"
             android:layout_marginTop="16dp"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginBottom="16dp"/>
-
+            android:layout_marginBottom="8dp"/>
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/valorSessaoLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/LoginInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/session_value"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/financeiroTitle"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
+            android:layout_marginTop="12dp">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/valorSessaoEditText"
+                style="@style/LoginInputEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="numberDecimal"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
+                android:hint="Valor da sessão"/>
         </com.google.android.material.textfield.TextInputLayout>
-
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/diaCobrancaLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/LoginInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/billing_day"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/valorSessaoLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
+            android:layout_marginTop="12dp">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/diaCobrancaEditText"
+                style="@style/LoginInputEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="number"
-                android:maxLength="2"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
+                android:hint="Dia da cobrança"/>
         </com.google.android.material.textfield.TextInputLayout>
-
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/lembreteCobrancaSwitch"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/enable_billing_reminder"
-            android:textColor="@color/white"
-            app:thumbTint="@color/bronze_gold"
-            app:trackTint="@color/bronze_gold_light"
-            app:layout_constraintTop_toBottomOf="@id/diaCobrancaLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
-
-        <!-- Responsável Financeiro -->
-        <TextView
-            android:id="@+id/responsavelFinanceiroTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/financial_responsible"
-            android:textColor="@color/bronze_gold"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            app:layout_constraintTop_toBottomOf="@id/lembreteCobrancaSwitch"
+            android:text="Ativar lembrete de cobrança mensal"
             android:layout_marginTop="16dp"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginBottom="16dp"/>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/responsavelNomeLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/responsible_name"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/responsavelFinanceiroTitle"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/responsavelNomeEditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/responsavelWhatsappLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/responsible_whatsapp"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/responsavelNomeLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/responsavelWhatsappEditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="phone"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/responsavelEmailLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/responsible_email"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/responsavelWhatsappLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/responsavelEmailEditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textEmailAddress"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/responsavelCpfLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/responsible_cpf"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/responsavelEmailLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/responsavelCpfEditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="number"
-                android:maxLength="14"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
-        </com.google.android.material.textfield.TextInputLayout>
+            android:textColor="@color/bronze_gold"/>
 
         <!-- Contato de Emergência -->
         <TextView
             android:id="@+id/contatoEmergenciaTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/emergency_contact"
+            android:text="Contato de emergência"
             android:textColor="@color/bronze_gold"
             android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintTop_toBottomOf="@id/responsavelCpfLayout"
             android:layout_marginTop="16dp"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginBottom="16dp"/>
-
+            android:layout_marginBottom="8dp"/>
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/contatoNomeLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/LoginInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/contact_name"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/contatoEmergenciaTitle"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
+            android:layout_marginTop="12dp">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/contatoNomeEditText"
+                style="@style/LoginInputEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
+                android:hint="Nome do contato de emergência"/>
         </com.google.android.material.textfield.TextInputLayout>
-
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/contatoWhatsappLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/LoginInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/contact_whatsapp"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/contatoNomeLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
+            android:layout_marginTop="12dp">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/contatoWhatsappEditText"
+                style="@style/LoginInputEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="phone"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
+                android:hint="WhatsApp do contato de emergência"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Dados Adicionais -->
-        <TextView
-            android:id="@+id/dadosAdicionaisTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/additional_info"
-            android:textColor="@color/bronze_gold"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            app:layout_constraintTop_toBottomOf="@id/contatoWhatsappLayout"
-            android:layout_marginTop="16dp"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginBottom="16dp"/>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/generoLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/gender"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/dadosAdicionaisTitle"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <AutoCompleteTextView
-                android:id="@+id/generoAutoComplete"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="none"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/naturalidadeLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/birthplace"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/generoLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/naturalidadeEditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/escolaridadeLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/education"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/naturalidadeLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <AutoCompleteTextView
-                android:id="@+id/escolaridadeAutoComplete"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="none"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/profissaoLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/profession"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/escolaridadeLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/profissaoEditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/encaminhamentoLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/referral"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/profissaoLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/encaminhamentoEditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/estadoCivilLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/marital_status"
-            app:boxStrokeColor="@color/bronze_gold"
-            app:hintTextColor="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/encaminhamentoLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <AutoCompleteTextView
-                android:id="@+id/estadoCivilAutoComplete"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="none"
-                android:textColor="@color/white"
-                android:textColorHint="@color/bronze_gold_light"/>
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Ajustar o botão de salvar para ficar após todas as novas seções -->
+        <!-- Botão Salvar -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/salvarButton"
+            style="@style/LoginButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="16dp"
-            android:text="@string/save"
-            android:textColor="@color/black"
-            android:backgroundTint="@color/bronze_gold"
-            app:layout_constraintTop_toBottomOf="@id/estadoCivilLayout"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            android:text="Salvar"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="24dp"/>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/progressBar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            style="@style/Widget.MaterialComponents.CircularProgressIndicator"
+            android:layout_marginTop="16dp" />
 
+    </LinearLayout>
 </ScrollView> 

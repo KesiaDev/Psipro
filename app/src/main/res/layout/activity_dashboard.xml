@@ -14,17 +14,26 @@
             android:id="@+id/appBarLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="@id/guidelineToolbar">
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:background="?attr/colorPrimary"
-                app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light"/>
+                android:background="@color/bar_background"
+                app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light"
+                app:titleTextColor="@color/bronze_gold"
+                app:subtitleTextColor="@color/bronze_gold"
+                app:navigationIconTint="@color/bronze_gold"/>
 
         </com.google.android.material.appbar.AppBarLayout>
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineToolbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.0" />
 
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/nav_host_fragment"
@@ -41,7 +50,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:background="?attr/colorSurface"
+            android:background="@color/bar_background"
             app:itemIconTint="@color/bronze_gold"
             app:itemTextColor="@color/bronze_gold"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -51,7 +60,7 @@
             android:id="@+id/welcomeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Bem-vinda, Marian Martins!"
+            android:text="Bem-vindo (a)!"
             android:textColor="@color/bronze_gold"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -66,7 +75,7 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="#121212"
+        android:background="@color/drawer_background"
         app:itemTextColor="@color/bronze_gold"
         app:itemIconTint="@color/bronze_gold"
         app:headerLayout="@layout/drawer_header"

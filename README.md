@@ -1,4 +1,4 @@
-# AppPisc - Aplicativo de Gestão para Psicólogos
+# Psipro - Aplicativo de Gestão para Psicólogos
 
 Este é um aplicativo Android desenvolvido para auxiliar psicólogos na gestão de seus pacientes, consultas e finanças.
 

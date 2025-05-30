@@ -3,4 +3,7 @@
     <external-files-path
         name="reports"
         path="reports" />
+    <external-files-path
+        name="profile_pictures"
+        path="ProfilePictures/" />
 </paths> 

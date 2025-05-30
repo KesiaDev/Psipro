@@ -7,49 +7,48 @@
 
     <fragment
         android:id="@+id/navigation_home"
-        android:name="com.example.apppisc.ui.fragments.HomeFragment"
+        android:name="com.example.psipro.ui.fragments.HomeFragment"
         android:label="@string/home"
         tools:layout="@layout/fragment_home" />
 
     <fragment
         android:id="@+id/navigation_schedule"
-        android:name="com.example.apppisc.ui.fragments.ScheduleFragment"
-        android:label="@string/schedule"
+        android:name="com.example.psipro.ui.fragments.ScheduleFragment"
         tools:layout="@layout/fragment_schedule" />
 
     <fragment
         android:id="@+id/navigation_patients"
-        android:name="com.example.apppisc.ui.fragments.PatientsFragment"
+        android:name="com.example.psipro.ui.fragments.PatientsFragment"
         android:label="@string/patients"
         tools:layout="@layout/fragment_patients" />
 
     <fragment
         android:id="@+id/nav_financeiro"
-        android:name="com.example.apppisc.ui.fragments.FinanceiroFragment"
+        android:name="com.example.psipro.ui.fragments.FinanceiroFragment"
         android:label="Financeiro"
         tools:layout="@layout/fragment_financeiro" />
 
     <fragment
         android:id="@+id/nav_notificacoes"
-        android:name="com.example.apppisc.ui.fragments.NotificacoesFragment"
+        android:name="com.example.psipro.ui.fragments.NotificacoesFragment"
         android:label="Notificações"
         tools:layout="@layout/fragment_notificacoes" />
 
     <fragment
         android:id="@+id/nav_configuracoes"
-        android:name="com.example.apppisc.ui.fragments.ConfiguracoesFragment"
+        android:name="com.example.psipro.ui.fragments.ConfiguracoesFragment"
         android:label="Configurações"
         tools:layout="@layout/fragment_configuracoes" />
 
     <fragment
         android:id="@+id/nav_suporte"
-        android:name="com.example.apppisc.ui.fragments.SuporteFragment"
+        android:name="com.example.psipro.ui.fragments.SuporteFragment"
         android:label="Suporte"
         tools:layout="@layout/fragment_suporte" />
 
     <fragment
         android:id="@+id/nav_aniversariantes"
-        android:name="com.example.apppisc.ui.fragments.BirthdayFragment"
+        android:name="com.example.psipro.ui.fragments.BirthdayFragment"
         android:label="Aniversariantes"
         tools:layout="@layout/fragment_birthday" />
 
