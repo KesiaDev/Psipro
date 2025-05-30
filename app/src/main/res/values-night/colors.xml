@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="surface_bronze_dark">#1E1E1E</color>
+    <color name="black">#FFFFFFFF</color>
+    <color name="surface_black">#FF1E1E1E</color>
+    <color name="background_black">#FF121212</color>
+    <color name="bronze_gold">#B08D57</color>
+    <color name="drawer_background">#1E1E1E</color>
+    <color name="bar_background">#1E1E1E</color>
+    <color name="error_red">#CF6679</color>
+    <color name="hint_gray">#AAAAAA</color>
+    <color name="text_white">#FFFFFF</color>
+    <color name="card_appointment_bg">#232323</color>
+    <color name="agenda_bronze">#CDA552</color>
+    <color name="agenda_bronze_30">#4DCDA552</color>
+    <color name="agenda_event_bg">#26CDA552</color>
+    <color name="agenda_event_text">#F5F5F5</color>
+    <color name="agenda_divider">#4DCDA552</color>
+    <color name="agenda_toggle_selected">#CDA552</color>
+    <color name="agenda_toggle_unselected">#232323</color>
+    <color name="agenda_toggle_text">#F5F5F5</color>
+    <color name="agenda_fab">#CDA552</color>
+    <color name="agenda_fab_ripple">#26CDA552</color>
+
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="white">#121212</color>
+    <color name="gold">#FFD4AF37</color>
+    <color name="gold_light">#FFE6D7A3</color>
+    <color name="gold_dark">#FFB8860B</color>
+    <color name="bronze_gold_light">#E5D1B8</color>
+    <color name="bronze_gold_dark">#8C6B3F</color>
+    <color name="background_card_dark">#232323</color>
+    <color name="transparent">#00000000</color>
+    <color name="green">#4CAF50</color>
+    <color name="red">#F44336</color>
+
+    <color name="background_general">#121212</color>
+    <color name="card_background_alt">#1E1E1E</color>
+    <color name="border">#424242</color>
+    <color name="shadow">#1A000000</color>
+    <color name="text_secondary">#B3FFFFFF</color>
+    <color name="icon_neutral">#757575</color>
+    <color name="icon_neutral_alt">#424242</color>
+    <color name="button_background">#D4AF37</color>
+    <color name="button_text">#FFFFFF</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="card_background">#1E1E1E</color>
+
+    <color name="input_background_light">#1F1F1F</color>
+    <color name="input_background_dark">#1F1F1F</color>
+    <color name="input_text_light">#FFFFFF</color>
+    <color name="input_text_dark">#FFFFFF</color>
+    <color name="input_hint_light">#B3FFFFFF</color>
+    <color name="input_hint_dark">#B3FFFFFF</color>
+    <color name="input_stroke_light">#424242</color>
+    <color name="input_stroke_dark">#424242</color>
+
+    <color name="primary_bronze">#CDA552</color>
+    <color name="primary_bronze_translucent">#26CDA552</color>
+    <color name="background_light">#121212</color>
+    <color name="background_dark">#121212</color>
+    <color name="text_light">#FFFFFF</color>
+    <color name="text_dark">#F5F5F5</color>
+    <color name="event_background">#26CDA552</color>
+    <color name="event_text">#FFFFFF</color>
+    <color name="colorPrimary">@color/gold</color>
+    <color name="ic_launcher_background">#070707</color>
+    <color name="background_card">#FF181818</color>
+</resources>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="8dp">
+
+    <TextView
+        android:id="@+id/textDay"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Segunda-feira"
+        android:textColor="@color/text_primary"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/textHour"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="08:00–20:00"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:layout_marginEnd="12dp" />
+
+    <CheckBox
+        android:id="@+id/checkClosed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Fechado"
+        android:textColor="@color/text_secondary" />
+
+</LinearLayout> 

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@color/surface_bronze_dark">
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/imageProfile"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:src="@drawable/ic_account_circle"
+        android:layout_gravity="center_horizontal"
+        android:contentDescription="Foto de perfil"
+        android:background="@color/surface_black"
+        android:padding="4dp" />
+
+    <Button
+        android:id="@+id/btnChangePhoto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Alterar Foto"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:textColor="@color/bronze_gold"
+        android:textStyle="bold"
+        android:backgroundTint="@color/surface_bronze_dark" />
+
+    <EditText
+        android:id="@+id/editName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Seu nome"
+        android:textColor="@color/bronze_gold"
+        android:textStyle="bold"
+        android:textColorHint="@color/bronze_gold"
+        android:background="@color/surface_bronze_dark"
+        android:padding="12dp"
+        android:layout_marginTop="16dp"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/btnSaveProfile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Salvar"
+        android:layout_marginTop="20dp"
+        android:textColor="@color/bronze_gold"
+        android:textStyle="bold"
+        android:backgroundTint="@color/surface_bronze_dark" />
+
+</LinearLayout> 

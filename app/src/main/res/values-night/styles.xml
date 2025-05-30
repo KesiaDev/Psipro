@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Google Sign In Button Style - Dark Theme -->
+    <style name="GoogleSignInButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textColor">@color/input_text_dark</item>
+        <item name="android:backgroundTint">@color/input_background_dark</item>
+        <item name="strokeColor">@color/input_stroke_dark</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cornerRadius">32dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+
+    <!-- Login Input Style - Dark Theme -->
+    <style name="LoginInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">16dp</item>
+        <item name="boxCornerRadiusTopEnd">16dp</item>
+        <item name="boxCornerRadiusBottomStart">16dp</item>
+        <item name="boxCornerRadiusBottomEnd">16dp</item>
+        <item name="boxStrokeColor">@color/bronze_gold</item>
+        <item name="hintTextColor">@color/bronze_gold</item>
+        <item name="android:background">@color/input_background_dark</item>
+        <item name="boxStrokeWidth">1.5dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="android:elevation">2dp</item>
+        <item name="android:layout_marginStart">4dp</item>
+        <item name="android:layout_marginEnd">4dp</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:layout_height">52dp</item>
+        <item name="boxBackgroundColor">@color/input_background_dark</item>
+        <item name="hintEnabled">true</item>
+        <item name="hintAnimationEnabled">false</item>
+    </style>
+
+    <style name="LoginInputEditText" parent="Widget.MaterialComponents.TextInputEditText.OutlinedBox">
+        <item name="android:textColor">@color/text_white</item>
+        <item name="android:textColorHint">@color/bronze_gold</item>
+        <item name="android:background">@color/input_background_dark</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+</resources> 

@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorBackground"
+    android:padding="0dp">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:descendantFocusability="afterDescendants"
+        android:isScrollContainer="false"
+        android:padding="16dp"
+        android:maxWidth="600dp">
+
+        <!-- Foto de perfil centralizada com sombra -->
+        <FrameLayout
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="16dp">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/profileImageView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_profile_placeholder"
+                app:shapeAppearanceOverlay="@style/CircleImageView"
+                android:background="@drawable/circle_background"/>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnChangePhoto"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="4dp"
+                app:cardCornerRadius="15dp"
+                app:cardElevation="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_camera_small"
+                    android:padding="6dp"
+                    android:background="@drawable/circle_button_background"
+                    android:contentDescription="Alterar foto"/>
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </FrameLayout>
+
+        <!-- Seção: Dados Pessoais -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Dados Pessoais"
+            android:textColor="@color/bronze_gold"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:layout_marginTop="8dp"/>
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/bronze_gold" android:layout_marginVertical="8dp"/>
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/LoginInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Nome completo"
+            app:startIconDrawable="@drawable/ic_person"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextName"
+                style="@style/LoginInputEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Seção: Profissional -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Profissional"
+            android:textColor="@color/bronze_gold"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:layout_marginTop="16dp"/>
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/bronze_gold" android:layout_marginVertical="8dp"/>
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/LoginInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Título profissional"
+            app:startIconDrawable="@drawable/ic_badge"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextTitle"
+                style="@style/LoginInputEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"/>
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/LoginInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="CRP"
+            app:startIconDrawable="@drawable/ic_badge"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextCRP"
+                style="@style/LoginInputEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"/>
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/LoginInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Especialidades"
+            app:startIconDrawable="@drawable/ic_star"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp"
+            app:hintEnabled="true"
+            app:hintAnimationEnabled="true"
+            app:expandedHintEnabled="true"
+            app:boxBackgroundColor="@color/input_background_light"
+            app:boxStrokeWidth="0dp"
+            app:boxStrokeWidthFocused="0dp">
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/editTextSpecialties"
+                style="@style/LoginInputEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="56dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp"
+                android:inputType="textMultiLine"
+                android:singleLine="false"
+                android:maxLines="3"
+                android:scrollHorizontally="false"
+                android:ellipsize="end"
+                android:focusable="false"
+                android:drawableEnd="@drawable/ic_arrow_drop_down"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:background="@null"/>
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/LoginInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Sobre mim"
+            app:startIconDrawable="@drawable/ic_info"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextAbout"
+                style="@style/LoginInputEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="56dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp"
+                android:inputType="textMultiLine"
+                android:singleLine="false"
+                android:maxLines="3"
+                android:scrollHorizontally="false"
+                android:ellipsize="end"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Modalidades de atendimento -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Modalidades de atendimento"
+            android:textColor="@color/bronze_gold"
+            android:textStyle="bold"
+            android:layout_marginTop="12dp"/>
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupModalities"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:singleSelection="false"
+            android:layout_marginBottom="8dp">
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPresencial"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Presencial"
+                app:chipBackgroundColor="@color/bronze_gold"/>
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipOnline"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Online"
+                app:chipBackgroundColor="@color/bronze_gold"/>
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipHibrido"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Híbrido"
+                app:chipBackgroundColor="@color/bronze_gold"/>
+        </com.google.android.material.chip.ChipGroup>
+
+        <!-- Endereço (opcional) -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/LoginInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Endereço (opcional)"
+            app:startIconDrawable="@drawable/ic_location_on"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextAddress"
+                style="@style/LoginInputEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:focusable="false"
+                android:clickable="true"
+                android:drawableEnd="@drawable/ic_location_on"
+                android:drawableTint="@color/bronze_gold"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Seção: Contato -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Contato"
+            android:textColor="@color/bronze_gold"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:layout_marginTop="16dp"/>
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/bronze_gold" android:layout_marginVertical="8dp"/>
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/LoginInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="WhatsApp"
+            app:startIconDrawable="@drawable/ic_whatsapp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextWhatsapp"
+                style="@style/LoginInputEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="phone"
+                android:maxLength="15"/>
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/LoginInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="E-mail profissional"
+            app:startIconDrawable="@drawable/ic_email"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextEmail"
+                style="@style/LoginInputEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textEmailAddress"/>
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/LoginInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Redes sociais (opcional)"
+            app:startIconDrawable="@drawable/ic_share"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextSocial"
+                style="@style/LoginInputEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"/>
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/LoginInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Horários de atendimento"
+            app:startIconDrawable="@drawable/ic_schedule"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextSchedule"
+                style="@style/LoginInputEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"/>
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/LoginInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Idiomas"
+            app:startIconDrawable="@drawable/ic_language"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp"
+            app:hintEnabled="true"
+            app:hintAnimationEnabled="true"
+            app:expandedHintEnabled="true"
+            app:boxBackgroundColor="@color/input_background_light"
+            app:boxStrokeWidth="0dp"
+            app:boxStrokeWidthFocused="0dp">
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/editTextLanguages"
+                style="@style/LoginInputEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="56dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp"
+                android:inputType="textMultiLine"
+                android:singleLine="false"
+                android:maxLines="3"
+                android:scrollHorizontally="false"
+                android:ellipsize="end"
+                android:focusable="false"
+                android:drawableEnd="@drawable/ic_arrow_drop_down"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:background="@null"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Botão de salvar destacado -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSave"
+            style="@style/LoginButton"
+            android:text="Salvar alterações"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            app:cornerRadius="16dp"
+            app:icon="@drawable/ic_check"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            app:backgroundTint="@color/bronze_gold"
+            android:textColor="@android:color/white"/>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancel"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:text="Cancelar"
+            android:textColor="@color/bronze_gold"
+            app:strokeColor="@color/bronze_gold"
+            app:strokeWidth="1dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"/>
+    </LinearLayout>
+</ScrollView> 
