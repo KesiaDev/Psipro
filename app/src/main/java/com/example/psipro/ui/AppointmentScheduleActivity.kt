@@ -383,9 +383,9 @@ class AppointmentScheduleActivity : SecureActivity() {
                                 val record = FinancialRecord(
                                     patientId = selectedPatient!!.id,
                                     description = newAppointment.title,
-                                    amount = valorSessao,
-                                    date = newAppointment.date,
-                                    status = "Pendente"
+                                    value = valorSessao,
+                                    type = "RECEITA",
+                                    date = newAppointment.date
                                 )
                                 financialRecordRepository.insert(record)
                             }

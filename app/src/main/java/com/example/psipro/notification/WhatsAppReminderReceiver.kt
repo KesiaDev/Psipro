@@ -26,8 +26,8 @@ class WhatsAppReminderReceiver : BroadcastReceiver() {
                 val db = AppDatabase.getInstance(context)
                 val msg = PatientMessage(
                     patientId = patientId,
-                    texto = message,
-                    data = Date()
+                    message = message,
+                    sentAt = Date()
                 )
                 db.patientMessageDao().insertMessage(msg)
             } catch (e: Exception) {

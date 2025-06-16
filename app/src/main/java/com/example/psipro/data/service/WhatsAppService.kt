@@ -37,11 +37,8 @@ class WhatsAppService(
         // Salva a mensagem enviada
         val conversation = WhatsAppConversation(
             patientId = patientId,
-            messageId = System.currentTimeMillis().toString(),
-            direction = MessageDirection.OUTGOING.name,
             message = message,
-            timestamp = Date(),
-            status = MessageStatus.SENT.name
+            sentAt = Date()
         )
 
         // Inicia o WhatsApp e salva a conversa
@@ -50,14 +47,14 @@ class WhatsAppService(
     }
 
     fun getConversationsForPatient(patientId: Long): Flow<List<WhatsAppConversation>> {
-        return conversationDao.getConversationsForPatient(patientId)
+        return conversationDao.getConversationsByPatient(patientId)
     }
 
     fun getConversationsInDateRange(patientId: Long, startDate: LocalDateTime, endDate: LocalDateTime): Flow<List<WhatsAppConversation>> {
-        return conversationDao.getConversationsForPatientInDateRange(
+        return conversationDao.getConversationsInDateRange(
             patientId,
-            startDate.toEpochSecond(java.time.ZoneOffset.UTC),
-            endDate.toEpochSecond(java.time.ZoneOffset.UTC)
+            startDate.toEpochSecond(java.time.ZoneOffset.UTC) * 1000,
+            endDate.toEpochSecond(java.time.ZoneOffset.UTC) * 1000
         )
     }
 

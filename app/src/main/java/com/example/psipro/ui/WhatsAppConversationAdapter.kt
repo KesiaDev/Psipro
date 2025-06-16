@@ -21,8 +21,9 @@ class WhatsAppConversationAdapter : ListAdapter<WhatsAppConversation, WhatsAppCo
     class ViewHolder(private val binding: ItemWhatsappConversationBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(conversation: WhatsAppConversation) {
             binding.textMessage.text = conversation.message
-            binding.textTimestamp.text = conversation.timestamp.toString()
-            binding.textStatus.text = conversation.status
+            val sdf = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale("pt", "BR"))
+            binding.textTimestamp.text = sdf.format(conversation.sentAt)
+            binding.textStatus.text = ""
         }
     }
 

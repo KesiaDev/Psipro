@@ -1,18 +1,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/nav_home"
+        android:id="@+id/navigation_home"
         android:icon="@drawable/ic_home"
         android:title="Início"/>
     <item
-        android:id="@+id/nav_schedule"
+        android:id="@+id/navigation_schedule"
         android:icon="@drawable/ic_calendar"
         android:title="Agenda"/>
     <item
-        android:id="@+id/nav_patients"
+        android:id="@+id/navigation_patients"
         android:icon="@drawable/ic_people"
         android:title="Pacientes"/>
     <item
-        android:id="@+id/nav_finance"
+        android:id="@+id/nav_financeiro"
         android:icon="@drawable/ic_attach_money"
         android:title="Financeiro"/>
 </menu> 

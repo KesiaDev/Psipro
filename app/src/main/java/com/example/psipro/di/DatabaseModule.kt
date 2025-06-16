@@ -23,7 +23,8 @@ object DatabaseModule {
             context,
             com.example.psipro.data.AppDatabase::class.java,
             "app_pisc_database"
-        ).build()
+        ).fallbackToDestructiveMigration()
+         .build()
     }
 
     @Provides

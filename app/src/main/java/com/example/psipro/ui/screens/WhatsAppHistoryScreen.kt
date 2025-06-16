@@ -55,9 +55,9 @@ fun WhatsAppHistoryScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(conversations) { conversation ->
-                    val timestamp = dateFormatter.format(conversation.data)
+                    val timestamp = dateFormatter.format(conversation.sentAt)
                     MessageBubble(
-                        message = conversation.texto,
+                        message = conversation.message,
                         timestamp = timestamp,
                         isOutgoing = false
                     )

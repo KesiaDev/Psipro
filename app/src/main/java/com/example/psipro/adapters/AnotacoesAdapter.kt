@@ -32,8 +32,8 @@ class AnotacoesAdapter : ListAdapter<PatientNote, AnotacoesAdapter.ViewHolder>(N
     ) : RecyclerView.ViewHolder(binding.root) {
         
         fun bind(note: PatientNote) {
-            binding.anotacaoText.text = note.texto
-            binding.dataText.text = dateFormat.format(note.data)
+            binding.anotacaoText.text = note.content
+            binding.dataText.text = dateFormat.format(note.createdAt)
         }
     }
 

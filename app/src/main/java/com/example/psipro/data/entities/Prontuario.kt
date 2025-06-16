@@ -1,10 +1,9 @@
 package com.example.psipro.data.entities
 
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
-import androidx.room.TypeConverters
-import com.example.psipro.data.converters.StringListConverter
+import androidx.room.PrimaryKey
+import java.util.Date
 
 @Entity(
     tableName = "prontuarios",
@@ -17,11 +16,11 @@ import com.example.psipro.data.converters.StringListConverter
         )
     ]
 )
-@TypeConverters(StringListConverter::class)
 data class Prontuario(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
     val patientId: Long,
-    val perguntas: List<String>, // Exemplo: ["Queixa Inicial?", "Evolução", ...]
-    val respostas: List<String>, // Exemplo: ["Dor de cabeça", "Melhorou", ...]
-    val data: Long = System.currentTimeMillis()
+    val content: String,
+    val createdAt: Date = Date(),
+    val updatedAt: Date = Date()
 ) 

@@ -13,16 +13,16 @@ interface UserDao {
     suspend fun getUserById(id: Long): User?
 
     @Query("SELECT * FROM users WHERE email = :email LIMIT 1")
-    suspend fun getUserByEmail(email: String): User?
+    fun getUserByEmail(email: String): User?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertUser(user: User): Long
+    fun insertUser(user: User): Long
 
     @Update
-    suspend fun updateUser(user: User)
+    fun updateUser(user: User)
 
     @Delete
-    suspend fun deleteUser(user: User)
+    fun deleteUser(user: User)
 
     @Query("SELECT EXISTS(SELECT 1 FROM users WHERE email = :email)")
     suspend fun userExists(email: String): Boolean

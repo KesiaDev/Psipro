@@ -14,7 +14,7 @@ class PatientNoteViewModel @Inject constructor(
     private val repository: PatientNoteRepository
 ) : ViewModel() {
 
-    fun getNotesForPatient(patientId: Long): Flow<List<PatientNote>> =
+    fun getNotesByPatient(patientId: Long): Flow<List<PatientNote>> =
         repository.getNotesForPatient(patientId)
 
     fun insertNote(

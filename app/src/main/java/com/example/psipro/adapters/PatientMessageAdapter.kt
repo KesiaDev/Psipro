@@ -29,8 +29,8 @@ class PatientMessageAdapter : ListAdapter<PatientMessage, PatientMessageAdapter.
 
     inner class ViewHolder(private val binding: ItemMensagemBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(message: PatientMessage) {
-            binding.mensagemText.text = message.texto
-            binding.dataMensagemText.text = dateFormat.format(message.data)
+            binding.mensagemText.text = message.message
+            binding.dataMensagemText.text = dateFormat.format(message.sentAt)
         }
     }
 

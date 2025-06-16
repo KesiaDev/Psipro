@@ -8,12 +8,9 @@ import java.util.Date
 data class FinancialRecord(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val patientId: Long,
+    val patientId: Long? = null,
     val description: String,
-    val amount: Double,
-    val date: Date,
-    val status: String, // "Pago", "Pendente", "Cancelado"
-    val paymentMethod: String? = null,
-    val paymentDate: Date? = null,
-    val notes: String? = null
+    val value: Double,
+    val type: String, // RECEITA ou DESPESA
+    val date: Date = Date()
 ) 

@@ -32,9 +32,9 @@ class AnotacoesAdapter : ListAdapter<PatientNote, AnotacoesAdapter.AnotacaoViewH
         private val dateFormat = SimpleDateFormat("d 'de' MMMM 'de' yyyy", Locale("pt", "BR"))
 
         fun bind(anotacao: PatientNote) {
-            val resumo = if (anotacao.texto.length > 60) anotacao.texto.substring(0, 60) + "..." else anotacao.texto
+            val resumo = if (anotacao.content.length > 60) anotacao.content.substring(0, 60) + "..." else anotacao.content
             binding.anotacaoText.text = resumo
-            binding.dataText.text = dateFormat.format(anotacao.data)
+            binding.dataText.text = dateFormat.format(anotacao.createdAt)
         }
     }
 

@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PatientMessageDao {
-    @Query("SELECT * FROM patient_messages WHERE patientId = :patientId ORDER BY data DESC")
-    fun getMessagesForPatient(patientId: Long): Flow<List<PatientMessage>>
+    @Query("SELECT * FROM patient_messages WHERE patientId = :patientId ORDER BY sentAt DESC")
+    fun getMessagesByPatient(patientId: Long): Flow<List<PatientMessage>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMessage(message: PatientMessage): Long

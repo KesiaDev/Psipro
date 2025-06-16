@@ -11,7 +11,7 @@ data class Patient(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val name: String,
-    val cpf: String,
+    val cpf: String = "",
     val birthDate: Date,
     val phone: String,
     val email: String = "",
@@ -26,12 +26,13 @@ data class Patient(
     val diaCobranca: Int = 1,
     val lembreteCobranca: Boolean = false,
     @TypeConverters(EncryptionConverter::class)
-    val clinicalHistory: String?,
+    val clinicalHistory: String? = null,
     @TypeConverters(EncryptionConverter::class)
-    val medications: String?,
+    val medications: String? = null,
     @TypeConverters(EncryptionConverter::class)
-    val allergies: String?,
+    val allergies: String? = null,
     val isEncrypted: Boolean = false,
+    val notes: String? = null,
     val createdAt: Date = Date(),
     val updatedAt: Date = Date()
 ) 

@@ -26,8 +26,8 @@ class AnotacaoAdapter : RecyclerView.Adapter<AnotacaoAdapter.AnotacaoViewHolder>
 
     override fun onBindViewHolder(holder: AnotacaoViewHolder, position: Int) {
         val anotacao = anotacoes[position]
-        holder.anotacaoText.text = anotacao.texto
-        holder.dataText.text = dateFormat.format(anotacao.data)
+        holder.anotacaoText.text = anotacao.content
+        holder.dataText.text = dateFormat.format(anotacao.createdAt)
     }
 
     override fun getItemCount() = anotacoes.size

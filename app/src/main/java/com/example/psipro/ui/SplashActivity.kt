@@ -10,6 +10,11 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import com.example.psipro.R
 import com.example.psipro.MainActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
 
 @AndroidEntryPoint
 class SplashActivity : AppCompatActivity() {
@@ -20,15 +25,16 @@ class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        
-        Handler(Looper.getMainLooper()).postDelayed({
-            val intent = if (appConfig.isFirstRun) {
-                Intent(this, OnboardingActivity::class.java)
+        lifecycleScope.launch {
+            delay(2000) // 2 segundos
+            val isFirstRun = withContext(Dispatchers.IO) { appConfig.isFirstRun }
+            val intent = if (isFirstRun) {
+                Intent(this@SplashActivity, OnboardingActivity::class.java)
             } else {
-                Intent(this, MainActivity::class.java)
+                Intent(this@SplashActivity, MainActivity::class.java)
             }
             startActivity(intent)
             finish()
-        }, 2000) // 2 segundos de delay
+        }
     }
 } 

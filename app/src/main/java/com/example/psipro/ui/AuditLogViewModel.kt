@@ -25,7 +25,9 @@ class AuditLogViewModel @Inject constructor(
 
     fun loadLogs() {
         viewModelScope.launch {
-            _logs.value = repository.getAllLogs()
+            repository.getAllLogs().collect { logs ->
+                _logs.value = logs
+            }
         }
     }
 } 

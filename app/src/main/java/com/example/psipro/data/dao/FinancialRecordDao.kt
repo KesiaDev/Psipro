@@ -6,18 +6,18 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FinancialRecordDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(record: FinancialRecord): Long
+    @Query("SELECT * FROM financial_records ORDER BY date DESC")
+    fun getAllRecords(): Flow<List<FinancialRecord>>
 
-    @Update
-    suspend fun update(record: FinancialRecord)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRecord(record: FinancialRecord): Long
 
     @Delete
-    suspend fun delete(record: FinancialRecord)
-
-    @Query("SELECT * FROM financial_records ORDER BY date DESC")
-    fun getAll(): Flow<List<FinancialRecord>>
+    suspend fun deleteRecord(record: FinancialRecord)
 
     @Query("SELECT * FROM financial_records WHERE patientId = :patientId ORDER BY date DESC")
     fun getByPatient(patientId: Long): Flow<List<FinancialRecord>>
+
+    @Update
+    suspend fun updateRecord(record: FinancialRecord)
 } 

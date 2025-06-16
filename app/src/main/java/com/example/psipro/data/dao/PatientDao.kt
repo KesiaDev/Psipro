@@ -9,14 +9,8 @@ interface PatientDao {
     @Query("SELECT * FROM patients ORDER BY name ASC")
     fun getAllPatients(): Flow<List<Patient>>
 
-    @Query("SELECT * FROM patients WHERE name LIKE '%' || :query || '%' OR cpf LIKE '%' || :query || '%' ORDER BY name ASC")
-    fun searchPatients(query: String): Flow<List<Patient>>
-
     @Query("SELECT * FROM patients WHERE id = :id")
     suspend fun getPatientById(id: Long): Patient?
-
-    @Query("SELECT * FROM patients WHERE cpf = :cpf")
-    suspend fun getPatientByCpf(cpf: String): Patient?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPatient(patient: Patient): Long
@@ -26,6 +20,12 @@ interface PatientDao {
 
     @Delete
     suspend fun deletePatient(patient: Patient)
+
+    @Query("SELECT * FROM patients WHERE name LIKE '%' || :query || '%'")
+    fun searchPatients(query: String): Flow<List<Patient>>
+
+    @Query("SELECT * FROM patients WHERE cpf = :cpf LIMIT 1")
+    suspend fun getPatientByCpf(cpf: String): Patient?
 
     @Query("SELECT COUNT(*) FROM patients")
     suspend fun getPatientCount(): Int

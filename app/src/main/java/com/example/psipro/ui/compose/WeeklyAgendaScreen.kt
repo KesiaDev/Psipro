@@ -46,6 +46,7 @@ import android.content.SharedPreferences
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 
+
 @Composable
 fun WeeklyAgendaScreen(
     appointments: List<Appointment>,
@@ -85,6 +86,7 @@ fun WeeklyAgendaScreen(
     val hourLabelColor = bronzeGold.copy(alpha = 0.7f)
     val context = LocalContext.current
     var theme by remember { mutableStateOf(loadThemePreference(context)) }
+    var expanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(theme) {
         saveThemePreference(context, theme)
@@ -95,6 +97,56 @@ fun WeeklyAgendaScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        @OptIn(ExperimentalMaterial3Api::class)
+        TopAppBar(
+            title = { Text("Agenda", color = bronzeGold) },
+            actions = {
+                Box {
+                    IconButton(onClick = { expanded = true }) {
+                        Icon(
+                            Icons.Filled.DateRange,
+                            contentDescription = "Selecionar visualização",
+                            tint = bronzeGold
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        menuOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = option,
+                                        color = if (viewMode == option) bronzeGold else MaterialTheme.colorScheme.onSurface
+                                    )
+                                },
+                                onClick = {
+                                    viewMode = option
+                                    expanded = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = when(option) {
+                                            "Mês" -> Icons.Filled.DateRange
+                                            "Semana" -> Icons.Filled.Event
+                                            "4 dias" -> Icons.Filled.Event
+                                            else -> Icons.Filled.Event
+                                        },
+                                        contentDescription = null,
+                                        tint = if (viewMode == option) bronzeGold else MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background
+            )
+        )
+
         // 1. Título principal da agenda
         // Text(
         //     text = "Agenda",
@@ -114,52 +166,52 @@ fun WeeklyAgendaScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Menu dropdown para seleção de visualização
-            var expanded by remember { mutableStateOf(false) }
+            // var expanded by remember { mutableStateOf(false) }
             
-            Box {
-                IconButton(
-                    onClick = { expanded = true },
-                    modifier = Modifier.padding(vertical = 0.dp)
-                ) {
-                    Icon(
-                        Icons.Filled.DateRange,
-                        contentDescription = "Selecionar visualização",
-                        tint = bronzeGold
-                    )
-                }
+            // Box {
+            //     IconButton(
+            //         onClick = { expanded = true },
+            //         modifier = Modifier.padding(vertical = 0.dp)
+            //     ) {
+            //         Icon(
+            //             Icons.Filled.DateRange,
+            //             contentDescription = "Selecionar visualização",
+            //             tint = bronzeGold
+            //         )
+            //     }
                 
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    menuOptions.forEach { option ->
-                        DropdownMenuItem(
-                            text = { 
-                                Text(
-                                    text = option,
-                                    color = if (viewMode == option) bronzeGold else MaterialTheme.colorScheme.onSurface
-                                )
-                            },
-                            onClick = {
-                                viewMode = option
-                                expanded = false
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = when(option) {
-                                        "Mês" -> Icons.Filled.DateRange
-                                        "Semana" -> Icons.Filled.Event
-                                        "4 dias" -> Icons.Filled.Event
-                                        else -> Icons.Filled.Event
-                                    },
-                                    contentDescription = null,
-                                    tint = if (viewMode == option) bronzeGold else MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        )
-                    }
-                }
-            }
+            //     DropdownMenu(
+            //         expanded = expanded,
+            //         onDismissRequest = { expanded = false }
+            //     ) {
+            //         menuOptions.forEach { option ->
+            //             DropdownMenuItem(
+            //                 text = { 
+            //                     Text(
+            //                         text = option,
+            //                         color = if (viewMode == option) bronzeGold else MaterialTheme.colorScheme.onSurface
+            //                     )
+            //                 },
+            //                 onClick = {
+            //                     viewMode = option
+            //                     expanded = false
+            //                 },
+            //                 leadingIcon = {
+            //                     Icon(
+            //                         imageVector = when(option) {
+            //                             "Mês" -> Icons.Filled.DateRange
+            //                             "Semana" -> Icons.Filled.Event
+            //                             "4 dias" -> Icons.Filled.Event
+            //                             else -> Icons.Filled.Event
+            //                         },
+            //                         contentDescription = null,
+            //                         tint = if (viewMode == option) bronzeGold else MaterialTheme.colorScheme.onSurface
+            //                     )
+            //                 }
+            //             )
+            //         }
+            //     }
+            // }
         }
 
         // Cabeçalho com menu suspenso sempre visível
@@ -203,7 +255,7 @@ fun WeeklyAgendaScreen(
         // Conteúdo de acordo com o modo de visualização
         when(viewMode) {
             "Semana" -> {
-                // Dias da semana
+                // Cabeçalho dos dias da semana
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -221,105 +273,104 @@ fun WeeklyAgendaScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
+                            // Nome do dia (SEG, TER, ...)
+                            Text(
+                                text = daysOfWeek[i],
+                                color = if (isToday) MaterialTheme.colorScheme.background else bronzeGold,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = dayFontSize,
+                                modifier = if (isToday) Modifier
+                                    .background(bronzeGold, shape = CircleShape)
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                else Modifier
+                            )
+                            // Número do dia do mês
+                            Text(
+                                text = date.dayOfMonth.toString(),
+                                color = if (isToday) MaterialTheme.colorScheme.background else bronzeGold,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = dayFontSize
+                            )
+                        }
+                    }
+                }
+                val horarios = (7..20).map { java.time.LocalTime.of(it, 0) }
+                val alturaCelula = hourBoxHeight
+                Row(Modifier.fillMaxWidth()) {
+                    // Coluna de horários
+                    Column(Modifier.width(44.dp)) {
+                        Spacer(modifier = Modifier.height(28.dp))
+                        horarios.forEach { horario ->
                             Box(
-                                modifier = Modifier
-                                    .padding(vertical = 4.dp),
-                                contentAlignment = Alignment.Center
+                                Modifier
+                                    .height(alturaCelula)
+                                    .fillMaxWidth(),
+                                contentAlignment = Alignment.CenterEnd
                             ) {
                                 Text(
-                                    text = daysOfWeek[i],
-                                    color = if (isToday) MaterialTheme.colorScheme.background else bronzeGold,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = dayFontSize,
-                                    modifier = if (isToday) Modifier
-                                        .background(bronzeGold, shape = CircleShape)
-                                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                                    else Modifier
-                                )
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .padding(vertical = 4.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = date.dayOfMonth.toString(),
-                                    color = if (isToday) MaterialTheme.colorScheme.background else bronzeGold,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = dayFontSize
+                                    text = "%02d:00".format(horario.hour),
+                                    color = bronzeGold,
+                                    fontSize = hourFontSize,
+                                    modifier = Modifier.padding(end = 12.dp),
+                                    textAlign = TextAlign.End
                                 )
                             }
                         }
                     }
-                }
-                // Grade de horários
-                Box(
-                    modifier = Modifier
-                        .heightIn(max = maxGridHeight)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        // Coluna de horários
-                        Column(
-                            modifier = Modifier.width(64.dp)
-                        ) {
-                            Spacer(modifier = Modifier.height(28.dp))
-                            for (hour in totalHours) {
-                                Box(
-                                    modifier = Modifier
-                                        .height(hourBoxHeight)
-                                        .fillMaxWidth(),
-                                    contentAlignment = Alignment.CenterEnd
-                                ) {
-                                    Text(
-                                        text = "%02d:00".format(hour),
-                                        color = bronzeGold,
-                                        fontSize = hourFontSize,
-                                        modifier = Modifier.padding(end = 12.dp),
-                                        textAlign = TextAlign.End
+                    // Colunas dos dias
+                    for (i in 0..6) {
+                        val date = weekStart.plusDays(i.toLong())
+                        Box(Modifier.weight(1f)) {
+                            // Grade de horários
+                            Column {
+                                Spacer(modifier = Modifier.height(28.dp))
+                                horarios.forEach { _ ->
+                                    Box(
+                                        Modifier
+                                            .height(alturaCelula)
+                                            .fillMaxWidth()
+                                            .border(thinLine, thinLineColor)
                                     )
                                 }
                             }
-                        }
-                        // Colunas dos dias
-                        for (i in 0..6) {
-                            val date = weekStart.plusDays(i.toLong())
-                            Column(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Spacer(modifier = Modifier.height(28.dp))
-                                for (hour in totalHours) {
-                                    val appointment = appointments.find { appt ->
-                                        val apptDate = appt.date.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate()
-                                        val apptHour = appt.startTime.split(":")[0].toIntOrNull() ?: -1
-                                        apptDate == date && apptHour == hour
-                                    }
-                                    Box(
-                                        modifier = Modifier
-                                            .height(hourBoxHeight)
-                                            .fillMaxWidth()
-                                            .border(thinLine, thinLineColor)
-                                            .clickable { onTimeSlotClick(date, hour) }
-                                    ) {
-                                        if (appointment != null) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(horizontal = 4.dp, vertical = 2.dp)
-                                                    .background(bronzeGoldTranslucent, shape = RoundedCornerShape(16.dp))
-                                                    .padding(vertical = 8.dp, horizontal = 12.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                            Text(
-                                                text = appointment.patientName,
-                                                    color = textDark,
-                                                    textAlign = TextAlign.Center,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 14.sp
-                                            )
-                                            }
-                                        }
-                                    }
+                            // Eventos sobrepostos desenhados por cima
+                            val eventosDoDia = appointments.filter { appt ->
+                                val apptDate = appt.date.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                                apptDate == date
+                            }
+                            eventosDoDia.sortedBy { parseTime(it.startTime) }.forEach { evento ->
+                                val inicio = parseTime(evento.startTime)
+                                val fim = parseTime(evento.endTime)
+                                val minutosDesdeInicio = ((inicio.hour - 7) * 60 + inicio.minute)
+                                val minutosDuracao = ((fim.hour - inicio.hour) * 60 + (fim.minute - inicio.minute)).coerceAtLeast(15)
+                                val topOffset = alturaCelula * (minutosDesdeInicio / 60f)
+                                val eventHeight = alturaCelula * (minutosDuracao / 60f)
+                                // Empilhamento lateral para múltiplos eventos no mesmo horário
+                                val eventosNoMesmoHorario = eventosDoDia.filter {
+                                    val s = parseTime(it.startTime)
+                                    val e = parseTime(it.endTime)
+                                    (inicio < e && fim > s)
+                                }
+                                val largura = 1f / eventosNoMesmoHorario.size
+                                val posicao = eventosNoMesmoHorario.indexOf(evento)
+                                Box(
+                                    Modifier
+                                        .fillMaxWidth(largura)
+                                        .offset(y = topOffset)
+                                        .height(eventHeight)
+                                        .padding(2.dp)
+                                        .background(Color(android.graphics.Color.parseColor(evento.colorHex)), shape = RoundedCornerShape(8.dp))
+                                        .clickable { /* abrir detalhes/editar */ }
+                                ) {
+                                    Text(
+                                        text = evento.title,
+                                        color = textDark,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.padding(4.dp)
+                                    )
                                 }
                             }
                         }
@@ -659,4 +710,8 @@ fun saveThemePreference(context: Context, theme: String) {
 fun loadThemePreference(context: Context): String {
     val prefs: SharedPreferences = context.getSharedPreferences("PsiproPrefs", Context.MODE_PRIVATE)
     return prefs.getString("theme", "light") ?: "light"
-} 
+}
+
+// Função utilitária para converter string de hora para LocalTime
+fun parseTime(timeStr: String): java.time.LocalTime =
+    java.time.LocalTime.parse(timeStr, java.time.format.DateTimeFormatter.ofPattern("HH:mm")) 

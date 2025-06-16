@@ -11,7 +11,7 @@ class PatientMessageRepository @Inject constructor(
     private val patientMessageDao: PatientMessageDao
 ) {
     fun getMessagesForPatient(patientId: Long): Flow<List<PatientMessage>> =
-        patientMessageDao.getMessagesForPatient(patientId)
+        patientMessageDao.getMessagesByPatient(patientId)
 
     suspend fun insertMessage(message: PatientMessage): Long =
         patientMessageDao.insertMessage(message)

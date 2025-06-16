@@ -2,20 +2,21 @@ package com.example.psipro.data.dao
 
 import androidx.room.*
 import com.example.psipro.data.entities.Prontuario
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProntuarioDao {
+    @Query("SELECT * FROM prontuarios WHERE patientId = :patientId ORDER BY createdAt DESC")
+    fun getProntuariosByPatient(patientId: Long): Flow<List<Prontuario>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(prontuario: Prontuario): Long
+    suspend fun insertProntuario(prontuario: Prontuario): Long
 
     @Update
-    suspend fun update(prontuario: Prontuario)
+    suspend fun updateProntuario(prontuario: Prontuario)
 
     @Delete
-    suspend fun delete(prontuario: Prontuario)
-
-    @Query("SELECT * FROM prontuarios WHERE patientId = :patientId ORDER BY data DESC")
-    suspend fun getProntuariosByPatient(patientId: Long): List<Prontuario>
+    suspend fun deleteProntuario(prontuario: Prontuario)
 
     @Query("SELECT * FROM prontuarios WHERE id = :id")
     suspend fun getProntuarioById(id: Long): Prontuario?

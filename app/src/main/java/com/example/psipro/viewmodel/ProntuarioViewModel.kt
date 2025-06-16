@@ -19,7 +19,9 @@ class ProntuarioViewModel @Inject constructor(
 
     fun loadProntuarios(patientId: Long) {
         viewModelScope.launch {
-            _prontuarios.value = repository.getProntuariosByPatient(patientId)
+            repository.getProntuariosByPatient(patientId).collect { prontuarios ->
+                _prontuarios.value = prontuarios
+            }
         }
     }
 

@@ -21,6 +21,13 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import dagger.hilt.android.AndroidEntryPoint
 import com.example.psipro.ui.compose.PsiproTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.*
+import com.example.psipro.ui.compose.AppointmentForm
+import androidx.compose.ui.window.Dialog
 
 @AndroidEntryPoint
 class ScheduleFragment : Fragment() {
@@ -44,29 +51,33 @@ class ScheduleFragment : Fragment() {
                 appointmentViewModel.allAppointments.collectLatest { appointments ->
                     composeView.setContent {
                         PsiproTheme {
-                        WeeklyAgendaScreen(
-                            appointments = appointments,
-                            onAddEvent = { /* ação do botão + */ },
-                            onTimeSlotClick = { date, hour ->
-                                val appointment = appointments.find { appt ->
-                                    val apptDate = appt.date.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate()
-                                    val apptHour = appt.startTime.split(":")[0].toIntOrNull() ?: -1
-                                    apptDate == date && apptHour == hour
+                            var showAppointmentForm by remember { mutableStateOf(false) }
+                            var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+                            var selectedHour by remember { mutableStateOf<Int?>(null) }
+
+                            WeeklyAgendaScreen(
+                                appointments = appointments,
+                                onAddEvent = { /* ação do botão + */ },
+                                onTimeSlotClick = { date, hour ->
+                                    selectedDate = date
+                                    selectedHour = hour
+                                    showAppointmentForm = true
                                 }
-                                val dialog = AppointmentDialogFragment()
-                                val bundle = Bundle().apply {
-                                    if (appointment != null) {
-                                        putLong("appointment_id", appointment.id)
-                                    } else {
-                                        putLong("selected_date", date.atTime(hour, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli())
-                                        putString("selected_hour", String.format("%02d:00", hour))
-                                        putString("selected_end_hour", String.format("%02d:00", hour + 1))
-                                    }
+                            )
+
+                            if (showAppointmentForm && selectedDate != null && selectedHour != null) {
+                                Dialog(onDismissRequest = { showAppointmentForm = false }) {
+                                    AppointmentForm(
+                                        initialDate = selectedDate!!.toString(),
+                                        initialStartTime = "%02d:00".format(selectedHour),
+                                        initialEndTime = "%02d:00".format(selectedHour!! + 1),
+                                        onSave = { _, _, _, _, _, _, _, _, _, _, _ ->
+                                            // salvar evento no banco
+                                            showAppointmentForm = false
+                                        }
+                                    )
                                 }
-                                dialog.arguments = bundle
-                                dialog.show(parentFragmentManager, "criarAgendamento")
                             }
-                        )
                         }
                     }
                 }

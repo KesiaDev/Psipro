@@ -5,75 +5,62 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.example.psipro.data.converters.DateConverter
-import com.example.psipro.data.converters.LocalDateTimeConverter
-import com.example.psipro.data.converters.StringListConverter
-import com.example.psipro.data.converters.StringMapConverter
-import com.example.psipro.data.dao.*
-import com.example.psipro.data.entities.*
+import com.example.psipro.data.dao.AppointmentDao
+import com.example.psipro.data.dao.PatientDao
+import com.example.psipro.data.dao.UserDao
+import com.example.psipro.data.dao.PatientNoteDao
+import com.example.psipro.data.dao.PatientMessageDao
+import com.example.psipro.data.dao.PatientReportDao
+import com.example.psipro.data.dao.FinancialRecordDao
+import com.example.psipro.data.dao.ProntuarioDao
+import com.example.psipro.data.dao.AuditLogDao
+import com.example.psipro.data.dao.WhatsAppConversationDao
+import com.example.psipro.data.entities.Appointment
+import com.example.psipro.data.entities.Patient
+import com.example.psipro.data.entities.User
+import com.example.psipro.data.entities.PatientNote
+import com.example.psipro.data.entities.PatientMessage
+import com.example.psipro.data.entities.PatientReport
+import com.example.psipro.data.entities.FinancialRecord
+import com.example.psipro.data.entities.Prontuario
+import com.example.psipro.data.entities.AuditLog
 import com.example.psipro.data.entities.WhatsAppConversation
-import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
-import javax.inject.Singleton
+import com.example.psipro.data.converters.DateConverter
 
 @Database(
-    entities = [
-        Patient::class,
-        PatientNote::class,
-        PatientMessage::class,
-        PatientReport::class,
-        Appointment::class,
-        User::class,
-        AuditLog::class,
-        FinancialRecord::class,
-        WhatsAppConversation::class,
-        Prontuario::class
-    ],
-    version = 6,
+    entities = [User::class, Patient::class, Appointment::class, PatientNote::class, PatientMessage::class, PatientReport::class, FinancialRecord::class, Prontuario::class, AuditLog::class, WhatsAppConversation::class],
+    version = 2,
     exportSchema = false
 )
-@TypeConverters(DateConverter::class, LocalDateTimeConverter::class, StringListConverter::class, StringMapConverter::class)
-@Singleton
+@TypeConverters(DateConverter::class)
 abstract class AppDatabase : RoomDatabase() {
+    abstract fun userDao(): UserDao
     abstract fun patientDao(): PatientDao
+    abstract fun appointmentDao(): AppointmentDao
     abstract fun patientNoteDao(): PatientNoteDao
     abstract fun patientMessageDao(): PatientMessageDao
     abstract fun patientReportDao(): PatientReportDao
-    abstract fun appointmentDao(): AppointmentDao
-    abstract fun userDao(): UserDao
-    abstract fun auditLogDao(): AuditLogDao
     abstract fun financialRecordDao(): FinancialRecordDao
-    abstract fun whatsappConversationDao(): WhatsAppConversationDao
     abstract fun prontuarioDao(): ProntuarioDao
+    abstract fun auditLogDao(): AuditLogDao
+    abstract fun whatsappConversationDao(): WhatsAppConversationDao
 
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
-            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE patients ADD COLUMN sessionValue REAL NOT NULL DEFAULT 0.0")
-            }
-        }
-
-        val MIGRATION_2_3 = object : androidx.room.migration.Migration(2, 3) {
-            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE appointments ADD COLUMN sessionValue REAL NOT NULL DEFAULT 0.0")
-            }
-        }
-
         @JvmStatic
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: Room.databaseBuilder(
+                val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "psipro_database"
-                )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
-                .fallbackToDestructiveMigration()
-                .build().also { INSTANCE = it }
+                ).fallbackToDestructiveMigration()
+                .build()
+                INSTANCE = instance
+                instance
             }
         }
     }
-} 
+}

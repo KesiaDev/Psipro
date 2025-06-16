@@ -8,9 +8,9 @@ import javax.inject.Inject
 class FinancialRecordRepository @Inject constructor(
     private val dao: FinancialRecordDao
 ) {
-    suspend fun insert(record: FinancialRecord) = dao.insert(record)
-    suspend fun update(record: FinancialRecord) = dao.update(record)
-    suspend fun delete(record: FinancialRecord) = dao.delete(record)
-    fun getAll(): Flow<List<FinancialRecord>> = dao.getAll()
+    suspend fun insert(record: FinancialRecord) = dao.insertRecord(record)
+    suspend fun update(record: FinancialRecord) = dao.updateRecord(record)
+    suspend fun delete(record: FinancialRecord) = dao.deleteRecord(record)
+    fun getAll(): Flow<List<FinancialRecord>> = dao.getAllRecords()
     fun getByPatient(patientId: Long): Flow<List<FinancialRecord>> = dao.getByPatient(patientId)
 } 

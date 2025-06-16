@@ -1,43 +1,35 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="160dp"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
+    android:layout_height="180dp"
     android:background="@color/drawer_background"
-    android:padding="24dp">
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="bottom">
 
     <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/imageProfileDrawer"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
+        android:id="@+id/nav_header_photo"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
         android:src="@drawable/ic_account_circle"
-        android:tint="@color/bronze_gold"
-        android:contentDescription="Perfil" />
+        app:civ_border_color="@color/bronze_gold"
+        app:civ_border_width="2dp" />
 
-    <LinearLayout
-        android:layout_width="wrap_content"
+    <TextView
+        android:id="@+id/nav_header_name"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginStart="16dp">
+        android:layout_marginTop="8dp"
+        android:text="Seu Nome aqui"
+        android:textColor="@color/bronze_gold"
+        android:textStyle="bold"
+        android:textSize="18sp" />
 
-        <TextView
-            android:id="@+id/textProfileNameDrawer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Nome do Profissional"
-            android:textColor="@color/bronze_gold"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/textProfileCrpDrawer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="CRP 00/00000"
-            android:textColor="@color/bronze_gold"
-            android:textSize="14sp"
-            android:layout_marginTop="2dp" />
-    </LinearLayout>
-
+    <TextView
+        android:id="@+id/nav_header_crp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="CRP não informado"
+        android:textColor="@color/bronze_gold"
+        android:textSize="14sp" />
 </LinearLayout> 

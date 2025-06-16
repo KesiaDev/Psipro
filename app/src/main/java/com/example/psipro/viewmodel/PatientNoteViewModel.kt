@@ -17,7 +17,7 @@ class PatientNoteViewModel(application: Application) : AndroidViewModel(applicat
         repository = PatientNoteRepository(patientNoteDao)
     }
 
-    fun getNotesForPatient(patientId: Long): Flow<List<PatientNote>> {
+    fun getNotesByPatient(patientId: Long): Flow<List<PatientNote>> {
         return repository.getNotesForPatient(patientId)
     }
 

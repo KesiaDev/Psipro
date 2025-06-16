@@ -11,7 +11,7 @@ class PatientNoteRepository @Inject constructor(
     private val patientNoteDao: PatientNoteDao
 ) {
     fun getNotesForPatient(patientId: Long): Flow<List<PatientNote>> = 
-        patientNoteDao.getNotesForPatient(patientId)
+        patientNoteDao.getNotesByPatient(patientId)
 
     suspend fun insertNote(note: PatientNote): Long = 
         patientNoteDao.insertNote(note)

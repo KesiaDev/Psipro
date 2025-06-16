@@ -1,6 +1,8 @@
 package com.example.psipro.data.entities
 
-import androidx.room.*
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.PrimaryKey
 import java.util.Date
 
 @Entity(
@@ -12,15 +14,13 @@ import java.util.Date
             childColumns = ["patientId"],
             onDelete = ForeignKey.CASCADE
         )
-    ],
-    indices = [
-        Index("patientId")
     ]
 )
 data class PatientNote(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val patientId: Long,
-    val texto: String,
-    val data: Date = Date()
+    val content: String,
+    val createdAt: Date = Date(),
+    val updatedAt: Date = Date()
 ) 

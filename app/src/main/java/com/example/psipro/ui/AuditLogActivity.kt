@@ -24,6 +24,7 @@ import java.util.*
 import android.widget.Toast
 import com.example.psipro.data.repository.AuditLogRepository
 import com.example.psipro.R
+import kotlinx.coroutines.flow.collect
 
 class AuditLogActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
@@ -42,11 +43,13 @@ class AuditLogActivity : AppCompatActivity() {
 
     private fun loadLogs() {
         CoroutineScope(Dispatchers.IO).launch {
-            val logs = AppDatabase.getInstance(this@AuditLogActivity).auditLogDao().getAllLogs()
-            withContext(Dispatchers.Main) {
-                adapter.submitList(logs)
-                if (logs.isEmpty()) {
-                    Toast.makeText(this@AuditLogActivity, "Nenhum log de auditoria encontrado.", Toast.LENGTH_LONG).show()
+            val logsFlow = AppDatabase.getInstance(this@AuditLogActivity).auditLogDao().getAllLogs()
+            logsFlow.collect { logs ->
+                withContext(Dispatchers.Main) {
+                    adapter.submitList(logs)
+                    if (logs.isEmpty()) {
+                        Toast.makeText(this@AuditLogActivity, "Nenhum log de auditoria encontrado.", Toast.LENGTH_LONG).show()
+                    }
                 }
             }
         }
@@ -71,7 +74,7 @@ class AuditLogAdapter : ListAdapter<AuditLog, AuditLogAdapter.LogViewHolder>(DIF
     class LogViewHolder(private val tv: TextView) : RecyclerView.ViewHolder(tv) {
         fun bind(log: AuditLog) {
             val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
-            tv.text = "Ação: ${log.action}\nAlvo: ${log.target}\nData: ${sdf.format(Date(log.timestamp))}"
+            tv.text = "Ação: ${log.action}\nUsuário: ${log.user}\nDetalhes: ${log.details.orEmpty()}\nData: ${sdf.format(log.timestamp)}"
         }
     }
 } 

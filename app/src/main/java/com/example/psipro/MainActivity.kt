@@ -43,6 +43,13 @@ class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
 
         viewModel = ViewModelProvider(this)[AuthViewModel::class.java]
 
+        // Aplicar tema salvo
+        val themePrefs = getSharedPreferences("settings", MODE_PRIVATE)
+        when (themePrefs.getString("app_theme", "light")) {
+            "dark" -> androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES)
+            "light" -> androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO)
+        }
+
         // Configuração do Google Sign-In
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()

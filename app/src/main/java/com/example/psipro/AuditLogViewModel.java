@@ -19,7 +19,7 @@ public class AuditLogViewModel extends AndroidViewModel {
 
     public AuditLogViewModel(Application application) {
         super(application);
-        AuditLogDao dao = AppDatabase.getInstance(application).auditLogDao();
+        AuditLogDao dao = AppDatabase.getInstance(application.getApplicationContext()).auditLogDao();
         repository = new AuditLogRepository(dao);
     }
 

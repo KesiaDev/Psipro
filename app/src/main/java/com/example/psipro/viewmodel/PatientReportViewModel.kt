@@ -9,6 +9,7 @@ import com.example.psipro.data.repository.PatientReportRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.flow.collect
 
 @HiltViewModel
 class PatientReportViewModel @Inject constructor(
@@ -22,7 +23,9 @@ class PatientReportViewModel @Inject constructor(
 
     fun loadReportsByPatient(patientId: Long) {
         viewModelScope.launch {
-            _reports.value = repository.getReportsByPatient(patientId)
+            repository.getReportsByPatient(patientId).collect { reports ->
+                _reports.value = reports
+            }
         }
     }
 

@@ -24,12 +24,6 @@ import android.widget.Toast
 import android.os.Build
 import android.content.res.Configuration
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
-import com.bumptech.glide.Glide
-import com.example.psipro.state.UserState
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class DashboardActivity : AppCompatActivity() {
@@ -37,127 +31,98 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var navigationView: NavigationView
-
-    @Inject
-    lateinit var userState: UserState
+    private lateinit var drawerToggle: ActionBarDrawerToggle
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDashboardBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Definir barra de navegação e status escuras no modo escuro
-        val nightModeFlags = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-        if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                window.navigationBarColor = ContextCompat.getColor(this, R.color.surface_black)
-                window.statusBarColor = ContextCompat.getColor(this, R.color.surface_black)
-            }
-        } else {
-            // Modo claro: Toolbar com texto e ícones bronze
-            binding.toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.bronze_gold))
-            binding.toolbar.navigationIcon?.setTint(ContextCompat.getColor(this, R.color.bronze_gold))
-            binding.toolbar.overflowIcon?.setTint(ContextCompat.getColor(this, R.color.bronze_gold))
-        }
-
-        // Configurar a toolbar
         setSupportActionBar(binding.toolbar)
 
-        // Forçar cor bronze nos ícones e título da Toolbar (inclusive overflow/3 pontinhos)
-        val bronze = ContextCompat.getColor(this, R.color.bronze_gold)
-        binding.toolbar.setTitleTextColor(bronze)
-        binding.toolbar.setSubtitleTextColor(bronze)
-        binding.toolbar.navigationIcon?.setTint(bronze)
-        binding.toolbar.overflowIcon?.setTint(bronze)
-
-        setupNavigation()
-        observeUserState()
-    }
-
-    private fun setupNavigation() {
-        drawerLayout = binding.drawerLayout
-        navigationView = binding.navView
+        drawerLayout = findViewById(R.id.drawer_layout)
+        navigationView = findViewById(R.id.navigation_view)
 
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
 
         appBarConfiguration = AppBarConfiguration(
-            setOf(R.id.nav_home, R.id.nav_patients, R.id.nav_appointments),
+            setOf(
+                R.id.navigation_home,
+                R.id.navigation_schedule,
+                R.id.navigation_patients,
+                R.id.nav_financeiro,
+                R.id.nav_notificacoes,
+                R.id.nav_aniversariantes,
+                R.id.nav_configuracoes,
+                R.id.nav_suporte
+            ),
             drawerLayout
         )
 
-        setupActionBarWithNavController(navController, appBarConfiguration)
+        binding.toolbar.setupWithNavController(navController, appBarConfiguration)
         navigationView.setupWithNavController(navController)
-    }
 
-    private fun observeUserState() {
-        lifecycleScope.launch {
-            userState.user.collectLatest { user ->
-                user?.let { updateNavigationHeader(it) }
+        drawerToggle = ActionBarDrawerToggle(
+            this, drawerLayout, binding.toolbar,
+            R.string.navigation_drawer_open, R.string.navigation_drawer_close
+        )
+        drawerLayout.addDrawerListener(drawerToggle)
+        drawerToggle.syncState()
+
+        navigationView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.navigation_home -> navController.navigate(R.id.navigation_home)
+                R.id.navigation_schedule -> navController.navigate(R.id.navigation_schedule)
+                R.id.navigation_patients -> navController.navigate(R.id.navigation_patients)
+                R.id.nav_financeiro -> navController.navigate(R.id.nav_financeiro)
+                R.id.nav_notificacoes -> navController.navigate(R.id.nav_notificacoes)
+                R.id.nav_aniversariantes -> navController.navigate(R.id.nav_aniversariantes)
+                R.id.nav_configuracoes -> navController.navigate(R.id.nav_configuracoes)
+                R.id.nav_suporte -> navController.navigate(R.id.nav_suporte)
+                R.id.nav_sair -> {
+                    AuthManager.getInstance().logout()
+                    val intent = Intent(this, MainActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                    finish()
+                }
             }
+            drawerLayout.closeDrawers()
+            true
         }
+
+        val bottomNavigationView = findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottom_navigation)
+        bottomNavigationView.setupWithNavController(navController)
     }
 
-    private fun updateNavigationHeader(user: User) {
+    override fun onResume() {
+        super.onResume()
+        updateDrawerHeader()
+    }
+
+    fun updateDrawerHeader() {
         val headerView = navigationView.getHeaderView(0)
         val nameTextView = headerView.findViewById<TextView>(R.id.nav_header_name)
+        val crpTextView = headerView.findViewById<TextView>(R.id.nav_header_crp)
         val photoImageView = headerView.findViewById<ImageView>(R.id.nav_header_photo)
 
-        nameTextView.text = user.name.ifEmpty { "Profissional" }
-
-        if (user.photoUrl.isNotEmpty()) {
-            Glide.with(this)
-                .load(user.photoUrl)
-                .circleCrop()
-                .into(photoImageView)
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+        nameTextView.text = prefs.getString("profile_name", "Seu Nome aqui")
+        crpTextView.text = prefs.getString("profile_crp", "CRP não informado")
+        // Se tiver foto salva, carregue, senão use ic_account_circle
+        val photoPath = prefs.getString("profile_photo_path", null)
+        if (photoPath != null) {
+            val file = File(photoPath)
+            if (file.exists()) {
+                val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                photoImageView.setImageBitmap(bitmap)
+            } else {
+                photoImageView.setImageResource(R.drawable.ic_account_circle)
+            }
         } else {
-            photoImageView.setImageResource(R.drawable.default_profile)
-        }
-    }
-
-    override fun onPostCreate(savedInstanceState: Bundle?) {
-        super.onPostCreate(savedInstanceState)
-        drawerToggle.drawerArrowDrawable.color = ContextCompat.getColor(this, R.color.bronze_gold)
-        forceHamburgerColorIfLightMode()
-    }
-
-    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
-        super.onConfigurationChanged(newConfig)
-        drawerToggle.drawerArrowDrawable.color = ContextCompat.getColor(this, R.color.bronze_gold)
-        forceHamburgerColorIfLightMode()
-    }
-
-    private fun forceHamburgerColorIfLightMode() {
-        drawerToggle.drawerArrowDrawable.color = ContextCompat.getColor(this, R.color.bronze_gold)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.dashboard_menu, menu)
-        val nightModeFlags = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-        if (nightModeFlags != Configuration.UI_MODE_NIGHT_YES) {
-            for (i in 0 until menu.size()) {
-                menu.getItem(i).icon?.setTint(ContextCompat.getColor(this, R.color.bronze_gold))
-            }
-        }
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_logout -> {
-                AuthManager.getInstance().logout()
-                val intent = Intent(this, MainActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
-                finish()
-                true
-            }
-            R.id.action_settings -> {
-                navController.navigate(R.id.nav_configuracoes)
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
+            photoImageView.setImageResource(R.drawable.ic_account_circle)
         }
     }
 
@@ -166,10 +131,5 @@ class DashboardActivity : AppCompatActivity() {
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        updateNavigationHeader(userState.user.value ?: User(name = "Profissional"))
     }
 } 

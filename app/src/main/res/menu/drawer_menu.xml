@@ -1,7 +1,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/nav_dashboard" android:title="Dashboard" android:icon="@drawable/ic_home" />
-    <item android:id="@+id/nav_agenda" android:title="Agenda" android:icon="@drawable/ic_calendar" />
-    <item android:id="@+id/nav_pacientes" android:title="Pacientes" android:icon="@drawable/ic_people" />
+    <item android:id="@+id/navigation_home" android:title="Dashboard" android:icon="@drawable/ic_home" />
+    <item android:id="@+id/navigation_schedule" android:title="Agenda" android:icon="@drawable/ic_calendar" />
+    <item android:id="@+id/navigation_patients" android:title="Pacientes" android:icon="@drawable/ic_people" />
     <item android:id="@+id/nav_financeiro" android:title="Financeiro" android:icon="@drawable/ic_attach_money" android:titleTextAppearance="@style/DrawerMenuBold" />
     <item android:id="@+id/nav_notificacoes" android:title="Notificações" android:icon="@drawable/ic_notifications" />
     <item android:id="@+id/nav_aniversariantes" android:title="Aniversariantes" android:icon="@drawable/ic_cake" android:titleTextAppearance="@style/DrawerMenuBold" />

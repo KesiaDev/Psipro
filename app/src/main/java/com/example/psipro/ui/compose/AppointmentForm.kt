@@ -1,5 +1,6 @@
 package com.example.psipro.ui.compose
 
+import com.example.psipro.data.entities.AppointmentType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -95,6 +96,7 @@ fun AppointmentForm(
     var notificacaoAtiva by remember { mutableStateOf(false) }
     var tempoAntecedencia by remember { mutableStateOf("") }
     var tipoAntecedencia by remember { mutableStateOf("minutos") }
+    var tipoEvento by remember { mutableStateOf(AppointmentType.CONSULTA) }
 
     val patientViewModel: PatientViewModel = viewModel()
     val patients by patientViewModel.patients.collectAsState()
@@ -187,10 +189,37 @@ fun AppointmentForm(
                 .padding(20.dp)
                 .verticalScroll(scrollState)
         ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                AppointmentType.values().forEach { tipo ->
+                    val selecionado = tipoEvento == tipo
+                    Button(
+                        onClick = { tipoEvento = tipo },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (selecionado) bronzeGold else cardColor,
+                            contentColor = if (selecionado) Color.White else bronzeGold
+                        ),
+                        shape = RoundedCornerShape(20.dp),
+                        modifier = Modifier.weight(1f).padding(horizontal = 2.dp)
+                    ) {
+                        Text(
+                            text = when (tipo) {
+                                AppointmentType.CONSULTA -> "Consulta"
+                                AppointmentType.RECONSULTA -> "Reconsulta"
+                                AppointmentType.PESSOAL -> "Pessoal"
+                            },
+                            fontWeight = if (selecionado) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
             OutlinedTextField(
                 value = titulo,
                 onValueChange = { titulo = it },
-                label = { Text("Título da consulta", color = hintColor) },
+                label = { Text("Título do evento", color = hintColor) },
                 shape = RoundedCornerShape(12.dp),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedBorderColor = bronzeGold,
@@ -219,58 +248,11 @@ fun AppointmentForm(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(10.dp))
-            OutlinedTextField(
-                value = paciente,
-                onValueChange = { },
-                label = { Text("Nome do paciente", color = hintColor) },
-                shape = RoundedCornerShape(12.dp),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = bronzeGold,
-                    unfocusedBorderColor = bronzeGold,
-                    cursorColor = bronzeGold,
-                    focusedLabelColor = hintColor,
-                    unfocusedLabelColor = hintColor
-                ),
-                textStyle = TextStyle(color = textColor),
-                modifier = Modifier.fillMaxWidth(),
-                readOnly = true,
-                trailingIcon = {
-                    IconButton(onClick = { showPatientDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Filled.Search,
-                            contentDescription = "Buscar paciente",
-                            tint = bronzeGold
-                        )
-                    }
-                }
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            OutlinedTextField(
-                value = telefone,
-                onValueChange = { },
-                label = { Text("Telefone do paciente", color = hintColor) },
-                shape = RoundedCornerShape(12.dp),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = bronzeGold,
-                    unfocusedBorderColor = bronzeGold,
-                    cursorColor = bronzeGold,
-                    focusedLabelColor = hintColor,
-                    unfocusedLabelColor = hintColor
-                ),
-                textStyle = TextStyle(color = textColor),
-                modifier = Modifier.fillMaxWidth(),
-                readOnly = true
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(modifier = Modifier.fillMaxWidth()) {
+            if (tipoEvento != AppointmentType.PESSOAL) {
                 OutlinedTextField(
-                    value = valor,
-                    onValueChange = { newValue ->
-                        val clean = newValue.replace("[^\\d]".toRegex(), "")
-                        valorRaw = clean
-                        valor = if (clean.isNotEmpty()) formatCurrencyBR(clean) else ""
-                    },
-                    label = { Text("Valor da sessão", color = hintColor) },
+                    value = paciente,
+                    onValueChange = { },
+                    label = { Text("Nome do paciente", color = hintColor) },
                     shape = RoundedCornerShape(12.dp),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
                         focusedBorderColor = bronzeGold,
@@ -280,11 +262,60 @@ fun AppointmentForm(
                         unfocusedLabelColor = hintColor
                     ),
                     textStyle = TextStyle(color = textColor),
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    placeholder = { Text("R$ 0,00") }
+                    modifier = Modifier.fillMaxWidth(),
+                    readOnly = true,
+                    trailingIcon = {
+                        IconButton(onClick = { showPatientDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Filled.Search,
+                                contentDescription = "Buscar paciente",
+                                tint = bronzeGold
+                            )
+                        }
+                    }
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
+                OutlinedTextField(
+                    value = telefone,
+                    onValueChange = { },
+                    label = { Text("Telefone do paciente", color = hintColor) },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = bronzeGold,
+                        unfocusedBorderColor = bronzeGold,
+                        cursorColor = bronzeGold,
+                        focusedLabelColor = hintColor,
+                        unfocusedLabelColor = hintColor
+                    ),
+                    textStyle = TextStyle(color = textColor),
+                    modifier = Modifier.fillMaxWidth(),
+                    readOnly = true
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+            OutlinedTextField(
+                value = valor,
+                onValueChange = { newValue ->
+                    val clean = newValue.replace("[^\\d]".toRegex(), "")
+                    valorRaw = clean
+                    valor = if (clean.isNotEmpty()) formatCurrencyBR(clean) else ""
+                },
+                label = { Text("Valor da sessão", color = hintColor) },
+                shape = RoundedCornerShape(12.dp),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = bronzeGold,
+                    unfocusedBorderColor = bronzeGold,
+                    cursorColor = bronzeGold,
+                    focusedLabelColor = hintColor,
+                    unfocusedLabelColor = hintColor
+                ),
+                textStyle = TextStyle(color = textColor),
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                placeholder = { Text("R$ 0,00") }
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     value = data,
                     onValueChange = {},
@@ -346,7 +377,6 @@ fun AppointmentForm(
                 )
             }
             Spacer(modifier = Modifier.height(10.dp))
-            // Recorrência Dropdown
             var expanded by remember { mutableStateOf(false) }
             Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
@@ -384,7 +414,6 @@ fun AppointmentForm(
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))
-            // Status e seleção de cor
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Status: ", color = textColor, fontWeight = FontWeight.Bold)
                 Text(status, color = textColor)
@@ -415,7 +444,6 @@ fun AppointmentForm(
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))
-            // Notificação de lembrete
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Aviso de notificação", color = textColor, modifier = Modifier.weight(1f))
                 Switch(
@@ -433,7 +461,6 @@ fun AppointmentForm(
                     OutlinedTextField(
                         value = tempoAntecedencia,
                         onValueChange = { novo ->
-                            // Permite apenas números
                             if (novo.all { it.isDigit() }) tempoAntecedencia = novo
                         },
                         label = { Text("Tempo de antecedência", color = hintColor) },
@@ -451,7 +478,6 @@ fun AppointmentForm(
                         placeholder = { Text("Ex: 30") }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    // Dropdown para minutos/horas
                     var expandedTipo by remember { mutableStateOf(false) }
                     Box {
                         OutlinedButton(onClick = { expandedTipo = true }) {

@@ -48,6 +48,11 @@ class CreateAccountActivity : AppCompatActivity() {
                                 resultIntent.putExtra("email", email)
                                 resultIntent.putExtra("password", password)
                                 setResult(RESULT_OK, resultIntent)
+
+                                // Salvar nome nas SharedPreferences
+                                val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+                                prefs.edit().putString("profile_name", name).apply()
+
                                 finish()
                             } else {
                                 Toast.makeText(this, "Erro ao salvar nome: ${updateTask.exception?.message}", Toast.LENGTH_SHORT).show()

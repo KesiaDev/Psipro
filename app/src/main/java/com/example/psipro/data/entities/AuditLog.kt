@@ -6,9 +6,10 @@ import java.util.Date
 
 @Entity(tableName = "audit_logs")
 data class AuditLog(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val userId: Long?,
-    val action: String, // ex: VIEW, EXPORT, EDIT, DELETE
-    val target: String, // ex: "Paciente:123", "Relatorio:45"
-    val timestamp: Long = System.currentTimeMillis()
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val action: String,
+    val user: String,
+    val timestamp: Date = Date(),
+    val details: String? = null
 ) 

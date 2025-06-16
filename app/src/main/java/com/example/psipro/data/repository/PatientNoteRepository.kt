@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 class PatientNoteRepository(private val patientNoteDao: PatientNoteDao) {
     fun getNotesForPatient(patientId: Long): Flow<List<PatientNote>> {
-        return patientNoteDao.getNotesForPatient(patientId)
+        return patientNoteDao.getNotesByPatient(patientId)
     }
 
     suspend fun insertNote(note: PatientNote): Long {

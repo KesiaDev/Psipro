@@ -18,6 +18,10 @@ enum class RecurrenceType {
     NONE, DAILY, WEEKLY, BIWEEKLY, MONTHLY, CUSTOM
 }
 
+enum class AppointmentType {
+    CONSULTA, RECONSULTA, PESSOAL
+}
+
 @Entity(
     tableName = "appointments",
     foreignKeys = [
@@ -62,7 +66,9 @@ data class Appointment(
     val confirmationDate: Date? = null, // data/hora da confirmação
     val absenceReason: String? = null, // motivo da ausência
     // Cor do agendamento
-    val colorHex: String = "#FFF9C4" // Amarelo suave padrão
+    val colorHex: String = "#FFF9C4", // Amarelo suave padrão
+    val notes: String? = null,
+    val type: AppointmentType = AppointmentType.CONSULTA // NOVO CAMPO
 )
 
 fun generateRecurrenceDates(

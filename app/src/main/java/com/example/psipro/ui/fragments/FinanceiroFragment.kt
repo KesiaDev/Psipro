@@ -44,8 +44,8 @@ class FinanceiroFragment : Fragment() {
 
         lifecycleScope.launch {
             financialRecordRepository.getAll().collectLatest { records ->
-                val totalRecebido = records.filter { it.status == "Pago" }.sumOf { it.amount }
-                val aReceber = records.filter { it.status == "A Receber" || it.status == "Pendente" }.sumOf { it.amount }
+                val totalRecebido = records.filter { it.type == "RECEITA" }.sumOf { it.value }
+                val aReceber = records.filter { it.type == "DESPESA" }.sumOf { it.value }
                 val sessoes = records.size
                 val resumoText = "Total recebido: R$ %.2f\nA receber: R$ %.2f\nSessões: %d".format(totalRecebido, aReceber, sessoes)
                 view.findViewById<android.widget.TextView>(R.id.financeiroResumo)?.text = resumoText
@@ -57,23 +57,19 @@ class FinanceiroFragment : Fragment() {
                 val registros = records.map { rec ->
                     val pacienteNome = pacienteMap[rec.patientId]?.name ?: "Paciente desconhecido"
                     val dataSessao = dateFormat.format(rec.date)
-                    val dataPagamento = rec.paymentDate?.let { dateFormat.format(it) }
                     val descricaoLinha1 = pacienteNome
                     val descricaoLinha2 = "${rec.description} realizada em $dataSessao"
                     val descricaoLinha3 = buildString {
-                        append("R$ %.2f".format(rec.amount))
+                        append("R$ %.2f".format(rec.value))
                         append("  •  ")
-                        append(rec.status)
-                        if (rec.status == "Pago" && dataPagamento != null) {
-                            append(" em $dataPagamento")
-                        }
+                        append(rec.type)
                     }
                     FinanceiroRegistro(
                         id = rec.id,
                         descricao = "$descricaoLinha1\n$descricaoLinha2\n$descricaoLinha3",
-                        valor = rec.amount,
+                        valor = rec.value,
                         data = dataSessao,
-                        status = rec.status
+                        status = rec.type
                     )
                 }
                 recyclerView?.adapter = FinanceiroAdapter(
@@ -98,7 +94,7 @@ class FinanceiroFragment : Fragment() {
         builder.setPositiveButton("Salvar") { _, _ ->
             val novoValor = input.text.toString().toDoubleOrNull() ?: registro.valor
             lifecycleScope.launch {
-                financialRecordRepository.update(record.copy(amount = novoValor))
+                financialRecordRepository.update(record.copy(value = novoValor))
             }
         }
         builder.setNegativeButton("Excluir") { _, _ ->

@@ -8,14 +8,14 @@ import java.util.Date
 
 @Dao
 interface AppointmentDao {
-    @Query("SELECT * FROM appointments ORDER BY date DESC, startTime ASC")
+    @Query("SELECT * FROM appointments ORDER BY date ASC, startTime ASC")
     fun getAllAppointments(): Flow<List<Appointment>>
+
+    @Query("SELECT * FROM appointments WHERE patientId = :patientId ORDER BY date ASC, startTime ASC")
+    fun getAppointmentsByPatient(patientId: Long): Flow<List<Appointment>>
 
     @Query("SELECT * FROM appointments WHERE date = :date ORDER BY startTime ASC")
     fun getAppointmentsByDate(date: Date): Flow<List<Appointment>>
-
-    @Query("SELECT * FROM appointments WHERE patientId = :patientId ORDER BY date DESC, startTime DESC")
-    fun getAppointmentsByPatient(patientId: Long): Flow<List<Appointment>>
 
     @Query("SELECT * FROM appointments WHERE id = :id")
     suspend fun getAppointmentById(id: Long): Appointment?

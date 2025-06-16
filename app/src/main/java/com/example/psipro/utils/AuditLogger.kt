@@ -15,9 +15,9 @@ object AuditLogger {
             val db = AppDatabase.getInstance(context)
             db.auditLogDao().insertLog(
                 AuditLog(
-                    userId = userId,
                     action = action,
-                    target = target
+                    user = userId?.toString() ?: "desconhecido",
+                    details = target
                 )
             )
         }

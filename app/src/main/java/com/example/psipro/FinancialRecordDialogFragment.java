@@ -44,15 +44,12 @@ public class FinancialRecordDialogFragment extends DialogFragment {
                         try {
                             double amount = Double.parseDouble(amountStr);
                             FinancialRecord record = new FinancialRecord(
-                                0, // id (auto)
+                                0L, // id (auto)
                                 patientId,
                                 description,
                                 amount,
-                                new Date(),
-                                "Pendente",
-                                null,
-                                null,
-                                null
+                                "RECEITA", // ou "DESPESA" conforme o caso
+                                new Date()
                             );
                             FinancialRecordDao dao = AppDatabase.getInstance(requireContext()).financialRecordDao();
                             FinancialRecordRepository repo = new FinancialRecordRepository(dao);
