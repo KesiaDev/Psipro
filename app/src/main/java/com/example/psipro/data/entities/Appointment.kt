@@ -42,7 +42,7 @@ data class Appointment(
     val id: Long = 0,
     val title: String,
     val description: String? = null,
-    val patientId: Long,
+    val patientId: Long?,
     val patientName: String,
     val patientPhone: String,
     val date: Date,

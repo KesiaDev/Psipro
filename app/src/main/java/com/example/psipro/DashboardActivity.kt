@@ -64,6 +64,12 @@ class DashboardActivity : AppCompatActivity() {
         binding.toolbar.setupWithNavController(navController, appBarConfiguration)
         navigationView.setupWithNavController(navController)
 
+        // Verifica se há uma instrução para navegar para um destino específico
+        val navigateTo = intent.getIntExtra("NAVIGATE_TO", -1)
+        if (navigateTo != -1) {
+            navController.navigate(navigateTo)
+        }
+
         drawerToggle = ActionBarDrawerToggle(
             this, drawerLayout, binding.toolbar,
             R.string.navigation_drawer_open, R.string.navigation_drawer_close

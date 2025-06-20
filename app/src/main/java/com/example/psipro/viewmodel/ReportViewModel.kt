@@ -9,6 +9,7 @@ import com.example.psipro.reports.AppointmentReportGenerator
 import com.example.psipro.reports.PatientReport
 import com.example.psipro.reports.PeriodReport
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.*
@@ -52,8 +53,8 @@ class ReportViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val appointments = appointmentRepository.getAppointmentsByDateRange(startDate, endDate).first()
-                val patientIds = appointments.map { it.patientId }.distinct()
-                
+                val patientIds = appointments.mapNotNull { it.patientId }.distinct()
+
                 val patients = patientIds.mapNotNull { id ->
                     patientRepository.getPatientById(id)?.let { patient ->
                         id to patient

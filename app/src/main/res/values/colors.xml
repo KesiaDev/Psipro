@@ -12,7 +12,7 @@
     <color name="gold_dark">#FFB8860B</color>
     <color name="background_black">#FF121212</color>
     <color name="surface_black">#FF1E1E1E</color>
-    <color name="bronze_gold">#B08D57</color>
+    <color name="bronze_gold">#D4AF37</color>
     <color name="bronze_gold_light">#E5D1B8</color>
     <color name="bronze_gold_dark">#8C6B3F</color>
     <color name="background_card_dark">#232323</color>
@@ -55,8 +55,8 @@
     <color name="agenda_toggle_text">#000000</color>
     <color name="agenda_fab">#CDA552</color>
     <color name="agenda_fab_ripple">#26CDA552</color>
-    <color name="primary_bronze">#CDA552</color>
-    <color name="primary_bronze_translucent">#26CDA552</color>
+    <color name="primary_bronze">#C0A062</color>
+    <color name="primary_bronze_translucent">#99C0A062</color>
     <color name="background_light">#FFFFFF</color>
     <color name="background_dark">#121212</color>
     <color name="text_light">#000000</color>
@@ -68,4 +68,5 @@
     <color name="colorPrimary">@color/gold</color>
     <color name="ic_launcher_background">#070707</color>
     <color name="background_card">#FFFFFFFF</color>
+    <color name="bronze_dark">#8C7853</color>
 </resources>

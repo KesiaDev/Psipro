@@ -1,588 +1,453 @@
 package com.example.psipro.ui.compose
 
-import com.example.psipro.data.entities.AppointmentType
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.example.psipro.R
-import androidx.compose.foundation.isSystemInDarkTheme
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog as AndroidTimePickerDialog
-import androidx.compose.ui.platform.LocalContext
-import java.util.Calendar
-import androidx.compose.foundation.border
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.runtime.DisposableEffect
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.material.icons.filled.Search
+import com.example.psipro.data.entities.Appointment
+import com.example.psipro.data.entities.AppointmentStatus
+import com.example.psipro.data.entities.Patient
+import com.example.psipro.viewmodel.AppointmentViewModel
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.*
 
-import java.text.NumberFormat
-import java.util.Locale
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
-import com.example.psipro.ui.viewmodels.PatientViewModel
+private data class StatusOption(val label: String, val color: Color)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppointmentForm(
-    initialPatientName: String = "",
-    initialPatientPhone: String = "",
-    initialDate: String = "",
-    initialStartTime: String = "",
-    initialEndTime: String = "",
-    onSave: (
-        notificacaoAtiva: Boolean,
-        tempoAntecedencia: String,
-        tipoAntecedencia: String,
-        titulo: String,
-        descricao: String,
-        paciente: String,
-        telefone: String,
-        valor: String,
-        data: String,
-        horaInicio: String,
-        horaFim: String
-    ) -> Unit = { _, _, _, _, _, _, _, _, _, _, _ -> }
+    onDismiss: () -> Unit,
+    initialDate: LocalDate? = null,
+    initialHour: Int? = null,
+    patients: List<Patient> = emptyList(),
+    viewModel: AppointmentViewModel,
+    existingAppointment: Appointment? = null
 ) {
-    android.util.Log.d("AppointmentForm", "Dados recebidos no formulário: Nome=$initialPatientName, Telefone=$initialPatientPhone")
-    
-    val bronzeGold = colorResource(id = R.color.primary_bronze)
-    val isDark = isSystemInDarkTheme()
-    val textColor = if (isDark) Color.White else Color(0xFF222222)
-    val hintColor = if (isDark) Color(0xFFBBBBBB) else Color(0xFF999999)
-    val cardColor = if (isDark) Color(0xFF232323) else Color.White
-    val buttonTextColor = if (isDark) Color.Black else Color.White
-    val colorOptions = listOf(
-        Color(0xFFD4AF37), // bronze
-        Color(0xFFE0C066), // amarelo
-        Color(0xFFB0B0B0), // cinza
-        Color(0xFFF5E9DA), // bege claro
-        Color(0xFFE57373)  // vermelho claro
-    )
-    val context = LocalContext.current
+    val isEditing = existingAppointment != null
 
-    
-    var titulo by remember { mutableStateOf("") }
-    var descricao by remember { mutableStateOf("") }
-    var paciente by remember { mutableStateOf(initialPatientName) }
-    var telefone by remember { mutableStateOf(initialPatientPhone) }
-    var valorRaw by remember { mutableStateOf("") }
-    var valor by remember { mutableStateOf("") }
-    var data by remember { mutableStateOf(initialDate) }
-    var horaInicio by remember { mutableStateOf(initialStartTime) }
-    var horaFim by remember { mutableStateOf(initialEndTime) }
-    var recorrencia by remember { mutableStateOf("") }
-    var status by remember { mutableStateOf("Não respondido") }
-    var selectedColor by remember { mutableStateOf(colorOptions[0]) }
+    var eventTypeIndex by remember { mutableStateOf(0) }
+    val eventTypes = listOf("Consulta", "Reconsulta", "Pessoal")
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var selectedDate by remember {
+        mutableStateOf(
+            initialDate?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: ""
+        )
+    }
+    var startTime by remember {
+        mutableStateOf(
+            initialHour?.let { String.format("%02d:00", it) } ?: ""
+        )
+    }
+    var endTime by remember {
+        mutableStateOf(
+            initialHour?.let { String.format("%02d:00", it + 1) } ?: ""
+        )
+    }
+    var statusIndex by remember { mutableStateOf(0) }
+
     var showDatePicker by remember { mutableStateOf(false) }
-    var showTimePickerInicio by remember { mutableStateOf(false) }
-    var showTimePickerFim by remember { mutableStateOf(false) }
-    var showPatientDialog by remember { mutableStateOf(false) }
-    var selectedPatientId by remember { mutableStateOf<Long?>(null) }
-    var notificacaoAtiva by remember { mutableStateOf(false) }
-    var tempoAntecedencia by remember { mutableStateOf("") }
-    var tipoAntecedencia by remember { mutableStateOf("minutos") }
-    var tipoEvento by remember { mutableStateOf(AppointmentType.CONSULTA) }
+    var showTimePicker by remember { mutableStateOf<String?>(null) } // "start" or "end"
 
-    val patientViewModel: PatientViewModel = viewModel()
-    val patients by patientViewModel.patients.collectAsState()
+    var patientDropdownExpanded by remember { mutableStateOf(false) }
+    var selectedPatient by remember { mutableStateOf<Patient?>(null) }
 
-    var searchQuery by remember { mutableStateOf("") }
+    val statusOptions = listOf(
+        StatusOption("Pendente", Color(0xFFD4AF37)),
+        StatusOption("Confirmado", Color(0xFF4CAF50)),
+        StatusOption("Cancelado", Color(0xFFF44336)),
+        StatusOption("Realizado", Color(0xFF2196F3)),
+        StatusOption("Faltou", Color(0xFF9E9E9E))
+    )
 
-    if (showDatePicker) {
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            onDateChange = { year, month, day ->
-                data = "%02d/%02d/%04d".format(day, month + 1, year)
-                showDatePicker = false
-            }
-        )
-    }
-    if (showTimePickerInicio) {
-        TimePickerDialog(
-            onDismissRequest = { showTimePickerInicio = false },
-            onTimeChange = { hour, minute ->
-                horaInicio = "%02d:%02d".format(hour, minute)
-                showTimePickerInicio = false
-            }
-        )
-    }
-    if (showTimePickerFim) {
-        TimePickerDialog(
-            onDismissRequest = { showTimePickerFim = false },
-            onTimeChange = { hour, minute ->
-                horaFim = "%02d:%02d".format(hour, minute)
-                showTimePickerFim = false
-            }
-        )
+    val statusEnumMap = mapOf(
+        0 to AppointmentStatus.SCHEDULED,
+        1 to AppointmentStatus.COMPLETED, // Usando COMPLETED para "Confirmado"
+        2 to AppointmentStatus.CANCELLED,
+        3 to AppointmentStatus.COMPLETED,
+        4 to AppointmentStatus.NO_SHOW
+    )
+
+    LaunchedEffect(existingAppointment) {
+        if (existingAppointment != null) {
+            title = existingAppointment.title
+            description = existingAppointment.description ?: ""
+            val zonedDateTime = existingAppointment.date.toInstant().atZone(ZoneId.systemDefault())
+            selectedDate = zonedDateTime.toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+            startTime = existingAppointment.startTime
+            endTime = existingAppointment.endTime
+            selectedPatient = patients.find { it.id == existingAppointment.patientId }
+            statusIndex = statusEnumMap.entries.find { it.value == existingAppointment.status }?.key ?: 0
+        }
     }
 
-    if (showPatientDialog) {
-        AlertDialog(
-            onDismissRequest = { showPatientDialog = false },
-            title = { Text("Selecionar paciente") },
-            text = {
-                Column {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = {
-                            searchQuery = it
-                            patientViewModel.setSearchQuery(it)
-                        },
-                        label = { Text("Buscar...") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Column {
-                        patients.forEach { patient ->
-                            Row(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        paciente = patient.name
-                                        telefone = patient.phone
-                                        showPatientDialog = false
-                                    }
-                                    .padding(8.dp)
-                            ) {
-                                Text(patient.name, fontWeight = FontWeight.Bold)
-                                Spacer(Modifier.width(8.dp))
-                                Text(patient.phone, color = Color.Gray)
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showPatientDialog = false }) {
-                    Text("Fechar")
-                }
-            }
-        )
-    }
+    val appointmentColors = listOf(
+        "#FFAB91", "#FFCC80", "#FFE082", "#A5D6A7", "#80CBC4", "#81D4FA", "#CE93D8"
+    )
 
-    Card(
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = cardColor),
-        elevation = CardDefaults.cardElevation(8.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
+    val bronzeGold = colorResource(id = R.color.primary_bronze)
+    val bronzeDark = colorResource(id = R.color.bronze_dark)
+    val customTextFieldColors = TextFieldDefaults.outlinedTextFieldColors(
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        cursorColor = bronzeGold,
+        focusedBorderColor = bronzeDark,
+        unfocusedBorderColor = bronzeDark.copy(alpha = 0.7f),
+        focusedLabelColor = bronzeDark,
+        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+    )
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        val scrollState = rememberScrollState()
-        Column(
+        Card(
             modifier = Modifier
-                .padding(20.dp)
-                .verticalScroll(scrollState)
+                .fillMaxWidth(0.95f)
+                .wrapContentHeight()
+                .padding(vertical = 32.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                AppointmentType.values().forEach { tipo ->
-                    val selecionado = tipoEvento == tipo
-                    Button(
-                        onClick = { tipoEvento = tipo },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (selecionado) bronzeGold else cardColor,
-                            contentColor = if (selecionado) Color.White else bronzeGold
-                        ),
-                        shape = RoundedCornerShape(20.dp),
-                        modifier = Modifier.weight(1f).padding(horizontal = 2.dp)
-                    ) {
-                        Text(
-                            text = when (tipo) {
-                                AppointmentType.CONSULTA -> "Consulta"
-                                AppointmentType.RECONSULTA -> "Reconsulta"
-                                AppointmentType.PESSOAL -> "Pessoal"
-                            },
-                            fontWeight = if (selecionado) FontWeight.Bold else FontWeight.Normal
-                        )
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            OutlinedTextField(
-                value = titulo,
-                onValueChange = { titulo = it },
-                label = { Text("Título do evento", color = hintColor) },
-                shape = RoundedCornerShape(12.dp),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = bronzeGold,
-                    unfocusedBorderColor = bronzeGold,
-                    cursorColor = bronzeGold,
-                    focusedLabelColor = hintColor,
-                    unfocusedLabelColor = hintColor
-                ),
-                textStyle = TextStyle(color = textColor),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            OutlinedTextField(
-                value = descricao,
-                onValueChange = { descricao = it },
-                label = { Text("Descrição", color = hintColor) },
-                shape = RoundedCornerShape(12.dp),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = bronzeGold,
-                    unfocusedBorderColor = bronzeGold,
-                    cursorColor = bronzeGold,
-                    focusedLabelColor = hintColor,
-                    unfocusedLabelColor = hintColor
-                ),
-                textStyle = TextStyle(color = textColor),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            if (tipoEvento != AppointmentType.PESSOAL) {
-                OutlinedTextField(
-                    value = paciente,
-                    onValueChange = { },
-                    label = { Text("Nome do paciente", color = hintColor) },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = bronzeGold,
-                        unfocusedBorderColor = bronzeGold,
-                        cursorColor = bronzeGold,
-                        focusedLabelColor = hintColor,
-                        unfocusedLabelColor = hintColor
-                    ),
-                    textStyle = TextStyle(color = textColor),
-                    modifier = Modifier.fillMaxWidth(),
-                    readOnly = true,
-                    trailingIcon = {
-                        IconButton(onClick = { showPatientDialog = true }) {
-                            Icon(
-                                imageVector = Icons.Filled.Search,
-                                contentDescription = "Buscar paciente",
-                                tint = bronzeGold
-                            )
-                        }
-                    }
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                OutlinedTextField(
-                    value = telefone,
-                    onValueChange = { },
-                    label = { Text("Telefone do paciente", color = hintColor) },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = bronzeGold,
-                        unfocusedBorderColor = bronzeGold,
-                        cursorColor = bronzeGold,
-                        focusedLabelColor = hintColor,
-                        unfocusedLabelColor = hintColor
-                    ),
-                    textStyle = TextStyle(color = textColor),
-                    modifier = Modifier.fillMaxWidth(),
-                    readOnly = true
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-            OutlinedTextField(
-                value = valor,
-                onValueChange = { newValue ->
-                    val clean = newValue.replace("[^\\d]".toRegex(), "")
-                    valorRaw = clean
-                    valor = if (clean.isNotEmpty()) formatCurrencyBR(clean) else ""
-                },
-                label = { Text("Valor da sessão", color = hintColor) },
-                shape = RoundedCornerShape(12.dp),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = bronzeGold,
-                    unfocusedBorderColor = bronzeGold,
-                    cursorColor = bronzeGold,
-                    focusedLabelColor = hintColor,
-                    unfocusedLabelColor = hintColor
-                ),
-                textStyle = TextStyle(color = textColor),
-                modifier = Modifier.weight(1f),
-                singleLine = true,
-                placeholder = { Text("R$ 0,00") }
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = data,
-                    onValueChange = {},
-                    label = { Text("Data", color = hintColor) },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = bronzeGold,
-                        unfocusedBorderColor = bronzeGold,
-                        cursorColor = bronzeGold,
-                        focusedLabelColor = hintColor,
-                        unfocusedLabelColor = hintColor
-                    ),
-                    textStyle = TextStyle(color = textColor),
-                    modifier = Modifier.weight(1f).clickable { showDatePicker = true },
-                    readOnly = true,
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Filled.AccessTime,
-                            contentDescription = "Selecionar data",
-                            tint = bronzeGold
-                        )
-                    }
-                )
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = horaInicio,
-                    onValueChange = {},
-                    label = { Text("Hora de início", color = hintColor) },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = bronzeGold,
-                        unfocusedBorderColor = bronzeGold,
-                        cursorColor = bronzeGold,
-                        focusedLabelColor = hintColor,
-                        unfocusedLabelColor = hintColor
-                    ),
-                    textStyle = TextStyle(color = textColor),
-                    modifier = Modifier.weight(1f).clickable { showTimePickerInicio = true },
-                    readOnly = true
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                OutlinedTextField(
-                    value = horaFim,
-                    onValueChange = {},
-                    label = { Text("Hora de término", color = hintColor) },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = bronzeGold,
-                        unfocusedBorderColor = bronzeGold,
-                        cursorColor = bronzeGold,
-                        focusedLabelColor = hintColor,
-                        unfocusedLabelColor = hintColor
-                    ),
-                    textStyle = TextStyle(color = textColor),
-                    modifier = Modifier.weight(1f).clickable { showTimePickerFim = true },
-                    readOnly = true
-                )
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            var expanded by remember { mutableStateOf(false) }
-            Box(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = recorrencia,
-                    onValueChange = {},
-                    label = { Text("Recorrência", color = hintColor) },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = bronzeGold,
-                        unfocusedBorderColor = bronzeGold,
-                        cursorColor = bronzeGold,
-                        focusedLabelColor = hintColor,
-                        unfocusedLabelColor = hintColor
-                    ),
-                    textStyle = TextStyle(color = textColor),
-                    modifier = Modifier.fillMaxWidth().clickable { expanded = true },
-                    readOnly = true,
-                    trailingIcon = {
-                        Icon(Icons.Filled.AccessTime, contentDescription = "Abrir opções", tint = bronzeGold)
-                    }
-                )
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    listOf("Não repetir", "Diária", "Semanal", "Mensal").forEach { option ->
-                        DropdownMenuItem(
-                            text = { Text(option) },
-                            onClick = {
-                                recorrencia = option
-                                expanded = false
-                            }
-                        )
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Status: ", color = textColor, fontWeight = FontWeight.Bold)
-                Text(status, color = textColor)
-                Spacer(modifier = Modifier.width(16.dp))
-                colorOptions.forEach { color ->
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .padding(2.dp)
-                            .background(color, CircleShape)
-                            .clickable {
-                                selectedColor = color
-                                status = when (color) {
-                                    colorOptions[0] -> "Não respondido"
-                                    colorOptions[1] -> "Confirmado"
-                                    colorOptions[2] -> "Remarcado"
-                                    colorOptions[3] -> "Cancelado"
-                                    colorOptions[4] -> "Faltou"
-                                    else -> "Não respondido"
-                                }
-                            }
-                            .border(
-                                width = if (selectedColor == color) 2.dp else 0.dp,
-                                color = if (selectedColor == color) bronzeGold else Color.Transparent,
-                                shape = CircleShape
-                            )
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Aviso de notificação", color = textColor, modifier = Modifier.weight(1f))
-                Switch(
-                    checked = notificacaoAtiva,
-                    onCheckedChange = { notificacaoAtiva = it },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = bronzeGold,
-                        checkedTrackColor = bronzeGold.copy(alpha = 0.5f)
-                    )
-                )
-            }
-            if (notificacaoAtiva) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(
-                        value = tempoAntecedencia,
-                        onValueChange = { novo ->
-                            if (novo.all { it.isDigit() }) tempoAntecedencia = novo
-                        },
-                        label = { Text("Tempo de antecedência", color = hintColor) },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            focusedBorderColor = bronzeGold,
-                            unfocusedBorderColor = bronzeGold,
-                            cursorColor = bronzeGold,
-                            focusedLabelColor = hintColor,
-                            unfocusedLabelColor = hintColor
-                        ),
-                        textStyle = TextStyle(color = textColor),
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        placeholder = { Text("Ex: 30") }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    var expandedTipo by remember { mutableStateOf(false) }
-                    Box {
-                        OutlinedButton(onClick = { expandedTipo = true }) {
-                            Text(tipoAntecedencia)
-                        }
-                        DropdownMenu(
-                            expanded = expandedTipo,
-                            onDismissRequest = { expandedTipo = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("minutos") },
-                                onClick = {
-                                    tipoAntecedencia = "minutos"
-                                    expandedTipo = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("horas") },
-                                onClick = {
-                                    tipoAntecedencia = "horas"
-                                    expandedTipo = false
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(18.dp))
-            Button(
-                onClick = {
-                    onSave(
-                        notificacaoAtiva,
-                        tempoAntecedencia,
-                        tipoAntecedencia,
-                        titulo,
-                        descricao,
-                        paciente,
-                        telefone,
-                        valor,
-                        data,
-                        horaInicio,
-                        horaFim
-                    )
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = bronzeGold, contentColor = buttonTextColor),
-                shape = RoundedCornerShape(12.dp),
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("SALVAR", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                SegmentedButton(
+                    items = eventTypes,
+                    selectedIndex = eventTypeIndex,
+                    onSelectedIndexChange = { eventTypeIndex = it }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Título do evento") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = customTextFieldColors,
+                    shape = RoundedCornerShape(8.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Descrição") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = customTextFieldColors,
+                    shape = RoundedCornerShape(8.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (eventTypes[eventTypeIndex] != "Pessoal") {
+                    ExposedDropdownMenuBox(
+                        expanded = patientDropdownExpanded,
+                        onExpandedChange = { patientDropdownExpanded = !patientDropdownExpanded },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = selectedPatient?.name ?: "",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Paciente") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = patientDropdownExpanded) },
+                            colors = customTextFieldColors,
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = patientDropdownExpanded,
+                            onDismissRequest = { patientDropdownExpanded = false }
+                        ) {
+                            patients.forEach { patient ->
+                                DropdownMenuItem(
+                                    text = { Text(patient.name) },
+                                    onClick = {
+                                        selectedPatient = patient
+                                        patientDropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = selectedDate,
+                    onValueChange = {},
+                    label = { Text("Data") },
+                    readOnly = true,
+                    modifier = Modifier.fillMaxWidth().clickable(onClick = { showDatePicker = true }),
+                    trailingIcon = {
+                        IconButton(onClick = { showDatePicker = true }) {
+                            Icon(imageVector = Icons.Default.DateRange, contentDescription = "Selecionar data")
+                        }
+                    },
+                    colors = customTextFieldColors,
+                    shape = RoundedCornerShape(8.dp)
+                )
+
+                if (showDatePicker) {
+                    val context = LocalContext.current
+                    val calendar = Calendar.getInstance()
+                    DatePickerDialog(
+                        context,
+                        { _, year, month, dayOfMonth ->
+                            selectedDate = "$dayOfMonth/${month + 1}/$year"
+                            showDatePicker = false
+                        },
+                        calendar.get(Calendar.YEAR),
+                        calendar.get(Calendar.MONTH),
+                        calendar.get(Calendar.DAY_OF_MONTH)
+                    ).show()
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = startTime,
+                        onValueChange = { },
+                        label = { Text("Hora de início") },
+                        readOnly = true,
+                        modifier = Modifier.weight(1f).clickable { showTimePicker = "start" },
+                        colors = customTextFieldColors,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    OutlinedTextField(
+                        value = endTime,
+                        onValueChange = { },
+                        label = { Text("Hora de término") },
+                        readOnly = true,
+                        modifier = Modifier.weight(1f).clickable { showTimePicker = "end" },
+                        colors = customTextFieldColors,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                }
+
+                if (showTimePicker != null) {
+                    val context = LocalContext.current
+                    val calendar = Calendar.getInstance()
+                    val isStartTime = showTimePicker == "start"
+                    TimePickerDialog(
+                        context,
+                        { _, hour, minute ->
+                            val time = String.format("%02d:%02d", hour, minute)
+                            if (isStartTime) {
+                                startTime = time
+                                // Auto-update end time
+                                val endCalendar = Calendar.getInstance().apply {
+                                    set(Calendar.HOUR_OF_DAY, hour)
+                                    set(Calendar.MINUTE, minute)
+                                    add(Calendar.HOUR_OF_DAY, 1)
+                                }
+                                endTime = String.format("%02d:%02d", endCalendar.get(Calendar.HOUR_OF_DAY), endCalendar.get(Calendar.MINUTE))
+                            } else {
+                                endTime = time
+                            }
+                            showTimePicker = null
+                        },
+                        calendar.get(Calendar.HOUR_OF_DAY),
+                        calendar.get(Calendar.MINUTE),
+                        true
+                    ).show()
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                StatusSelector(
+                    statusOptions = statusOptions,
+                    selectedIndex = statusIndex,
+                    onSelectedIndexChange = { statusIndex = it }
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        val newOrUpdatedAppointment = Appointment(
+                            id = if(isEditing) existingAppointment!!.id else 0,
+                            title = if(title.isBlank() && selectedPatient != null) selectedPatient!!.name else title,
+                            description = description,
+                            date = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(selectedDate) ?: Date(),
+                            startTime = startTime,
+                            endTime = endTime,
+                            patientId = selectedPatient?.id,
+                            patientName = selectedPatient?.name ?: "Pessoal",
+                            status = statusEnumMap[statusIndex] ?: AppointmentStatus.SCHEDULED,
+                            colorHex = existingAppointment?.colorHex ?: appointmentColors.random(),
+                            patientPhone = selectedPatient?.phone ?: ""
+                        )
+
+                        viewModel.addAppointment(
+                            appointment = newOrUpdatedAppointment,
+                            onSuccess = { onDismiss() },
+                            onConflict = { /* TODO: handle conflict */ },
+                            onError = { /* TODO: handle error */ }
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = bronzeGold)
+                ) {
+                    Text(text = if(isEditing) "Salvar Alterações" else "Agendar", fontSize = 16.sp)
+                }
             }
         }
     }
 }
 
 @Composable
-fun DatePickerDialog(
-    onDismissRequest: () -> Unit,
-    onDateChange: (Int, Int, Int) -> Unit
+private fun StatusSelector(
+    statusOptions: List<StatusOption>,
+    selectedIndex: Int,
+    onSelectedIndexChange: (Int) -> Unit
 ) {
-    val context = LocalContext.current
-    val calendar = remember { Calendar.getInstance() }
-    DisposableEffect(Unit) {
-        val dialog = DatePickerDialog(
-            context,
-            { _, year, month, dayOfMonth ->
-                onDateChange(year, month, dayOfMonth)
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-        dialog.setOnDismissListener { onDismissRequest() }
-        dialog.show()
-        onDispose { dialog.dismiss() }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Status: ", fontWeight = FontWeight.Bold)
+            Text(
+                text = statusOptions[selectedIndex].label,
+                color = statusOptions[selectedIndex].color,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Row {
+            statusOptions.forEachIndexed { index, option ->
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .padding(4.dp)
+                        .clip(CircleShape)
+                        .background(option.color)
+                        .clickable { onSelectedIndexChange(index) }
+                        .then(
+                            if (selectedIndex == index) {
+                                Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                            } else Modifier
+                        )
+                )
+            }
+        }
     }
 }
 
 @Composable
-fun TimePickerDialog(
-    onDismissRequest: () -> Unit,
-    onTimeChange: (Int, Int) -> Unit
+fun SegmentedControl(
+    items: List<String>,
+    selectedIndex: Int,
+    onSelectedIndexChange: (Int) -> Unit
 ) {
-    val context = LocalContext.current
-    val calendar = remember { Calendar.getInstance() }
-    DisposableEffect(Unit) {
-        val dialog = AndroidTimePickerDialog(
-            context,
-            { _, hourOfDay, minute ->
-                onTimeChange(hourOfDay, minute)
-            },
-            calendar.get(Calendar.HOUR_OF_DAY),
-            calendar.get(Calendar.MINUTE),
-            true
-        )
-        dialog.setOnDismissListener { onDismissRequest() }
-        dialog.show()
-        onDispose { dialog.dismiss() }
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .height(IntrinsicSize.Min)
+    ) {
+        items.forEachIndexed { index, item ->
+            val isSelected = selectedIndex == index
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .clickable { onSelectedIndexChange(index) }
+                    .padding(horizontal = 4.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = item,
+                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                    fontSize = 12.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                )
+            }
+        }
     }
 }
 
-fun formatCurrencyBR(input: String): String {
-    val cleanString = input.replace("[R$,.\\s]".toRegex(), "")
-    if (cleanString.isEmpty()) return ""
-    val parsed = cleanString.toDouble() / 100
-    return NumberFormat.getCurrencyInstance(Locale("pt", "BR")).format(parsed)
-} 
+@Composable
+fun SegmentedButton(
+    items: List<String>,
+    selectedIndex: Int,
+    onSelectedIndexChange: (Int) -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .height(IntrinsicSize.Min)
+        ) {
+            items.forEachIndexed { index, item ->
+                val isSelected = selectedIndex == index
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .background(
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .clickable { onSelectedIndexChange(index) }
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = item,
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                    )
+                }
+            }
+        }
+    }
+}

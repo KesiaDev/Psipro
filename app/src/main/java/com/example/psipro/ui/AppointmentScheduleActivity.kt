@@ -222,18 +222,20 @@ class AppointmentScheduleActivity : SecureActivity() {
         if (isEdit) {
             // Fill in existing appointment data
             lifecycleScope.launch {
-                val patient = patientViewModel.getPatientById(appointment!!.patientId)
-                selectedPatient = patient
-                dialogBinding.apply {
-                    titleInput.setText(appointment.title)
-                    descriptionInput.setText(appointment.description)
-                    patientNameInput.setText(patient?.name ?: "")
-                    patientPhoneInput.setText(patient?.phone ?: "")
-                    dateInput.setText(dateFormat.format(appointment.date))
-                    startTimeInput.setText(appointment.startTime)
-                    endTimeInput.setText(appointment.endTime)
-                    reminderSwitch.isChecked = appointment.reminderEnabled
-                    reminderMinutesInput.setText(appointment.reminderMinutes.toString())
+                appointment?.patientId?.let { patientId ->
+                    val patient = patientViewModel.getPatientById(patientId)
+                    selectedPatient = patient
+                    dialogBinding.apply {
+                        titleInput.setText(appointment.title)
+                        descriptionInput.setText(appointment.description)
+                        patientNameInput.setText(patient?.name ?: "")
+                        patientPhoneInput.setText(patient?.phone ?: "")
+                        dateInput.setText(dateFormat.format(appointment.date))
+                        startTimeInput.setText(appointment.startTime)
+                        endTimeInput.setText(appointment.endTime)
+                        reminderSwitch.isChecked = appointment.reminderEnabled
+                        reminderMinutesInput.setText(appointment.reminderMinutes.toString())
+                    }
                 }
             }
         }
@@ -409,23 +411,28 @@ class AppointmentScheduleActivity : SecureActivity() {
                                         putExtra("message", mensagem)
                                         putExtra("patientId", newAppointment.patientId)
                                     }
-                                    val pendingIntent = android.app.PendingIntent.getBroadcast(
-                                        this@AppointmentScheduleActivity,
-                                        newAppointment.patientId.toInt(),
-                                        intent,
-                                        android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
-                                    )
-                                    // Disparar 1 dia antes da consulta, às 8h da manhã
-                                    val cal = java.util.Calendar.getInstance().apply {
-                                        time = newAppointment.date
-                                        set(java.util.Calendar.HOUR_OF_DAY, 8)
-                                        set(java.util.Calendar.MINUTE, 0)
-                                        set(java.util.Calendar.SECOND, 0)
-                                        add(java.util.Calendar.DATE, -1)
+                                    newAppointment.patientId?.let { patientId ->
+                                        val pendingIntent = android.app.PendingIntent.getBroadcast(
+                                            this@AppointmentScheduleActivity,
+                                            patientId.toInt(),
+                                            intent,
+                                            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+                                        )
+
+                                        // Disparar 1 dia antes da consulta, às 8h da manhã
+                                        val cal = java.util.Calendar.getInstance().apply {
+                                            time = newAppointment.date
+                                            set(java.util.Calendar.HOUR_OF_DAY, 8)
+                                            set(java.util.Calendar.MINUTE, 0)
+                                            set(java.util.Calendar.SECOND, 0)
+                                            add(java.util.Calendar.DATE, -1)
+                                        }
+
+                                        val triggerAtMillis = cal.timeInMillis
+                                        val alarmManager = this.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
+                                        alarmManager.setExact(android.app.AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
                                     }
-                                    val triggerAtMillis = cal.timeInMillis
-                                    val alarmManager = this.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
-                                    alarmManager.setExact(android.app.AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+                                    Toast.makeText(this@AppointmentScheduleActivity, "Consulta Salva", Toast.LENGTH_SHORT).show()
                                 }
                                 .setNegativeButton("Cancelar", null)
                                 .show()

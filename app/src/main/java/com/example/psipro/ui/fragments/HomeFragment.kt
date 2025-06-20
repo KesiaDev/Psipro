@@ -18,6 +18,7 @@ import com.example.psipro.databinding.FragmentHomeBinding
 import com.example.psipro.viewmodel.AppointmentViewModel
 import com.example.psipro.viewmodel.PatientViewModel
 import com.example.psipro.data.entities.Appointment
+import com.example.psipro.data.entities.AppointmentStatus
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -79,11 +80,9 @@ class HomeFragment : Fragment() {
     private fun setupRecyclerView() {
         appointmentAdapter = AppointmentAdapter(
             onItemClick = { appointment ->
-                val dialog = com.example.psipro.ui.fragments.AppointmentDialogFragment()
-                val args = Bundle()
-                args.putLong("appointment_id", appointment.id)
-                dialog.arguments = args
-                dialog.show(parentFragmentManager, "editAppointmentDialog")
+                // A navegação para edição será feita a partir da tela da agenda principal.
+                // Clicar aqui não fará nada por enquanto.
+                Toast.makeText(requireContext(), "Edite o agendamento na tela da Agenda", Toast.LENGTH_SHORT).show()
             },
             onItemLongClick = { appointment -> },
             onRecurrenceClick = { appointment -> }
@@ -161,8 +160,15 @@ class HomeFragment : Fragment() {
                 if (binding.appointmentsTabLayout.selectedTabPosition == 0) {
                     appointmentAdapter.submitList(todayAppointments)
                 }
-                // Atualiza o resumo do dia sempre que a lista de hoje mudar
-                binding.appointmentsCountText.text = "Consultas hoje: ${todayAppointments.size}"
+
+                // Atualiza os contadores de resumo do dia
+                val totalHoje = todayAppointments.size
+                val atendidas = todayAppointments.count { it.status == AppointmentStatus.COMPLETED }
+                val faltas = todayAppointments.count { it.status == AppointmentStatus.NO_SHOW }
+
+                binding.appointmentsCountText.text = totalHoje.toString()
+                binding.tvAtendidas.text = atendidas.toString()
+                binding.tvFaltas.text = faltas.toString()
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
@@ -190,7 +196,13 @@ class HomeFragment : Fragment() {
             0 -> {
                 appointmentAdapter.submitList(todayAppointments)
                 // Atualiza o resumo do dia ao trocar para a aba HOJE
-                binding.appointmentsCountText.text = "Consultas hoje: ${todayAppointments.size}"
+                val totalHoje = todayAppointments.size
+                val atendidas = todayAppointments.count { it.status == AppointmentStatus.COMPLETED }
+                val faltas = todayAppointments.count { it.status == AppointmentStatus.NO_SHOW }
+
+                binding.appointmentsCountText.text = totalHoje.toString()
+                binding.tvAtendidas.text = atendidas.toString()
+                binding.tvFaltas.text = faltas.toString()
             }
             1 -> appointmentAdapter.submitList(tomorrowAppointments)
             2 -> appointmentAdapter.submitList(weekAppointments)

@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.psipro.adapter.MenuAdapter
 import com.example.psipro.ui.screens.WhatsAppHistoryActivity
+import com.example.psipro.DashboardActivity
 
 @AndroidEntryPoint
 class DetalhePacienteActivity : AppCompatActivity() {
@@ -65,19 +66,12 @@ class DetalhePacienteActivity : AppCompatActivity() {
                 startActivity(intent)
             },
             MenuItem(R.drawable.ic_calendar, "Agendar consulta") {
-                lifecycleScope.launch {
-                    patientViewModel.getPatientById(currentPatientId) { patient ->
-                        android.util.Log.d("DetalhePaciente", "Dados do paciente: ID=$currentPatientId, Nome=${patient?.name}, ...")
-                        val dialog = com.example.psipro.ui.fragments.AppointmentDialogFragment()
-                        val args = android.os.Bundle().apply {
-                            putString("patient_name", patient?.name ?: "")
-                            putString("patient_phone", patient?.phone ?: "")
-                        }
-                        android.util.Log.d("DetalhePaciente", "Dados passados para o diálogo: Nome=${args.getString("patient_name")}, Telefone=${args.getString("patient_phone")}")
-                        dialog.arguments = args
-                        dialog.show(supportFragmentManager, "agendarConsulta")
-                    }
+                val intent = Intent(this, DashboardActivity::class.java).apply {
+                    putExtra("NAVIGATE_TO", R.id.navigation_schedule)
+                    // Limpa a pilha de atividades e cria uma nova tarefa para a Dashboard
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 }
+                startActivity(intent)
             }
         )
         val adapter = MenuAdapter(menuItems)

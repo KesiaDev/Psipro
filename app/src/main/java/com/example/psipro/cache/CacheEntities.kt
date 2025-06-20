@@ -19,7 +19,7 @@ data class PatientCache(
 data class AppointmentCache(
     @PrimaryKey
     val id: Long,
-    val patientId: Long,
+    val patientId: Long?,
     val date: Date,
     val startTime: String,
     val endTime: String,
