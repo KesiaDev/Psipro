@@ -19,6 +19,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -30,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.psipro.R
 import com.example.psipro.data.entities.Appointment
+import com.example.psipro.data.entities.AppointmentType
 import com.example.psipro.data.entities.Patient
 import com.example.psipro.ui.schedule.ScheduleViewModel
 import com.example.psipro.viewmodel.AppointmentViewModel
@@ -39,6 +41,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlin.math.max
 
 val hourBoxHeight = 70.dp
 val thinLine = 0.8.dp
@@ -74,7 +77,6 @@ fun WeeklyAgendaScreen(
     }
 
     var focusedDate by remember { mutableStateOf(LocalDate.now()) }
-    var menuExpanded by remember { mutableStateOf(false) }
     var viewMode by remember { mutableStateOf("Semana") }
     val hours = (8..22).toList()
     val today = LocalDate.now()
@@ -204,11 +206,10 @@ fun WeeklyAgendaScreen(
         }
 
         if (showAppointmentForm.value) {
-            val initialHour = selectedHourForForm.value
             AppointmentForm(
                 onDismiss = { showAppointmentForm.value = false },
                 initialDate = selectedDateForForm.value,
-                initialHour = initialHour,
+                initialHour = selectedHourForForm.value,
                 patients = patients,
                 viewModel = appointmentViewModel,
                 existingAppointment = editingAppointment.value
@@ -230,7 +231,6 @@ fun DayView(
     val firstHour = hours.minOrNull() ?: 8
 
     Box(modifier = Modifier.padding(horizontal = 8.dp)) {
-        // 1. Desenha a grade de fundo clicável
         Column {
             hours.forEach { hour ->
                 Row(
@@ -254,16 +254,17 @@ fun DayView(
             }
         }
 
-        // 2. Desenha os agendamentos por cima
         val appointmentsOnThisDay = appointments.filter {
             it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == date
         }
 
         appointmentsOnThisDay.forEach { appointment ->
+            val cardModifier = Modifier.clickable { onAppointmentClick(appointment) }
             AppointmentCard(
                 appointment = appointment,
                 firstHour = firstHour,
-                modifier = Modifier.clickable { onAppointmentClick(appointment) }
+                modifier = cardModifier,
+                isDayView = true
             )
         }
     }
@@ -278,77 +279,15 @@ fun FourDayView(
     onTimeSlotClick: (LocalDate, Int) -> Unit,
     onAppointmentClick: (Appointment) -> Unit
 ) {
-    val thinLineColor = bronzeGold.copy(alpha = if (!isSystemInDarkTheme()) 0.18f else 0.28f)
-    val firstHour = hours.minOrNull() ?: 8
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 2.dp)
-        ) {
-            Spacer(modifier = Modifier.width(44.dp))
-            (0..3).forEach { dayIndex ->
-                val currentDate = startDate.plusDays(dayIndex.toLong())
-                val isToday = currentDate == today
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(vertical = 2.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = daysOfWeek[currentDate.dayOfWeek.value - 1],
-                        color = if (isToday) MaterialTheme.colorScheme.onSurface else bronzeGold,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = dayFontSize
-                    )
-                }
-            }
-        }
-        Row(Modifier.fillMaxWidth()) {
-            Column(Modifier.width(44.dp)) {
-                hours.forEach { hour ->
-                    Box(
-                        Modifier.height(hourBoxHeight), contentAlignment = Alignment.CenterEnd) {
-                        Text("%02d:00".format(hour), color = bronzeGold, fontSize = 10.sp, modifier = Modifier.padding(end = 4.dp))
-                    }
-                }
-            }
-            (0..3).forEach { dayIndex ->
-                val currentDate = startDate.plusDays(dayIndex.toLong())
-                Box(modifier = Modifier.weight(1f)) {
-                    // 1. Desenha a grade de fundo clicável
-                    Column(Modifier.fillMaxSize()) {
-                        hours.forEach { hour ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(hourBoxHeight)
-                                    .border(thinLine, thinLineColor)
-                                    .clickable { onTimeSlotClick(currentDate, hour) }
-                            )
-                        }
-                    }
-
-                    // 2. Desenha os agendamentos por cima da grade
-                    val appointmentsOnThisDay = appointments.filter {
-                        it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == currentDate
-                    }
-
-                    appointmentsOnThisDay.forEach { appointment ->
-                        AppointmentCard(
-                            appointment = appointment,
-                            firstHour = firstHour,
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clickable { onAppointmentClick(appointment) }
-                        )
-                    }
-                }
-            }
-        }
-    }
+    AgendaView(
+        numDays = 4,
+        startDate = startDate,
+        hours = hours,
+        appointments = appointments,
+        today = today,
+        onTimeSlotClick = onTimeSlotClick,
+        onAppointmentClick = onAppointmentClick
+    )
 }
 
 @Composable
@@ -360,102 +299,25 @@ fun WeekView(
     onTimeSlotClick: (LocalDate, Int) -> Unit,
     onAppointmentClick: (Appointment) -> Unit
 ) {
-    val thinLineColor = bronzeGold.copy(alpha = if (!isSystemInDarkTheme()) 0.18f else 0.28f)
-    val firstHour = hours.minOrNull() ?: 8
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Linha com cabeçalho dos dias da semana
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 2.dp)
-        ) {
-            Spacer(modifier = Modifier.width(44.dp))
-            (0..6).forEach { dayIndex ->
-                val currentDate = startDate.plusDays(dayIndex.toLong())
-                val isToday = currentDate == today
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(vertical = 2.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = daysOfWeek[dayIndex],
-                        color = if (isToday) Color.White else bronzeGold,
-                        modifier = if (isToday) Modifier
-                            .background(bronzeGold, CircleShape)
-                            .padding(horizontal = 4.dp) else Modifier
-                    )
-                }
-            }
-        }
-
-        // Linha principal da grade
-        Row(Modifier.fillMaxWidth()) {
-            // Coluna de horários (8:00, 9:00, etc)
-            Column(Modifier.width(44.dp)) {
-                hours.forEach { hour ->
-                    Box(
-                        Modifier.height(hourBoxHeight), contentAlignment = Alignment.CenterEnd) {
-                        Text("%02d:00".format(hour), color = bronzeGold, fontSize = 10.sp, modifier = Modifier.padding(end = 4.dp))
-                    }
-                }
-            }
-
-            // Colunas dos dias
-            (0..6).forEach { dayIndex ->
-                val currentDate = startDate.plusDays(dayIndex.toLong())
-                Box(modifier = Modifier.weight(1f)) {
-                    // 1. Desenha a grade de fundo clicável
-                    Column(Modifier.fillMaxSize()) {
-                        hours.forEach { hour ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(hourBoxHeight)
-                                    .border(thinLine, thinLineColor)
-                                    .clickable { onTimeSlotClick(currentDate, hour) }
-                            )
-                        }
-                    }
-
-                    // 2. Desenha os agendamentos por cima da grade
-                    val appointmentsOnThisDay = appointments.filter {
-                        it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == currentDate
-                    }
-
-                    appointmentsOnThisDay.forEach { appointment ->
-                        AppointmentCard(
-                            appointment = appointment,
-                            firstHour = firstHour,
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clickable { onAppointmentClick(appointment) }
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun MonthView(
-    appointments: List<Appointment>,
-    currentMonth: LocalDate
-) {
-    // Placeholder for month view implementation
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Visualização de Mês em breve.")
-    }
+    AgendaView(
+        numDays = 7,
+        startDate = startDate,
+        hours = hours,
+        appointments = appointments,
+        today = today,
+        onTimeSlotClick = onTimeSlotClick,
+        onAppointmentClick = onAppointmentClick
+    )
 }
 
 @Composable
 fun AppointmentCard(
     appointment: Appointment,
     firstHour: Int,
-    modifier: Modifier
+    modifier: Modifier,
+    isDayView: Boolean = false,
+    widthFraction: Float = 1f,
+    horizontalOffset: Float = 0f
 ) {
     val startTime = parseTime(appointment.startTime)
     val endTime = parseTime(appointment.endTime)
@@ -465,21 +327,37 @@ fun AppointmentCard(
     val clampedDuration = durationInMinutes.coerceAtLeast(15f)
 
     val cardOffsetY = hourBoxHeight * (minutesFromTop / 60f)
-    val cardHeight = hourBoxHeight * (clampedDuration / 60f)
+    val cardHeight = hourBoxHeight * (clampedDuration / 60f) - 2.dp
 
-    Card(
-        modifier = modifier
+    val cardModifier = if (isDayView) {
+        modifier
             .fillMaxWidth()
             .height(cardHeight)
-            .offset(x = 70.dp, y = cardOffsetY) // Offset para não sobrepor os horários
-            .padding(horizontal = 2.dp),
+            .offset(x = 70.dp, y = cardOffsetY)
+            .padding(horizontal = 2.dp)
+    } else {
+        modifier
+            .fillMaxWidth(fraction = widthFraction)
+            .height(cardHeight)
+            .offset(y = cardOffsetY)
+            .padding(start = (100 * horizontalOffset).dp * widthFraction)
+    }
+
+    Card(
+        modifier = cardModifier,
         shape = RoundedCornerShape(4.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(android.graphics.Color.parseColor(appointment.colorHex))
         ),
     ) {
+        val title = if (appointment.type == AppointmentType.PESSOAL) {
+            appointment.title
+        } else {
+            appointment.patientName
+        }
+
         Text(
-            text = appointment.title,
+            text = title,
             color = Color.Black,
             fontSize = 12.sp,
             maxLines = 1,
@@ -491,6 +369,215 @@ fun AppointmentCard(
     }
 }
 
+private fun parseTime(time: String): LocalTime {
+    return try {
+        LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm"))
+    } catch (e: Exception) {
+        LocalTime.of(8, 0)
+    }
+}
+
+@Composable
+private fun AgendaView(
+    numDays: Int,
+    startDate: LocalDate,
+    hours: List<Int>,
+    appointments: List<Appointment>,
+    today: LocalDate,
+    onTimeSlotClick: (LocalDate, Int) -> Unit,
+    onAppointmentClick: (Appointment) -> Unit
+) {
+    val days = (0 until numDays).map { startDate.plusDays(it.toLong()) }
+    val thinLineColor = bronzeGold.copy(alpha = if (!isSystemInDarkTheme()) 0.18f else 0.28f)
+    val firstHour = hours.minOrNull() ?: 8
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp)
+    ) {
+        // Coluna das Horas
+        Column {
+            Spacer(modifier = Modifier.height(30.dp))
+            hours.forEach { hour ->
+                Text(
+                    "%02d:00".format(hour),
+                    color = bronzeGold,
+                    fontSize = 10.sp,
+                    modifier = Modifier
+                        .height(hourBoxHeight)
+                        .width(48.dp)
+                        .padding(end = 4.dp),
+                    textAlign = TextAlign.End
+                )
+            }
+        }
+
+        // Colunas dos dias
+        days.forEach { date ->
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Cabeçalho do Dia
+                Text(
+                    text = daysOfWeek[date.dayOfWeek.value - 1],
+                    fontSize = dayFontSize,
+                    color = if (date == today) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
+                // Corpo do Dia
+                Box {
+                    Column {
+                        hours.forEach { hour ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(hourBoxHeight)
+                                    .border(thinLine, thinLineColor)
+                                    .clickable { onTimeSlotClick(date, hour) }
+                            )
+                        }
+                    }
+
+                    val appointmentsOnThisDay = appointments
+                        .filter { it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == date }
+                        .sortedBy { parseTime(it.startTime) }
+
+                    val appointmentLayouts = calculateAppointmentLayout(appointmentsOnThisDay)
+
+                    appointmentLayouts.forEach { layoutInfo ->
+                        Box(modifier = Modifier.fillMaxWidth(layoutInfo.width).offset(x = (100 * layoutInfo.xOffset).dp * layoutInfo.width)) {
+                            AppointmentCard(
+                                appointment = layoutInfo.appointment,
+                                firstHour = firstHour,
+                                modifier = Modifier.clickable { onAppointmentClick(layoutInfo.appointment) }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private data class AppointmentLayoutInfo(
+    val appointment: Appointment,
+    val width: Float,
+    val xOffset: Float
+)
+
+private fun calculateAppointmentLayout(appointments: List<Appointment>): List<AppointmentLayoutInfo> {
+    val layouts = mutableListOf<AppointmentLayoutInfo>()
+    if (appointments.isEmpty()) return layouts
+
+    val columns = mutableListOf<MutableList<Appointment>>()
+    columns.add(mutableListOf())
+
+    for (appointment in appointments) {
+        var placed = false
+        for (col in columns) {
+            if (col.isEmpty() || !overlaps(appointment, col.last())) {
+                col.add(appointment)
+                placed = true
+                break
+            }
+        }
+        if (!placed) {
+            columns.add(mutableListOf(appointment))
+        }
+    }
+
+    val totalColumns = columns.size
+    for ((colIndex, col) in columns.withIndex()) {
+        for (appointment in col) {
+            layouts.add(
+                AppointmentLayoutInfo(
+                    appointment = appointment,
+                    width = 1f / totalColumns,
+                    xOffset = colIndex.toFloat() / totalColumns
+                )
+            )
+        }
+    }
+
+    return layouts
+}
+
+private fun overlaps(a: Appointment, b: Appointment): Boolean {
+    val startA = parseTime(a.startTime)
+    val endA = parseTime(a.endTime)
+    val startB = parseTime(b.startTime)
+    val endB = parseTime(b.endTime)
+    return startA.isBefore(endB) && startB.isBefore(endA)
+}
+
+@Composable
+fun MonthView(
+    appointments: List<Appointment>,
+    currentMonth: LocalDate
+) {
+    val context = LocalContext.current
+    val daysInMonth = currentMonth.lengthOfMonth()
+    val firstDayOfMonth = currentMonth.withDayOfMonth(1)
+    val startDayOfWeek = firstDayOfMonth.dayOfWeek.value
+
+    Column(modifier = Modifier.padding(8.dp)) {
+        // Header
+        Row(modifier = Modifier.fillMaxWidth()) {
+            daysOfWeek.forEach { day ->
+                Text(
+                    text = day,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+        // Days
+        (0 until (daysInMonth + startDayOfWeek - 1) / 7 + 1).forEach { week ->
+            Row(modifier = Modifier.fillMaxWidth()) {
+                (0..6).forEach { day ->
+                    val dayOfMonth = week * 7 + day - startDayOfWeek + 2
+                    if (dayOfMonth > 0 && dayOfMonth <= daysInMonth) {
+                        val date = currentMonth.withDayOfMonth(dayOfMonth)
+                        val appointmentsOnDay = appointments.count { it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == date }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .aspectRatio(1f)
+                                .padding(2.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .border(
+                                    1.dp,
+                                    if (date == LocalDate.now()) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                    RoundedCornerShape(4.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = dayOfMonth.toString())
+                            if (appointmentsOnDay > 0) {
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .padding(bottom = 4.dp)
+                                        .size(6.dp)
+                                        .background(bronzeGold, CircleShape)
+                                )
+                            }
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
 // Dummy function to avoid breaking changes if it was used somewhere else.
 private fun saveThemePreference(context: Context, theme: String) {
     // No-op
@@ -498,12 +585,4 @@ private fun saveThemePreference(context: Context, theme: String) {
 
 private fun loadThemePreference(context: Context): String {
     return "light" // or "dark"
-}
-
-private fun parseTime(time: String): LocalTime {
-    return try {
-        LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm"))
-    } catch (e: Exception) {
-        LocalTime.MIDNIGHT // Retorna um valor padrão em caso de erro
-    }
 } 

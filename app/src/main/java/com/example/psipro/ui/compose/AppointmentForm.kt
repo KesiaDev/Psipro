@@ -28,6 +28,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.psipro.R
 import com.example.psipro.data.entities.Appointment
 import com.example.psipro.data.entities.AppointmentStatus
+import com.example.psipro.data.entities.AppointmentType
 import com.example.psipro.data.entities.Patient
 import com.example.psipro.viewmodel.AppointmentViewModel
 import java.text.SimpleDateFormat
@@ -312,7 +313,12 @@ fun AppointmentForm(
                             patientName = selectedPatient?.name ?: "Pessoal",
                             status = statusEnumMap[statusIndex] ?: AppointmentStatus.SCHEDULED,
                             colorHex = existingAppointment?.colorHex ?: appointmentColors.random(),
-                            patientPhone = selectedPatient?.phone ?: ""
+                            patientPhone = selectedPatient?.phone ?: "",
+                            type = when (eventTypes[eventTypeIndex]) {
+                                "Consulta" -> AppointmentType.CONSULTA
+                                "Reconsulta" -> AppointmentType.RECONSULTA
+                                else -> AppointmentType.PESSOAL
+                            }
                         )
 
                         viewModel.addAppointment(
