@@ -93,14 +93,13 @@ fun WeeklyAgendaScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
         TopAppBar(
-            title = { Text("Agenda", color = bronzeGold) },
+            title = { Text("Agenda") },
             actions = {
                 Box {
                     IconButton(onClick = { expanded = true }) {
                         Icon(
                             Icons.Filled.DateRange,
-                            contentDescription = "Selecionar visualização",
-                            tint = bronzeGold
+                            contentDescription = "Selecionar visualização"
                         )
                     }
                     DropdownMenu(
@@ -136,7 +135,9 @@ fun WeeklyAgendaScreen(
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background
+                containerColor = MaterialTheme.colorScheme.background,
+                titleContentColor = bronzeGold,
+                actionIconContentColor = bronzeGold
             )
         )
 
@@ -355,10 +356,11 @@ fun AppointmentCard(
         } else {
             appointment.patientName
         }
+        val textColor = if (isSystemInDarkTheme()) Color.White else Color.Black
 
         Text(
             text = title,
-            color = Color.Black,
+            color = textColor,
             fontSize = 12.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -388,7 +390,7 @@ private fun AgendaView(
     onAppointmentClick: (Appointment) -> Unit
 ) {
     val days = (0 until numDays).map { startDate.plusDays(it.toLong()) }
-    val thinLineColor = bronzeGold.copy(alpha = if (!isSystemInDarkTheme()) 0.18f else 0.28f)
+    val thinLineColor = bronzeGold.copy(alpha = if (!isSystemInDarkTheme()) 0.18f else 0.4f)
     val firstHour = hours.minOrNull() ?: 8
 
     Row(
@@ -423,7 +425,7 @@ private fun AgendaView(
                 Text(
                     text = daysOfWeek[date.dayOfWeek.value - 1],
                     fontSize = dayFontSize,
-                    color = if (date == today) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                    color = if (date == today) MaterialTheme.colorScheme.primary else bronzeGold,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
