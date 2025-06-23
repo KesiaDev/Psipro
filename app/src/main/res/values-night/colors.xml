@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Cores da Marca -->
-    <color name="primary_bronze">#D4AF37</color>
-    <color name="secondary_bronze">#9C7B4F</color>
-    <color name="accent_bronze">#E0C9A6</color>
-    <color name="bronze_gold">#C8A464</color>
-    <color name="bronze_gold_dark">#B38F5B</color>
+    <color name="primary_bronze">#CD7F32</color>
+    <color name="secondary_bronze">#B87333</color>
+    <color name="accent_bronze">#D2691E</color>
+    <color name="bronze_gold">#B8860B</color>
+    <color name="bronze_gold_dark">#8B6914</color>
 
     <!-- Cores de Texto -->
     <color name="text_black">#212529</color>
@@ -32,14 +32,14 @@
     <color name="ic_launcher_background">#1E1E1E</color>
 
     <!-- Cores Legadas da Agenda (a serem revisadas/removidas) -->
-    <color name="agenda_bronze">#CDA552</color>
-    <color name="agenda_bronze_30">#4DCDA552</color>
-    <color name="agenda_event_bg">#26CDA552</color>
+    <color name="agenda_bronze">#B8860B</color>
+    <color name="agenda_bronze_30">#4DB8860B</color>
+    <color name="agenda_event_bg">#26B8860B</color>
     <color name="agenda_event_text">#F5F5F5</color>
-    <color name="agenda_divider">#4DCDA552</color>
-    <color name="agenda_toggle_selected">#CDA552</color>
-    <color name="agenda_toggle_unselected">#333333</color> <!-- Um cinza escuro para o fundo não selecionado -->
+    <color name="agenda_divider">#4DB8860B</color>
+    <color name="agenda_toggle_selected">#B8860B</color>
+    <color name="agenda_toggle_unselected">#333333</color>
     <color name="agenda_toggle_text">#F5F5F5</color>
-    <color name="agenda_fab">#CDA552</color>
-    <color name="agenda_fab_ripple">#4DCDA552</color>
+    <color name="agenda_fab">#B8860B</color>
+    <color name="agenda_fab_ripple">#4DB8860B</color>
 </resources>

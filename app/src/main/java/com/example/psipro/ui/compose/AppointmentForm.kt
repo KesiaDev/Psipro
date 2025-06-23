@@ -111,7 +111,7 @@ fun AppointmentForm(
         "#FFAB91", "#FFCC80", "#FFE082", "#A5D6A7", "#80CBC4", "#81D4FA", "#CE93D8"
     )
 
-    val bronzeGold = colorResource(id = R.color.primary_bronze)
+    val bronzeGold = colorResource(id = R.color.bronze_gold)
     val bronzeDark = colorResource(id = R.color.bronze_gold_dark)
     val customTextFieldColors = TextFieldDefaults.outlinedTextFieldColors(
         focusedTextColor = MaterialTheme.colorScheme.onSurface,

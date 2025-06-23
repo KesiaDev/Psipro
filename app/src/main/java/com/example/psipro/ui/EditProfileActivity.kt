@@ -382,7 +382,7 @@ class EditProfileActivity : AppCompatActivity() {
         val isDark = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
         options.setToolbarColor(if (isDark) ContextCompat.getColor(this, R.color.background_light) else ContextCompat.getColor(this, R.color.surface_white))
         options.setStatusBarColor(if (isDark) ContextCompat.getColor(this, R.color.background_light) else ContextCompat.getColor(this, R.color.surface_white))
-        options.setActiveControlsWidgetColor(ContextCompat.getColor(this, R.color.primary_bronze))
+        options.setActiveControlsWidgetColor(ContextCompat.getColor(this, R.color.bronze_gold))
         options.setToolbarWidgetColor(if (isDark) Color.WHITE else Color.BLACK)
         options.setRootViewBackgroundColor(if (isDark) ContextCompat.getColor(this, R.color.background_light) else ContextCompat.getColor(this, R.color.surface_white))
         options.setHideBottomControls(false)

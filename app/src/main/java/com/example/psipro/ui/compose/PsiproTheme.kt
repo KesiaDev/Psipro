@@ -6,20 +6,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.isSystemInDarkTheme
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFFB08D57), // bronze_gold
+    primary = Color(0xFFB8860B), // bronze_gold equilibrado
     onPrimary = Color.White,
-    secondary = Color(0xFFE5D1B8), // bronze_gold_light
+    secondary = Color(0xFF8B6914), // bronze_gold_dark
     onSecondary = Color.Black,
     background = Color.White,
     onBackground = Color.Black,
-    surface = Color(0xFFE5D1B8), // bronze_gold_light
+    surface = Color(0xFFF5F5F5), // light surface
     onSurface = Color.Black,
 )
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFFB08D57),
+    primary = Color(0xFFB8860B), // bronze_gold equilibrado
     onPrimary = Color.Black,
-    secondary = Color(0xFFE5D1B8),
+    secondary = Color(0xFF8B6914), // bronze_gold_dark
     onSecondary = Color.Black,
     background = Color(0xFF121212),
     onBackground = Color.White,

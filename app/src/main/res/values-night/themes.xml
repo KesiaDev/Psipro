@@ -3,7 +3,7 @@
     <!-- Base application theme for dark mode -->
     <style name="Theme.Psipro" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Cores Primárias e Secundárias -->
-        <item name="colorPrimary">@color/primary_bronze</item>
+        <item name="colorPrimary">@color/bronze_gold</item>
         <item name="colorPrimaryVariant">@color/bronze_gold_dark</item>
         <item name="colorOnPrimary">@color/text_black</item> <!-- Texto preto sobre o bronze para melhor contraste -->
         <item name="colorSecondary">@color/secondary_bronze</item>
@@ -22,7 +22,7 @@
 
         <!-- Outras Cores -->
         <item name="colorError">@color/error_red</item>
-        <item name="colorOutline">@color/primary_bronze</item>
+        <item name="colorOutline">@color/bronze_gold</item>
         <item name="dividerColor">@color/dividerColor</item>
 
         <!-- Status Bar e Navigation Bar -->

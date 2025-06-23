@@ -51,8 +51,8 @@ val hourBoxHeight = 70.dp
 val thinLine = 0.8.dp
 val daysOfWeek = listOf("SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM")
 val dayFontSize = 12.sp
-val bronzeGold: Color @Composable get() = colorResource(id = R.color.primary_bronze)
-val agendaColor: Color @Composable get() = colorResource(id = R.color.primary_bronze)
+val bronzeGold: Color @Composable get() = colorResource(id = R.color.bronze_gold)
+val agendaColor: Color @Composable get() = colorResource(id = R.color.bronze_gold)
 val thinLineColor: Color @Composable get() {
     return agendaColor.copy(alpha = if (isSystemInDarkTheme()) 0.2f else 0.12f)
 }

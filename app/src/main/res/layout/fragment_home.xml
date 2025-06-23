@@ -18,7 +18,7 @@
             android:padding="16dp"
             android:text="Bem-vindo (a)!"
             android:textAppearance="?attr/textAppearanceHeadline5"
-            android:textColor="@color/primary_bronze" />
+            android:textColor="@color/bronze_gold" />
 
         <!-- Seção de Resumo com novo design -->
         <LinearLayout
@@ -60,7 +60,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0"
-                    android:textColor="@color/primary_bronze"
+                    android:textColor="@color/bronze_gold"
                     android:textSize="22sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -100,7 +100,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0"
-                    android:textColor="@color/primary_bronze"
+                    android:textColor="@color/bronze_gold"
                     android:textSize="22sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -140,7 +140,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0"
-                    android:textColor="@color/primary_bronze"
+                    android:textColor="@color/bronze_gold"
                     android:textSize="22sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -153,8 +153,8 @@
             android:layout_height="wrap_content"
             app:tabGravity="fill"
             app:tabMode="fixed"
-            app:tabIndicatorColor="@color/primary_bronze"
-            app:tabSelectedTextColor="@color/primary_bronze"
+            app:tabIndicatorColor="@color/bronze_gold"
+            app:tabSelectedTextColor="@color/bronze_gold"
             app:tabTextColor="?attr/colorOnSurface" />
 
         <androidx.recyclerview.widget.RecyclerView
