@@ -4,27 +4,27 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="20dp"
-    android:background="@color/background_black">
+    android:background="?attr/colorSurface">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Título"
-        android:textColor="@color/bronze_gold"
+        android:textColor="?attr/colorPrimary"
         android:textStyle="bold"/>
     <EditText
         android:id="@+id/editTitulo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Digite o título do laudo"
-        android:textColor="@color/white"
-        android:textColorHint="@color/bronze_gold_light"/>
+        android:textColor="?attr/colorOnSurface"
+        android:textColorHint="?attr/textColorSecondary"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Conteúdo"
-        android:textColor="@color/bronze_gold"
+        android:textColor="?attr/colorPrimary"
         android:textStyle="bold"
         android:layout_marginTop="12dp"/>
     <EditText
@@ -34,8 +34,8 @@
         android:gravity="top"
         android:inputType="textMultiLine"
         android:hint="Digite o conteúdo do laudo"
-        android:textColor="@color/white"
-        android:textColorHint="@color/bronze_gold_light"/>
+        android:textColor="?attr/colorOnSurface"
+        android:textColorHint="?attr/textColorSecondary"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -48,7 +48,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Nenhum anexo"
-            android:textColor="@color/bronze_gold_light"
+            android:textColor="?attr/textColorSecondary"
             android:layout_gravity="center_vertical"/>
         <Button
             android:id="@+id/btnSelecionarAnexo"

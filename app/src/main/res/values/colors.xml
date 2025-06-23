@@ -1,72 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="black">#222222</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="gold">#FFD4AF37</color>
-    <color name="gold_light">#FFE6D7A3</color>
-    <color name="gold_dark">#FFB8860B</color>
-    <color name="background_black">#FF121212</color>
-    <color name="surface_black">#FF1E1E1E</color>
-    <color name="bronze_gold">#D4AF37</color>
-    <color name="bronze_gold_light">#E5D1B8</color>
-    <color name="bronze_gold_dark">#8C6B3F</color>
-    <color name="background_card_dark">#232323</color>
+    <!-- Cores da Marca -->
+    <color name="primary_bronze">#D4AF37</color>
+    <color name="secondary_bronze">#9C7B4F</color>
+    <color name="accent_bronze">#E0C9A6</color>
+    <color name="bronze_gold">#C8A464</color>
+    <color name="bronze_gold_dark">#B38F5B</color>
+
+    <!-- Cores de Texto -->
+    <color name="text_black">#212529</color>
+    <color name="text_gray">#6C757D</color>
+    <color name="text_white">#FFFFFFFF</color>
+    <color name="text_hint">#AAAAAA</color>
+
+    <!-- Cores de Fundo e Superfície -->
+    <color name="background_light">#FAFAFA</color>
+    <color name="surface_white">#FFFFFF</color>
+
+    <!-- Cores Funcionais -->
+    <color name="dividerColor">#1F000000</color> <!-- Black com 12% opacidade -->
+    <color name="error_red">#D32F2F</color>
+    <color name="success_green">#388E3C</color>
     <color name="transparent">#00000000</color>
-    <color name="green">#4CAF50</color>
-    <color name="red">#F44336</color>
-    <color name="surface_bronze_dark">#8C6B3B</color>
-    <color name="drawer_background">#FFFFFFFF</color>
-    <!-- Paleta modo claro -->
-    <color name="background_general">#F8F9FA</color>
-    <color name="card_background_alt">#F8F9FA</color>
-    <color name="border">#CED4DA</color>
-    <color name="shadow">#1A000000</color> <!-- 10% opacity black -->
-    <color name="text_secondary">#6C757D</color>
-    <color name="icon_neutral">#ADB5BD</color>
-    <color name="icon_neutral_alt">#CED4DA</color>
-    <color name="button_background">#D4AF37</color>
-    <color name="button_text">#FFFFFF</color>
-    <color name="text_primary">#212529</color>
-    <color name="card_background">#FFFFFF</color>
-    <color name="bar_background">#FFFFFF</color>
-    <!-- Login Fields Colors -->
-    <color name="input_background_light">#F5F5F5</color>
-    <color name="input_background_dark">#1F1F1F</color>
-    <color name="input_text_light">#212121</color>
-    <color name="input_text_dark">#FFFFFF</color>
-    <color name="input_hint_light">#757575</color>
-    <color name="input_hint_dark">#B3FFFFFF</color>
-    <color name="input_stroke_light">#E0E0E0</color>
-    <color name="input_stroke_dark">#424242</color>
-    <color name="error_red">#CF6679</color>
-    <color name="card_appointment_bg">@color/bronze_gold_dark</color>
+
+    <!-- Cores Básicas (Evitar redefinir, usar @android:color se possível) -->
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+
+    <!-- Cor do ícone do launcher -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+
+    <!-- Cores Legadas da Agenda (a serem revisadas/removidas) -->
     <color name="agenda_bronze">#CDA552</color>
     <color name="agenda_bronze_30">#4DCDA552</color>
-    <color name="agenda_event_bg">#26CDA552</color> <!-- rgba(205,165,82,0.15) -->
-    <color name="agenda_event_text">#000000</color>
+    <color name="agenda_event_bg">#26CDA552</color>
+    <color name="agenda_event_text">#F5F5F5</color>
     <color name="agenda_divider">#4DCDA552</color>
     <color name="agenda_toggle_selected">#CDA552</color>
-    <color name="agenda_toggle_unselected">#F5F5F5</color>
-    <color name="agenda_toggle_text">#000000</color>
+    <color name="agenda_toggle_unselected">#FFFFFF</color>
+    <color name="agenda_toggle_text">#CDA552</color>
     <color name="agenda_fab">#CDA552</color>
-    <color name="agenda_fab_ripple">#26CDA552</color>
-    <color name="primary_bronze">#C0A062</color>
-    <color name="primary_bronze_translucent">#99C0A062</color>
-    <color name="background_light">#FFFFFF</color>
-    <color name="background_dark">#121212</color>
-    <color name="text_light">#000000</color>
-    <color name="text_dark">#F5F5F5</color>
-    <color name="event_background">#26CDA552</color>
-    <color name="event_text">#000000</color>
-    <color name="hint_gray">#AAAAAA</color>
-    <color name="text_white">#FFFFFF</color>
-    <color name="colorPrimary">@color/gold</color>
-    <color name="ic_launcher_background">#070707</color>
-    <color name="background_card">#FFFFFFFF</color>
-    <color name="bronze_dark">#8C7853</color>
+    <color name="agenda_fab_ripple">#4DCDA552</color>
+
+    <color name="background_black">#000000</color>
+    <color name="surface_black">#1E1E1E</color>
+    <color name="surface_bronze_dark">#D3C5B3</color>
 </resources>

@@ -71,9 +71,7 @@ data class PsicologoProfile(
     val endereco: String = "",
     val whatsapp: String = "",
     val email: String = "",
-    val redesSociais: String = "",
-    val horarios: String = "",
-    val idiomas: List<String> = emptyList(),
+    val site: String = "",
     val fotoUrl: String = ""
 )
 
@@ -103,10 +101,6 @@ class EditProfileActivity : AppCompatActivity() {
         "Psicologia do Desenvolvimento",
         "Psicologia do Luto e Cuidados Paliativos",
         "Outro"
-    )
-    private val languagesList = listOf("Português", "Inglês", "Espanhol")
-    private val weekDays = listOf(
-        "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado", "domingo"
     )
 
     // Novo launcher para o cropper
@@ -158,7 +152,6 @@ class EditProfileActivity : AppCompatActivity() {
         setupMultiSelectFields()
         setupAddressField()
         setupWhatsAppField()
-        setupScheduleField()
         setupCRPField()
         carregarPerfilFirestore { profile ->
             if (profile != null) preencherCampos(profile)
@@ -273,60 +266,6 @@ class EditProfileActivity : AppCompatActivity() {
         }
         // Impede o dropdown padrão
         binding.editTextSpecialties.setAdapter(null)
-
-        // --- Seleção múltipla de idiomas ---
-        val selectedLanguages = mutableListOf<String>()
-        binding.editTextLanguages.setOnClickListener {
-            selectedLanguages.clear()
-            val current = binding.editTextLanguages.text?.toString()?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList()
-            if (current.isEmpty()) {
-                selectedLanguages.add("Português")
-            } else {
-                selectedLanguages.addAll(current)
-            }
-            val dialogView = layoutInflater.inflate(R.layout.dialog_languages_selection, null)
-            val languagesContainer = dialogView.findViewById<LinearLayout>(R.id.languagesContainer)
-            
-            // Limpa o container e adiciona os switches
-            languagesContainer.removeAllViews()
-            languagesList.forEach { language ->
-                val switchView = layoutInflater.inflate(R.layout.item_language_switch, languagesContainer, false)
-                val switch = switchView.findViewById<com.google.android.material.switchmaterial.SwitchMaterial>(R.id.languageSwitch)
-                val textView = switchView.findViewById<TextView>(R.id.languageText)
-                
-                textView.text = language
-                switch.isChecked = selectedLanguages.contains(language)
-                
-                // Aplica estilo do tema
-                switch.trackTintList = ColorStateList.valueOf(getColor(R.color.bronze_gold))
-                switch.thumbTintList = ColorStateList.valueOf(getColor(R.color.bronze_gold))
-                
-                // Adiciona padding vertical
-                switchView.setPadding(0, 12, 0, 12)
-                
-                switch.setOnCheckedChangeListener { _: CompoundButton, isChecked: Boolean ->
-                    if (isChecked) {
-                        if (!selectedLanguages.contains(language)) selectedLanguages.add(language)
-                    } else {
-                        selectedLanguages.remove(language)
-                    }
-                }
-                
-                languagesContainer.addView(switchView)
-            }
-
-            // Cria o diálogo com AlertDialog.Builder
-            AlertDialog.Builder(this)
-                .setTitle("Selecione idiomas")
-                .setView(dialogView)
-                .setPositiveButton("Confirmar") { _, _ ->
-                    binding.editTextLanguages.setText(selectedLanguages.joinToString(", "))
-                }
-                .setNegativeButton("Cancelar", null)
-                .show()
-        }
-        // Impede o dropdown padrão
-        binding.editTextLanguages.setAdapter(null)
     }
 
     private fun setupAddressField() {
@@ -378,12 +317,6 @@ class EditProfileActivity : AppCompatActivity() {
         })
     }
 
-    private fun setupScheduleField() {
-        binding.editTextSchedule.setOnClickListener {
-            showWeekScheduleDialog()
-        }
-    }
-
     private fun setupCRPField() {
         binding.editTextCRP.addTextChangedListener(object : TextWatcher {
             private var isUpdating = false
@@ -408,68 +341,6 @@ class EditProfileActivity : AppCompatActivity() {
 
             override fun afterTextChanged(s: Editable?) {}
         })
-    }
-
-    private fun showWeekScheduleDialog() {
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_week_schedule, null)
-        val container = dialogView.findViewById<LinearLayout>(R.id.scheduleContainer)
-        val horarios = mutableMapOf<String, Pair<String, String>>()
-        val fechado = mutableSetOf<String>()
-        val current = binding.editTextSchedule.text?.toString() ?: ""
-
-        weekDays.forEach { dia ->
-            val itemView = LayoutInflater.from(this).inflate(R.layout.item_week_schedule, container, false)
-            val textDay = itemView.findViewById<TextView>(R.id.textDay)
-            val textHour = itemView.findViewById<TextView>(R.id.textHour)
-            val checkClosed = itemView.findViewById<CheckBox>(R.id.checkClosed)
-            textDay.text = dia.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-            textHour.text = "08:00–20:00"
-            checkClosed.isChecked = false
-            container.addView(itemView)
-
-            // Editar horário ao clicar no texto do horário
-            textHour.setOnClickListener {
-                if (checkClosed.isChecked) return@setOnClickListener
-                val parts = textHour.text.split("–")
-                val hIni = if (parts.size > 0) parts[0].trim() else "08:00"
-                val hFim = if (parts.size > 1) parts[1].trim() else "20:00"
-                TimePickerDialog(this, { _, hourOfDay, minute ->
-                    val ini = String.format("%02d:%02d", hourOfDay, minute)
-                    TimePickerDialog(this, { _, hourOfDay2, minute2 ->
-                        val fim = String.format("%02d:%02d", hourOfDay2, minute2)
-                        textHour.text = "$ini–$fim"
-                        horarios[dia] = Pair(ini, fim)
-                    }, hFim.substring(0,2).toInt(), hFim.substring(3,5).toInt(), true).show()
-                }, hIni.substring(0,2).toInt(), hIni.substring(3,5).toInt(), true).show()
-            }
-
-            // Checkbox "Fechado"
-            checkClosed.setOnCheckedChangeListener { _, isChecked ->
-                if (isChecked) {
-                    fechado.add(dia)
-                    textHour.text = "Fechado"
-                } else {
-                    fechado.remove(dia)
-                    textHour.text = horarios[dia]?.let { "${it.first}–${it.second}" } ?: "08:00–20:00"
-                }
-            }
-        }
-
-        AlertDialog.Builder(this)
-            .setTitle("Horário de funcionamento")
-            .setView(dialogView)
-            .setPositiveButton("Confirmar") { _, _ ->
-                val builder = StringBuilder()
-                for (i in 0 until container.childCount) {
-                    val itemView = container.getChildAt(i)
-                    val textDay = itemView.findViewById<TextView>(R.id.textDay)
-                    val textHour = itemView.findViewById<TextView>(R.id.textHour)
-                    builder.append(textDay.text).append(" ").append(textHour.text).append("\n")
-                }
-                binding.editTextSchedule.setText(builder.toString().trim())
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -509,11 +380,11 @@ class EditProfileActivity : AppCompatActivity() {
         val options = UCrop.Options()
         // Cores do tema
         val isDark = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
-        options.setToolbarColor(if (isDark) ContextCompat.getColor(this, R.color.background_black) else ContextCompat.getColor(this, R.color.background_card))
-        options.setStatusBarColor(if (isDark) ContextCompat.getColor(this, R.color.background_black) else ContextCompat.getColor(this, R.color.background_card))
-        options.setActiveControlsWidgetColor(ContextCompat.getColor(this, R.color.bronze_gold))
+        options.setToolbarColor(if (isDark) ContextCompat.getColor(this, R.color.background_light) else ContextCompat.getColor(this, R.color.surface_white))
+        options.setStatusBarColor(if (isDark) ContextCompat.getColor(this, R.color.background_light) else ContextCompat.getColor(this, R.color.surface_white))
+        options.setActiveControlsWidgetColor(ContextCompat.getColor(this, R.color.primary_bronze))
         options.setToolbarWidgetColor(if (isDark) Color.WHITE else Color.BLACK)
-        options.setRootViewBackgroundColor(if (isDark) ContextCompat.getColor(this, R.color.background_black) else ContextCompat.getColor(this, R.color.background_card))
+        options.setRootViewBackgroundColor(if (isDark) ContextCompat.getColor(this, R.color.background_light) else ContextCompat.getColor(this, R.color.surface_white))
         options.setHideBottomControls(false)
         options.setFreeStyleCropEnabled(false)
         options.setCircleDimmedLayer(true)
@@ -529,9 +400,7 @@ class EditProfileActivity : AppCompatActivity() {
         binding.editTextAddress.setText(profile.endereco)
         binding.editTextWhatsapp.setText(profile.whatsapp)
         binding.editTextEmail.setText(profile.email)
-        binding.editTextSocial.setText(profile.redesSociais)
-        binding.editTextSchedule.setText(profile.horarios)
-        binding.editTextLanguages.setText(profile.idiomas.joinToString(", "))
+        binding.editTextSite.setText(profile.site)
         for (i in 0 until binding.chipGroupModalities.childCount) {
             val chip = binding.chipGroupModalities.getChildAt(i) as Chip
             chip.isChecked = profile.modalidades.contains(chip.text.toString())
@@ -539,6 +408,32 @@ class EditProfileActivity : AppCompatActivity() {
         fotoUrlAtual = profile.fotoUrl
         if (profile.fotoUrl.isNotEmpty()) {
             Glide.with(this).load(profile.fotoUrl).into(binding.profileImageView)
+        }
+
+        // Salvar dados nas SharedPreferences para uso no cartão de visitas
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+        prefs.edit().apply {
+            putString("profile_name", profile.nome)
+            putString("profile_title", profile.titulo)
+            putString("profile_crp", profile.crp)
+            putString("profile_specialties", profile.especialidades.joinToString(", "))
+            putString("profile_about", profile.sobre)
+            putString("profile_address", profile.endereco)
+            putString("profile_whatsapp", profile.whatsapp)
+            putString("profile_email", profile.email)
+            putString("profile_site", profile.site)
+            putString("profile_modalities", profile.modalidades.joinToString(", "))
+            
+            profileImageUri?.let { uri ->
+                val file = File(cacheDir, "profile_photo.jpg")
+                contentResolver.openInputStream(uri)?.use { input ->
+                    file.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                putString("profile_photo_path", file.absolutePath)
+            }
+            apply()
         }
     }
 
@@ -562,6 +457,22 @@ class EditProfileActivity : AppCompatActivity() {
                 prefs.edit().apply {
                     putString("profile_name", nome)
                     putString("profile_crp", crp)
+                    putString("profile_title", binding.editTextTitle.text.toString().trim())
+                    putString("profile_specialties", binding.editTextSpecialties.text.toString().trim())
+                    putString("profile_about", binding.editTextAbout.text.toString().trim())
+                    putString("profile_address", binding.editTextAddress.text.toString().trim())
+                    putString("profile_whatsapp", binding.editTextWhatsapp.text.toString().trim())
+                    putString("profile_email", binding.editTextEmail.text.toString().trim())
+                    putString("profile_site", binding.editTextSite.text.toString().trim())
+                    
+                    // Salvar modalidades como string separada por vírgulas
+                    val modalidades = mutableListOf<String>()
+                    for (i in 0 until binding.chipGroupModalities.childCount) {
+                        val chip = binding.chipGroupModalities.getChildAt(i) as Chip
+                        if (chip.isChecked) modalidades.add(chip.text.toString())
+                    }
+                    putString("profile_modalities", modalidades.joinToString(", "))
+                    
                     profileImageUri?.let { uri ->
                         val file = File(cacheDir, "profile_photo.jpg")
                         contentResolver.openInputStream(uri)?.use { input ->
@@ -598,9 +509,7 @@ class EditProfileActivity : AppCompatActivity() {
             endereco = binding.editTextAddress.text.toString().trim(),
             whatsapp = binding.editTextWhatsapp.text.toString().trim(),
             email = binding.editTextEmail.text.toString().trim(),
-            redesSociais = binding.editTextSocial.text.toString().trim(),
-            horarios = binding.editTextSchedule.text.toString().trim(),
-            idiomas = binding.editTextLanguages.text.toString().split(",").map { it.trim() }.filter { it.isNotEmpty() },
+            site = binding.editTextSite.text.toString().trim(),
             fotoUrl = fotoUrl
         )
     }
@@ -715,56 +624,76 @@ class EditProfileActivity : AppCompatActivity() {
     }
 
     private fun exportarCartaoDeVisitas() {
-        // Inflar o layout do cartão de visitas corretamente
-        val cardView = layoutInflater.inflate(R.layout.card_visit, null, false)
-        
-        // Preencher os dados do cartão
-        val profile = getSharedPreferences("settings", MODE_PRIVATE)
-        
-        // Configurar a imagem do perfil
-        val profileImage = cardView.findViewById<CircleImageView>(R.id.cardProfileImage)
-        val photoPath = profile.getString("profile_photo_path", null)
-        if (photoPath != null) {
-            val file = File(photoPath)
-            if (file.exists()) {
-                val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-                profileImage.setImageBitmap(bitmap)
+        try {
+            // Inflar o layout do cartão de visitas corretamente
+            val cardView = layoutInflater.inflate(R.layout.card_visit, null, false)
+            
+            // Definir tamanho fixo para o cartão (formato retangular)
+            val screenWidth = resources.displayMetrics.widthPixels
+            val cardWidth = (screenWidth * 0.9).toInt() // 90% da largura da tela
+            val cardHeight = (cardWidth * 1.4).toInt() // Proporção retangular
+            
+            // Preencher os dados do cartão
+            val profile = getSharedPreferences("settings", MODE_PRIVATE)
+            
+            // Log para debug
+            Log.d("CARTÃO_VISITAS", "Dados do perfil: ${profile.all}")
+            
+            // Configurar a imagem do perfil
+            val profileImage = cardView.findViewById<CircleImageView>(R.id.cardProfileImage)
+            val photoPath = profile.getString("profile_photo_path", null)
+            if (photoPath != null) {
+                val file = File(photoPath)
+                if (file.exists()) {
+                    val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                    profileImage.setImageBitmap(bitmap)
+                }
             }
+
+            // Preencher os dados do perfil
+            val nome = profile.getString("profile_name", "Seu Nome")
+            val titulo = profile.getString("profile_title", "Título Profissional")
+            val crp = profile.getString("profile_crp", "00000000")
+            val especialidades = profile.getString("profile_specialties", "Especialidades não informadas")
+            val sobre = profile.getString("profile_about", "Sobre o psicólogo não informado")
+            val modalidades = profile.getString("profile_modalities", "Modalidades não informadas")
+            val whatsapp = profile.getString("profile_whatsapp", "WhatsApp não informado")
+            val email = profile.getString("profile_email", "Email não informado")
+            val endereco = profile.getString("profile_address", "Endereço não informado")
+            val site = profile.getString("profile_site", "Site não informado")
+
+            cardView.findViewById<TextView>(R.id.cardName).text = nome
+            cardView.findViewById<TextView>(R.id.cardTitle).text = titulo
+            cardView.findViewById<TextView>(R.id.cardCrp).text = "CRP $crp"
+            cardView.findViewById<TextView>(R.id.cardSpecialties).text = especialidades
+            cardView.findViewById<TextView>(R.id.cardAbout).text = sobre
+            cardView.findViewById<TextView>(R.id.cardModalities).text = modalidades
+            cardView.findViewById<TextView>(R.id.cardWhatsapp).text = whatsapp
+            cardView.findViewById<TextView>(R.id.cardEmail).text = email
+            cardView.findViewById<TextView>(R.id.cardAddress).text = endereco
+            cardView.findViewById<TextView>(R.id.cardSite).text = site
+
+            // Log para debug
+            Log.d("CARTÃO_VISITAS", "Nome: $nome, Título: $titulo, CRP: $crp")
+
+            // Medir e layout do card com tamanho fixo
+            cardView.measure(
+                View.MeasureSpec.makeMeasureSpec(cardWidth, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(cardHeight, View.MeasureSpec.EXACTLY)
+            )
+            cardView.layout(0, 0, cardWidth, cardHeight)
+
+            // Criar bitmap do card
+            val bitmap = Bitmap.createBitmap(cardWidth, cardHeight, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            cardView.draw(canvas)
+
+            // Exibir prévia antes de compartilhar
+            mostrarDialogPreviewCartao(bitmap)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Erro ao gerar cartão de visitas: ${e.message}", Toast.LENGTH_LONG).show()
+            e.printStackTrace()
         }
-
-        // Preencher os dados do perfil
-        cardView.findViewById<TextView>(R.id.cardName).text = profile.getString("profile_name", "Seu Nome")
-        cardView.findViewById<TextView>(R.id.cardCrp).text = profile.getString("profile_crp", "CRP não informado")
-        cardView.findViewById<TextView>(R.id.cardSpecialties).text = profile.getString("profile_specialties", "Especialidades")
-        cardView.findViewById<TextView>(R.id.cardAbout).text = profile.getString("profile_about", "Sobre o psicólogo")
-        val modalidades = profile.getString("profile_modalities", "Modalidades")
-        val horarios = profile.getString("profile_schedule", "Horários")
-        cardView.findViewById<TextView>(R.id.cardModalities).text = "$modalidades - $horarios"
-        cardView.findViewById<TextView>(R.id.cardWhatsapp).text = profile.getString("profile_whatsapp", "(00)")
-        cardView.findViewById<TextView>(R.id.cardEmail).text = profile.getString("profile_email", "email@exemplo.com")
-        cardView.findViewById<TextView>(R.id.cardAddress).text = profile.getString("profile_address", "Endereço")
-        cardView.findViewById<TextView>(R.id.cardLanguages).text = profile.getString("profile_languages", "Português")
-        cardView.findViewById<TextView>(R.id.cardSocial).text = profile.getString("profile_social", "Redes sociais")
-        cardView.findViewById<TextView>(R.id.cardDescription).text = profile.getString("profile_description", "Descrição do atendimento")
-
-        // Medir e layout do card
-        cardView.measure(
-            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
-            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        )
-        cardView.layout(0, 0, cardView.measuredWidth, cardView.measuredHeight)
-
-        // Criar bitmap do card
-        val bitmap = Bitmap.createBitmap(
-            cardView.measuredWidth,
-            cardView.measuredHeight,
-            Bitmap.Config.ARGB_8888
-        )
-        val canvas = Canvas(bitmap)
-        cardView.draw(canvas)
-
-        // Exibir prévia antes de compartilhar
-        mostrarDialogPreviewCartao(bitmap)
     }
 
     private fun mostrarDialogPreviewCartao(bitmap: Bitmap) {

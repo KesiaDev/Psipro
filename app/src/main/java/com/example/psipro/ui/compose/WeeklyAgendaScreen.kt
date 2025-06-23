@@ -42,13 +42,20 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.math.max
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 
 val hourBoxHeight = 70.dp
 val thinLine = 0.8.dp
 val daysOfWeek = listOf("SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM")
 val dayFontSize = 12.sp
 val bronzeGold: Color @Composable get() = colorResource(id = R.color.primary_bronze)
-val textDark: Color @Composable get() = colorResource(id = R.color.text_dark)
+val agendaColor: Color @Composable get() = colorResource(id = R.color.primary_bronze)
+val thinLineColor: Color @Composable get() {
+    return agendaColor.copy(alpha = if (isSystemInDarkTheme()) 0.2f else 0.12f)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,7 +118,7 @@ fun WeeklyAgendaScreen(
                                 text = {
                                     Text(
                                         text = option,
-                                        color = if (viewMode == option) bronzeGold else MaterialTheme.colorScheme.onSurface
+                                        color = if (viewMode == option) agendaColor else MaterialTheme.colorScheme.onSurface
                                     )
                                 },
                                 onClick = {
@@ -126,7 +133,7 @@ fun WeeklyAgendaScreen(
                                             else -> Icons.Filled.Event
                                         },
                                         contentDescription = null,
-                                        tint = if (viewMode == option) bronzeGold else MaterialTheme.colorScheme.onSurface
+                                        tint = if (viewMode == option) agendaColor else MaterialTheme.colorScheme.onSurface
                                     )
                                 }
                             )
@@ -136,8 +143,8 @@ fun WeeklyAgendaScreen(
             },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.background,
-                titleContentColor = bronzeGold,
-                actionIconContentColor = bronzeGold
+                titleContentColor = agendaColor,
+                actionIconContentColor = agendaColor
             )
         )
 
@@ -150,7 +157,7 @@ fun WeeklyAgendaScreen(
         ) {
             val (navText, prevDate, nextDate) = when (viewMode) {
                 "Semana" -> Triple(
-                    "Semana de ${weekStart.format(DateTimeFormatter.ofPattern("dd/MM"))}",
+                    "Semana",
                     focusedDate.minusWeeks(1),
                     focusedDate.plusWeeks(1)
                 )
@@ -175,11 +182,11 @@ fun WeeklyAgendaScreen(
             IconButton(onClick = {
                 if (viewMode == "Mês") currentMonth = prevDate else focusedDate = prevDate
             }) {
-                Icon(Icons.Filled.ChevronLeft, contentDescription = "Anterior", tint = bronzeGold)
+                Icon(Icons.Filled.ChevronLeft, contentDescription = "Anterior", tint = agendaColor)
             }
             Text(
                 text = navText,
-                color = bronzeGold,
+                color = agendaColor,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
                 modifier = Modifier.weight(1f),
@@ -188,7 +195,7 @@ fun WeeklyAgendaScreen(
             IconButton(onClick = {
                 if (viewMode == "Mês") currentMonth = nextDate else focusedDate = nextDate
             }) {
-                Icon(Icons.Filled.ChevronRight, contentDescription = "Próximo", tint = bronzeGold)
+                Icon(Icons.Filled.ChevronRight, contentDescription = "Próximo", tint = agendaColor)
             }
         }
 
@@ -199,7 +206,7 @@ fun WeeklyAgendaScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             when (viewMode) {
-                "Mês" -> MonthView(appointments, currentMonth)
+                "Mês" -> MonthView(appointments, currentMonth, onAppointmentClicked)
                 "Semana" -> WeekView(weekStart, hours, appointments, today, onTimeSlotClicked, onAppointmentClicked)
                 "4 dias" -> FourDayView(focusedDate, hours, appointments, today, onTimeSlotClicked, onAppointmentClicked)
                 "Dia" -> DayView(focusedDate, hours, appointments, today, onTimeSlotClicked, onAppointmentClicked)
@@ -228,7 +235,6 @@ fun DayView(
     onTimeSlotClick: (LocalDate, Int) -> Unit,
     onAppointmentClick: (Appointment) -> Unit
 ) {
-    val thinLineColor = bronzeGold.copy(alpha = if (!isSystemInDarkTheme()) 0.18f else 0.28f)
     val firstHour = hours.minOrNull() ?: 8
 
     Box(modifier = Modifier.padding(horizontal = 8.dp)) {
@@ -244,7 +250,7 @@ fun DayView(
                 ) {
                     Text(
                         "%02d:00".format(hour),
-                        color = bronzeGold,
+                        color = agendaColor,
                         fontSize = 10.sp,
                         modifier = Modifier
                             .width(64.dp)
@@ -356,18 +362,34 @@ fun AppointmentCard(
         } else {
             appointment.patientName
         }
-        val textColor = if (isSystemInDarkTheme()) Color.White else Color.Black
 
-        Text(
-            text = title,
-            color = textColor,
-            fontSize = 12.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .padding(4.dp)
-                .align(Alignment.CenterHorizontally)
-        )
+        // Ajusta o tamanho da fonte e maxLines com base na visualização e duração
+        val (dynamicFontSize, maxLines) = if (isDayView) {
+            Pair(
+                (14f + (clampedDuration / 60f)).coerceAtMost(18f).sp, // Fonte maior para DayView
+                (clampedDuration / 20).toInt().coerceAtLeast(2)      // Mais linhas para DayView
+            )
+        } else {
+            Pair(
+                (10f + (clampedDuration / 45f)).coerceAtMost(14f).sp,
+                (clampedDuration / 30).toInt().coerceAtLeast(1)
+            )
+        }
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = title,
+                color = Color.Black,
+                fontSize = dynamicFontSize,
+                maxLines = maxLines,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(4.dp)
+            )
+        }
     }
 }
 
@@ -390,7 +412,6 @@ private fun AgendaView(
     onAppointmentClick: (Appointment) -> Unit
 ) {
     val days = (0 until numDays).map { startDate.plusDays(it.toLong()) }
-    val thinLineColor = bronzeGold.copy(alpha = if (!isSystemInDarkTheme()) 0.18f else 0.4f)
     val firstHour = hours.minOrNull() ?: 8
 
     Row(
@@ -404,7 +425,7 @@ private fun AgendaView(
             hours.forEach { hour ->
                 Text(
                     "%02d:00".format(hour),
-                    color = bronzeGold,
+                    color = agendaColor,
                     fontSize = 10.sp,
                     modifier = Modifier
                         .height(hourBoxHeight)
@@ -422,13 +443,24 @@ private fun AgendaView(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Cabeçalho do Dia
-                Text(
-                    text = daysOfWeek[date.dayOfWeek.value - 1],
-                    fontSize = dayFontSize,
-                    color = if (date == today) MaterialTheme.colorScheme.primary else bronzeGold,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = daysOfWeek[date.dayOfWeek.value - 1],
+                        fontSize = dayFontSize,
+                        color = if (date == today) MaterialTheme.colorScheme.primary else agendaColor,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 8.dp, bottom = 2.dp)
+                    )
+                    Text(
+                        text = date.dayOfMonth.toString(),
+                        fontSize = 10.sp,
+                        color = if (date == today) MaterialTheme.colorScheme.primary else agendaColor,
+                        fontWeight = FontWeight.Normal,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
 
                 // Corpo do Dia
                 Box {
@@ -519,60 +551,119 @@ private fun overlaps(a: Appointment, b: Appointment): Boolean {
 @Composable
 fun MonthView(
     appointments: List<Appointment>,
-    currentMonth: LocalDate
+    currentMonth: LocalDate,
+    onAppointmentClick: (Appointment) -> Unit
 ) {
     val context = LocalContext.current
     val daysInMonth = currentMonth.lengthOfMonth()
     val firstDayOfMonth = currentMonth.withDayOfMonth(1)
     val startDayOfWeek = firstDayOfMonth.dayOfWeek.value
+    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+
+    val appointmentsForSelectedDay = remember(selectedDate) {
+        appointments.filter {
+            it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == selectedDate
+        }.sortedBy { parseTime(it.startTime) }
+    }
 
     Column(modifier = Modifier.padding(8.dp)) {
-        // Header
-        Row(modifier = Modifier.fillMaxWidth()) {
-            daysOfWeek.forEach { day ->
-                Text(
-                    text = day,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.weight(1f)
-                )
+        // Calendário
+        Column {
+            // Header
+            Row(modifier = Modifier.fillMaxWidth()) {
+                daysOfWeek.forEach { day ->
+                    Text(
+                        text = day,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(1f),
+                        color = agendaColor
+                    )
+                }
+            }
+            // Dias
+            (0 until (daysInMonth + startDayOfWeek - 1) / 7 + 1).forEach { week ->
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    (0..6).forEach { day ->
+                        val dayOfMonth = week * 7 + day - startDayOfWeek + 2
+                        if (dayOfMonth > 0 && dayOfMonth <= daysInMonth) {
+                            val date = currentMonth.withDayOfMonth(dayOfMonth)
+                            val appointmentsOnDay = appointments.count { it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == date }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .aspectRatio(1f)
+                                    .padding(2.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .border(
+                                        width = 2.dp,
+                                        color = when {
+                                            date == selectedDate -> MaterialTheme.colorScheme.primary
+                                            date == LocalDate.now() -> agendaColor
+                                            else -> Color.Transparent
+                                        },
+                                        shape = RoundedCornerShape(4.dp)
+                                    )
+                                    .clickable { selectedDate = date },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = dayOfMonth.toString())
+                                if (appointmentsOnDay > 0) {
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomCenter)
+                                            .padding(bottom = 4.dp)
+                                            .size(6.dp)
+                                            .background(agendaColor, CircleShape)
+                                    )
+                                }
+                            }
+                        } else {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
             }
         }
-        // Days
-        (0 until (daysInMonth + startDayOfWeek - 1) / 7 + 1).forEach { week ->
-            Row(modifier = Modifier.fillMaxWidth()) {
-                (0..6).forEach { day ->
-                    val dayOfMonth = week * 7 + day - startDayOfWeek + 2
-                    if (dayOfMonth > 0 && dayOfMonth <= daysInMonth) {
-                        val date = currentMonth.withDayOfMonth(dayOfMonth)
-                        val appointmentsOnDay = appointments.count { it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == date }
-                        Box(
+
+        // Lista de agendamentos para o dia selecionado
+        if (selectedDate != null) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Agendamentos para ${selectedDate?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}",
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                modifier = Modifier.padding(bottom = 8.dp),
+                color = agendaColor
+            )
+            if (appointmentsForSelectedDay.isEmpty()) {
+                Text("Nenhum agendamento para este dia.")
+            } else {
+                LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
+                    items(appointmentsForSelectedDay) { appointment ->
+                        Card(
                             modifier = Modifier
-                                .weight(1f)
-                                .aspectRatio(1f)
-                                .padding(2.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .border(
-                                    1.dp,
-                                    if (date == LocalDate.now()) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                    RoundedCornerShape(4.dp)
-                                ),
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .clickable { onAppointmentClick(appointment) },
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
-                            Text(text = dayOfMonth.toString())
-                            if (appointmentsOnDay > 0) {
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.BottomCenter)
-                                        .padding(bottom = 4.dp)
-                                        .size(6.dp)
-                                        .background(bronzeGold, CircleShape)
-                                )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(text = appointment.patientName, fontWeight = FontWeight.Bold)
+                                    Text(text = "Horário: ${appointment.startTime} - ${appointment.endTime}", fontSize = 14.sp)
+                                }
+                                Icon(Icons.Filled.ChevronRight, contentDescription = "Ver detalhes")
                             }
                         }
-                    } else {
-                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             }

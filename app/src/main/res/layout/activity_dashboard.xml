@@ -20,11 +20,11 @@
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:background="@color/bar_background"
+                android:background="?attr/colorPrimary"
                 app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light"
-                app:titleTextColor="@color/bronze_gold"
-                app:subtitleTextColor="@color/bronze_gold"
-                app:navigationIconTint="@color/bronze_gold"/>
+                app:titleTextColor="?attr/colorOnPrimary"
+                app:subtitleTextColor="?attr/colorOnPrimary"
+                app:navigationIconTint="?attr/colorOnPrimary"/>
 
         </com.google.android.material.appbar.AppBarLayout>
 
@@ -50,9 +50,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:background="@color/bar_background"
-            app:itemIconTint="@color/bronze_gold"
-            app:itemTextColor="@color/bronze_gold"
+            android:background="?attr/colorSurface"
+            app:itemIconTint="@color/primary_bronze"
+            app:itemTextColor="@color/primary_bronze"
             app:layout_constraintBottom_toBottomOf="parent"
             app:menu="@menu/bottom_navigation_menu" />
 
@@ -61,7 +61,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Bem-vindo (a)!"
-            android:textColor="@color/bronze_gold"
+            android:textColor="?attr/colorPrimary"
             android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintTop_toTopOf="parent"
@@ -75,9 +75,9 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="@color/drawer_background"
-        app:itemTextColor="@color/bronze_gold"
-        app:itemIconTint="@color/bronze_gold"
+        android:background="?attr/colorSurface"
+        app:itemTextColor="?attr/colorPrimary"
+        app:itemIconTint="?attr/colorPrimary"
         app:headerLayout="@layout/drawer_header"
         app:menu="@menu/drawer_menu" />
 

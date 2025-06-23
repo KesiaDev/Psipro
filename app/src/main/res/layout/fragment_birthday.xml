@@ -4,14 +4,14 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="24dp"
-    android:background="@color/background_card_dark">
+    android:background="?attr/colorSurface">
 
     <TextView
         android:id="@+id/birthdayList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Aniversariantes do dia"
-        android:textColor="@color/bronze_gold"
+        android:textColor="?attr/colorPrimary"
         android:textStyle="bold"
         android:textSize="24sp"
         android:gravity="center"
@@ -28,7 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Mensagem de aniversário"
-            android:textColor="@color/bronze_gold"
+            android:textColor="?attr/colorPrimary"
             android:textStyle="bold"
             android:layout_marginBottom="8dp" />
 
@@ -50,8 +50,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Copiar"
-                android:textColor="@color/white"
-                android:backgroundTint="@color/bronze_gold" />
+                android:textColor="?attr/colorOnPrimary"
+                android:backgroundTint="?attr/colorPrimary" />
 
             <Button
                 android:id="@+id/whatsappButton"
@@ -60,8 +60,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="WhatsApp"
-                android:textColor="@color/white"
-                android:backgroundTint="@color/bronze_gold"
+                android:textColor="?attr/colorOnPrimary"
+                android:backgroundTint="?attr/colorPrimary"
                 android:layout_marginStart="8dp" />
         </LinearLayout>
     </LinearLayout>

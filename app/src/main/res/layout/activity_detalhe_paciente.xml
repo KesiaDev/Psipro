@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background_black"
+    android:background="?attr/colorBackground"
     android:padding="0dp">
 
     <!-- Cabeçalho -->
@@ -23,7 +23,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_arrow_back"
-            android:tint="@color/bronze_gold"
+            app:tint="?attr/colorPrimary"
             android:contentDescription="Voltar" />
 
         <TextView
@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Ficha do Paciente"
-            android:textColor="@color/bronze_gold"
+            android:textColor="?attr/colorPrimary"
             android:textSize="22sp"
             android:textStyle="bold"
             android:gravity="center" />
@@ -57,20 +57,20 @@
                 android:layout_width="28dp"
                 android:layout_height="28dp"
                 android:src="@drawable/ic_calendar"
-                android:tint="@color/purple_200" />
+                app:tint="?attr/colorSecondary" />
             <TextView
                 android:id="@+id/tvSessoes"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0"
-                android:textColor="@color/white"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="18sp"
                 android:textStyle="bold" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Sessões"
-                android:textColor="@color/white"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -86,20 +86,20 @@
                 android:layout_width="28dp"
                 android:layout_height="28dp"
                 android:src="@drawable/ic_check_circle"
-                android:tint="@color/green" />
+                app:tint="@color/success_green" />
             <TextView
                 android:id="@+id/tvAtendidas"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0"
-                android:textColor="@color/white"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="18sp"
                 android:textStyle="bold" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Atendidas"
-                android:textColor="@color/white"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -115,20 +115,20 @@
                 android:layout_width="28dp"
                 android:layout_height="28dp"
                 android:src="@drawable/ic_error"
-                android:tint="@color/red" />
+                app:tint="@color/error_red" />
             <TextView
                 android:id="@+id/tvFaltas"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0"
-                android:textColor="@color/white"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="18sp"
                 android:textStyle="bold" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Faltas"
-                android:textColor="@color/white"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="12sp" />
         </LinearLayout>
     </LinearLayout>
@@ -152,10 +152,10 @@
         android:layout_height="48dp"
         android:text="Exportar"
         android:textAllCaps="false"
-        android:textColor="@color/white"
+        android:textColor="?attr/colorOnPrimary"
         android:textStyle="bold"
         android:textSize="15sp"
-        android:backgroundTint="@color/bronze_gold"
+        android:backgroundTint="?attr/colorPrimary"
         android:layout_margin="16dp"
         android:layout_gravity="bottom" />
 

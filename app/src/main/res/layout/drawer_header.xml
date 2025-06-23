@@ -2,7 +2,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="180dp"
-    android:background="@color/drawer_background"
+    android:background="?attr/colorPrimary"
     android:orientation="vertical"
     android:padding="16dp"
     android:gravity="bottom">
@@ -12,7 +12,7 @@
         android:layout_width="64dp"
         android:layout_height="64dp"
         android:src="@drawable/ic_account_circle"
-        app:civ_border_color="@color/bronze_gold"
+        app:civ_border_color="?attr/colorOnPrimary"
         app:civ_border_width="2dp" />
 
     <TextView
@@ -21,7 +21,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="Seu Nome aqui"
-        android:textColor="@color/bronze_gold"
+        android:textColor="?attr/colorOnPrimary"
         android:textStyle="bold"
         android:textSize="18sp" />
 
@@ -30,6 +30,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="CRP não informado"
-        android:textColor="@color/bronze_gold"
+        android:textColor="?attr/colorOnPrimary"
         android:textSize="14sp" />
 </LinearLayout> 

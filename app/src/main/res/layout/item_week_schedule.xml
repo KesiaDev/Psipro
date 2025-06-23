@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="Segunda-feira"
-        android:textColor="@color/text_primary"
+        android:textColor="?attr/textColorPrimary"
         android:textSize="15sp"
         android:textStyle="bold" />
 
@@ -21,7 +21,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="08:00–20:00"
-        android:textColor="@color/text_secondary"
+        android:textColor="?attr/textColorSecondary"
         android:textSize="14sp"
         android:layout_marginEnd="12dp" />
 
@@ -30,6 +30,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Fechado"
-        android:textColor="@color/text_secondary" />
+        android:textColor="?attr/textColorSecondary" />
 
 </LinearLayout> 

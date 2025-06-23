@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@color/black"
+    android:background="?attr/colorSurface"
     android:padding="12dp"
     android:layout_marginBottom="8dp"
     android:elevation="2dp">
@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Título do Laudo"
-        android:textColor="@color/bronze_gold"
+        android:textColor="?attr/colorPrimary"
         android:textStyle="bold"
         android:textSize="18sp"/>
 
@@ -22,7 +22,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="12/04/2024"
-        android:textColor="@color/gold_light"
+        android:textColor="?attr/textColorSecondary"
         android:textSize="14sp"
         android:layout_marginTop="2dp"/>
 
@@ -31,7 +31,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Resumo do laudo..."
-        android:textColor="@color/white"
+        android:textColor="?attr/colorOnSurface"
         android:textSize="15sp"
         android:maxLines="2"
         android:ellipsize="end"
@@ -50,6 +50,6 @@
             android:background="@android:color/transparent"
             android:src="@android:drawable/ic_menu_view"
             android:contentDescription="Ver anexo"
-            android:tint="@color/bronze_gold"/>
+            android:tint="?attr/colorPrimary"/>
     </LinearLayout>
 </LinearLayout> 

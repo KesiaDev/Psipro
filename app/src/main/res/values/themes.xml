@@ -2,21 +2,21 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Theme.Psipro" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/gold</item>
+        <item name="colorPrimary">@color/primary_bronze</item>
         <item name="colorPrimaryVariant">@color/bronze_gold_dark</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <item name="colorSecondary">@color/gold</item>
+        <item name="colorOnPrimary">@color/text_white</item>
+        <item name="colorSecondary">@color/secondary_bronze</item>
         <item name="colorSecondaryVariant">@color/bronze_gold_dark</item>
-        <item name="colorOnSecondary">@color/white</item>
-        <item name="android:windowBackground">@color/background_general</item>
-        <item name="colorSurface">@color/card_background</item>
-        <item name="colorOnSurface">@color/text_primary</item>
-        <item name="textColorPrimary">@color/text_primary</item>
-        <item name="textColorSecondary">@color/text_secondary</item>
-        <item name="colorBackground">@color/background_general</item>
-        <item name="colorError">@color/red</item>
-        <item name="android:statusBarColor">@color/gold</item>
-        <item name="android:navigationBarColor">@color/gold</item>
+        <item name="colorOnSecondary">@color/text_white</item>
+        <item name="android:windowBackground">@color/background_light</item>
+        <item name="colorSurface">@color/surface_white</item>
+        <item name="colorOnSurface">@color/text_black</item>
+        <item name="textColorPrimary">@color/text_black</item>
+        <item name="textColorSecondary">@color/text_gray</item>
+        <item name="colorBackground">@color/background_light</item>
+        <item name="colorError">@color/error_red</item>
+        <item name="android:statusBarColor">@color/primary_bronze</item>
+        <item name="android:navigationBarColor">@color/primary_bronze</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="textInputStyle">@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox</item>
         <item name="toolbarStyle">@style/Widget.MaterialComponents.Toolbar.Primary</item>
@@ -24,7 +24,8 @@
         <item name="actionBarPopupTheme">@style/ThemeOverlay.MaterialComponents.Light</item>
         <item name="bottomNavigationStyle">@style/Widget.MaterialComponents.BottomNavigationView</item>
         <item name="fontFamily">@font/nunito</item>
-        <item name="colorOutline">@color/border</item>
+        <item name="colorOutline">@color/primary_bronze</item>
+        <item name="dividerColor">@color/dividerColor</item>
     </style>
 
     <style name="Theme.Psipro.NoActionBar" parent="Theme.Psipro">

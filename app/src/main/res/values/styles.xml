@@ -19,9 +19,9 @@
 
     <!-- Google Sign In Button Style -->
     <style name="GoogleSignInButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
-        <item name="android:textColor">@color/input_text_light</item>
+        <item name="android:textColor">@color/text_black</item>
         <item name="android:backgroundTint">@color/white</item>
-        <item name="strokeColor">@color/input_stroke_light</item>
+        <item name="strokeColor">@color/primary_bronze</item>
         <item name="strokeWidth">1dp</item>
         <item name="cornerRadius">32dp</item>
         <item name="android:textSize">15sp</item>
@@ -41,9 +41,9 @@
         <item name="boxCornerRadiusTopEnd">16dp</item>
         <item name="boxCornerRadiusBottomStart">16dp</item>
         <item name="boxCornerRadiusBottomEnd">16dp</item>
-        <item name="boxStrokeColor">@color/bronze_gold</item>
-        <item name="hintTextColor">#6C757D</item>
-        <item name="android:background">@color/input_background_light</item>
+        <item name="boxStrokeColor">@color/primary_bronze</item>
+        <item name="hintTextColor">@color/text_gray</item>
+        <item name="android:background">@color/surface_white</item>
         <item name="boxStrokeWidth">1.5dp</item>
         <item name="boxStrokeWidthFocused">2dp</item>
         <item name="android:elevation">2dp</item>
@@ -51,15 +51,15 @@
         <item name="android:layout_marginEnd">4dp</item>
         <item name="android:minHeight">52dp</item>
         <item name="android:layout_height">52dp</item>
-        <item name="boxBackgroundColor">@color/input_background_light</item>
+        <item name="boxBackgroundColor">@color/surface_white</item>
         <item name="hintEnabled">true</item>
         <item name="hintAnimationEnabled">false</item>
     </style>
 
     <style name="LoginInputEditText" parent="Widget.MaterialComponents.TextInputEditText.OutlinedBox">
-        <item name="android:textColor">#212529</item>
-        <item name="android:textColorHint">#6C757D</item>
-        <item name="android:background">@color/input_background_light</item>
+        <item name="android:textColor">@color/text_black</item>
+        <item name="android:textColorHint">@color/text_gray</item>
+        <item name="android:background">@color/surface_white</item>
         <item name="android:paddingStart">20dp</item>
         <item name="android:paddingEnd">20dp</item>
         <item name="android:paddingTop">12dp</item>
@@ -157,18 +157,6 @@
     <style name="MaterialAlertDialog.Button.Negative" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
         <item name="android:textColor">@color/bronze_gold</item>
         <item name="rippleColor">@color/bronze_gold</item>
-    </style>
-
-    <style name="MaterialAlertDialog.MaterialComponents.Title.Text" parent="MaterialAlertDialog.MaterialComponents.Title.Text">
-        <item name="android:textAppearance">@style/TextAppearance.MaterialComponents.Headline6</item>
-        <item name="android:textColor">@color/bronze_gold</item>
-        <item name="android:fontFamily">@font/nunito</item>
-    </style>
-
-    <style name="MaterialAlertDialog.MaterialComponents.Body.Text" parent="MaterialAlertDialog.MaterialComponents.Body.Text">
-        <item name="android:textAppearance">@style/TextAppearance.MaterialComponents.Body1</item>
-        <item name="android:textColor">@android:color/black</item>
-        <item name="android:fontFamily">@font/nunito</item>
     </style>
 
     <style name="Widget.MaterialComponents.Button.TextButton.Dialog" parent="Widget.MaterialComponents.Button.TextButton">

@@ -8,7 +8,7 @@
     android:layout_marginHorizontal="0dp"
     app:cardCornerRadius="16dp"
     app:cardElevation="2dp"
-    app:cardBackgroundColor="@color/background_card_dark">
+    app:cardBackgroundColor="?attr/colorSurface">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -21,7 +21,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_calendar"
-            android:tint="@color/bronze_gold"
+            android:tint="?attr/colorPrimary"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
@@ -33,7 +33,7 @@
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="@color/bronze_gold"
+            android:textColor="?attr/colorPrimary"
             app:layout_constraintStart_toEndOf="@id/iconCalendar"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toStartOf="@id/iconArrow"
@@ -48,7 +48,7 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:src="@drawable/ic_chevron_right"
-            android:tint="@color/bronze_gold"
+            android:tint="?attr/colorPrimary"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
@@ -59,7 +59,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textSize="14sp"
-            android:textColor="@color/white"
+            android:textColor="?attr/colorOnSurface"
             app:layout_constraintStart_toStartOf="@id/dataText"
             app:layout_constraintTop_toBottomOf="@id/dataText"
             app:layout_constraintEnd_toEndOf="@id/dataText"

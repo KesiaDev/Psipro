@@ -24,6 +24,8 @@ import android.widget.Toast
 import android.os.Build
 import android.content.res.Configuration
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
+import androidx.navigation.ui.NavigationUI.setupWithNavController
 
 @AndroidEntryPoint
 class DashboardActivity : AppCompatActivity() {
@@ -32,6 +34,7 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var navigationView: NavigationView
     private lateinit var drawerToggle: ActionBarDrawerToggle
+    private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,18 +48,13 @@ class DashboardActivity : AppCompatActivity() {
 
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
+        navController = navHostFragment.navController
 
         appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.navigation_home,
                 R.id.navigation_schedule,
-                R.id.navigation_patients,
-                R.id.nav_financeiro,
-                R.id.nav_notificacoes,
-                R.id.nav_aniversariantes,
-                R.id.nav_configuracoes,
-                R.id.nav_suporte
+                R.id.navigation_patients
             ),
             drawerLayout
         )
@@ -101,6 +99,22 @@ class DashboardActivity : AppCompatActivity() {
 
         val bottomNavigationView = findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottom_navigation)
         bottomNavigationView.setupWithNavController(navController)
+
+        // Conjunto de IDs dos itens da navegação inferior para verificação
+        val bottomNavIds = setOf(R.id.navigation_home, R.id.navigation_schedule, R.id.navigation_patients, R.id.nav_financeiro)
+
+        // Listener para atualizar a UI com base na navegação
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            // Atualiza o título da Toolbar
+            supportActionBar?.title = destination.label
+
+            // Se o destino for um item da navegação inferior, limpa a seleção do menu lateral
+            if (bottomNavIds.contains(destination.id)) {
+                for (i in 0 until navigationView.menu.size()) {
+                    navigationView.menu.getItem(i).isChecked = false
+                }
+            }
+        }
     }
 
     override fun onResume() {
