@@ -45,4 +45,6 @@
     <color name="background_black">#000000</color>
     <color name="surface_black">#1E1E1E</color>
     <color name="surface_bronze_dark">#D3C5B3</color>
+
+    <color name="colorCardBackground">@color/bronze_gold</color>
 </resources>

@@ -54,7 +54,7 @@ val dayFontSize = 12.sp
 val bronzeGold: Color @Composable get() = colorResource(id = R.color.bronze_gold)
 val agendaColor: Color @Composable get() = colorResource(id = R.color.bronze_gold)
 val thinLineColor: Color @Composable get() {
-    return agendaColor.copy(alpha = if (isSystemInDarkTheme()) 0.2f else 0.12f)
+    return agendaColor.copy(alpha = 0.12f)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -350,11 +350,14 @@ fun AppointmentCard(
             .padding(start = (100 * horizontalOffset).dp * widthFraction)
     }
 
+    // Usar sempre a cor salva em colorHex
+    val cardColor = Color(android.graphics.Color.parseColor(appointment.colorHex)).copy(alpha = 0.6f)
+
     Card(
         modifier = cardModifier,
         shape = RoundedCornerShape(4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(android.graphics.Color.parseColor(appointment.colorHex))
+            containerColor = cardColor
         ),
     ) {
         val title = if (appointment.type == AppointmentType.PESSOAL) {

@@ -104,11 +104,23 @@ fun AppointmentForm(
             endTime = existingAppointment.endTime
             selectedPatient = patients.find { it.id == existingAppointment.patientId }
             statusIndex = statusEnumMap.entries.find { it.value == existingAppointment.status }?.key ?: 0
+            eventTypeIndex = when (existingAppointment.type) {
+                AppointmentType.CONSULTA -> 0
+                AppointmentType.RECONSULTA -> 1
+                AppointmentType.PESSOAL -> 2
+                else -> 0
+            }
         }
     }
 
     val appointmentColors = listOf(
-        "#FFAB91", "#FFCC80", "#FFE082", "#A5D6A7", "#80CBC4", "#81D4FA", "#CE93D8"
+        "#2196F3", // Azul
+        "#43A047", // Verde
+        "#FBC02D", // Amarelo
+        "#E53935", // Vermelho
+        "#8E24AA", // Roxo
+        "#F06292", // Rosa
+        "#FF9800"  // Laranja
     )
 
     val bronzeGold = colorResource(id = R.color.bronze_gold)

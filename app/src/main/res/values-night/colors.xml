@@ -8,7 +8,7 @@
     <color name="bronze_gold_dark">#8B6914</color>
 
     <!-- Cores de Texto -->
-    <color name="text_black">#212529</color>
+    <color name="text_black">#FFFFFFFF</color>
     <color name="text_gray">#6C757D</color>
     <color name="text_white">#FFFFFFFF</color>
     <color name="text_hint">#AAAAAA</color>
@@ -42,4 +42,6 @@
     <color name="agenda_toggle_text">#F5F5F5</color>
     <color name="agenda_fab">#B8860B</color>
     <color name="agenda_fab_ripple">#4DB8860B</color>
+
+    <color name="colorCardBackground">@color/surface_black</color>
 </resources>
