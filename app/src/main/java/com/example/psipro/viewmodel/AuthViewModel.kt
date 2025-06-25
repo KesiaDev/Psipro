@@ -8,6 +8,7 @@ import com.example.psipro.auth.AuthManager
 import com.example.psipro.data.AppDatabase
 import com.example.psipro.data.entities.User
 import com.example.psipro.data.repository.UserRepository
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
@@ -27,8 +28,22 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             try {
-                val success = authManager.login(email, password)
-                onResult(success)
+                val localSuccess = authManager.login(email, password)
+                if (!localSuccess) {
+                    onResult(false)
+                    return@launch
+                }
+                // Agora autentica no FirebaseAuth também
+                FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            onResult(true)
+                        } else {
+                            // Se falhar no Firebase, faz logout local para evitar inconsistência
+                            authManager.logout()
+                            onResult(false)
+                        }
+                    }
             } catch (e: Exception) {
                 Log.e(TAG, "Erro ao fazer login", e)
                 onResult(false)

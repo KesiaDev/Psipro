@@ -17,6 +17,8 @@ import org.vosk.Recognizer
 import org.vosk.android.StorageService
 import org.json.JSONObject
 import java.io.*
+import android.content.Context
+import android.net.Uri
 
 class AudioTranscriptionViewModel(app: Application) : AndroidViewModel(app) {
     private var isRecordingAudio = false
@@ -197,5 +199,27 @@ class AudioTranscriptionViewModel(app: Application) : AndroidViewModel(app) {
             .update("textoTranscricao", novoTexto)
             .addOnSuccessListener { _status.value = "Transcrição atualizada!" }
             .addOnFailureListener { e -> _status.value = "Erro ao atualizar: ${e.message}" }
+    }
+
+    fun transcribeFromUri(context: Context, uri: Uri, pacienteId: String, dataSessao: String) {
+        _status.value = "Processando arquivo..."
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Copia o arquivo do Uri para um arquivo temporário WAV
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val dir = context.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
+                val tempFile = File(dir, "audio_temp.wav")
+                inputStream?.use { input ->
+                    FileOutputStream(tempFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                wavFile = tempFile
+                _status.value = "Arquivo pronto para transcrição."
+                transcreverAudioVosk(pacienteId, dataSessao)
+            } catch (e: Exception) {
+                _status.value = "Erro ao processar arquivo: ${e.message}"
+            }
+        }
     }
 } 

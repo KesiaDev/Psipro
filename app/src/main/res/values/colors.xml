@@ -47,4 +47,10 @@
     <color name="surface_bronze_dark">#D3C5B3</color>
 
     <color name="colorCardBackground">@color/bronze_gold</color>
+    
+    <!-- Cores para botões de anexo -->
+    <color name="attachment_button_primary">#CD7F32</color>
+    <color name="attachment_button_secondary">#B87333</color>
+    <color name="attachment_button_text">#FFFFFF</color>
+    <color name="attachment_button_stroke">#A0522D</color>
 </resources>

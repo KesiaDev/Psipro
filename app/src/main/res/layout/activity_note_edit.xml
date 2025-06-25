@@ -145,14 +145,18 @@
                             android:layout_weight="1"
                             android:text="Imagem"
                             android:textAllCaps="false"
-                            android:textColor="?attr/colorOnPrimary"
+                            android:textSize="12sp"
+                            android:textColor="@color/attachment_button_text"
                             app:icon="@drawable/ic_camera_alt"
-                            app:iconTint="?attr/colorOnPrimary"
-                            app:iconPadding="8dp"
-                            app:backgroundTint="?attr/colorPrimary"
+                            app:iconTint="@color/attachment_button_text"
+                            app:iconSize="18dp"
+                            app:iconPadding="4dp"
+                            app:backgroundTint="@null"
+                            android:background="@drawable/button_attachment_background"
                             app:cornerRadius="24dp"
                             android:elevation="2dp"
-                            android:layout_marginEnd="8dp" />
+                            android:layout_marginEnd="4dp"
+                            android:paddingHorizontal="8dp" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnAddAudio"
@@ -162,14 +166,115 @@
                             android:layout_weight="1"
                             android:text="Áudio"
                             android:textAllCaps="false"
-                            android:textColor="?attr/colorOnPrimary"
+                            android:textSize="12sp"
+                            android:textColor="@color/attachment_button_text"
                             app:icon="@drawable/ic_mic"
-                            app:iconTint="?attr/colorOnPrimary"
-                            app:iconPadding="8dp"
-                            app:backgroundTint="?attr/colorPrimary"
+                            app:iconTint="@color/attachment_button_text"
+                            app:iconSize="18dp"
+                            app:iconPadding="4dp"
+                            app:backgroundTint="@null"
+                            android:background="@drawable/button_attachment_background"
                             app:cornerRadius="24dp"
                             android:elevation="2dp"
-                            android:layout_marginStart="8dp" />
+                            android:layout_marginStart="4dp"
+                            android:layout_marginEnd="4dp"
+                            android:paddingHorizontal="8dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnTranscribeAudio"
+                            style="@style/Widget.MaterialComponents.Button"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:text="Transcrever"
+                            android:textAllCaps="false"
+                            android:textSize="11sp"
+                            android:textColor="@color/attachment_button_text"
+                            app:icon="@drawable/ic_mic"
+                            app:iconTint="@color/attachment_button_text"
+                            app:iconSize="18dp"
+                            app:iconPadding="4dp"
+                            app:backgroundTint="@null"
+                            android:background="@drawable/button_attachment_background"
+                            app:cornerRadius="24dp"
+                            android:elevation="2dp"
+                            android:layout_marginStart="4dp"
+                            android:paddingHorizontal="6dp" />
+
+                    </LinearLayout>
+
+                    <!-- Layout alternativo para telas menores (opcional) -->
+                    <LinearLayout
+                        android:id="@+id/compactButtonsLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="12dp"
+                        android:visibility="gone">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnAddImageCompact"
+                            style="@style/Widget.MaterialComponents.Button"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_weight="1"
+                            android:text="Foto"
+                            android:textAllCaps="false"
+                            android:textSize="11sp"
+                            android:textColor="@color/attachment_button_text"
+                            app:icon="@drawable/ic_camera_alt"
+                            app:iconTint="@color/attachment_button_text"
+                            app:iconSize="16dp"
+                            app:iconPadding="2dp"
+                            app:backgroundTint="@null"
+                            android:background="@drawable/button_attachment_compact_background"
+                            app:cornerRadius="22dp"
+                            android:elevation="2dp"
+                            android:layout_marginEnd="3dp"
+                            android:paddingHorizontal="6dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnAddAudioCompact"
+                            style="@style/Widget.MaterialComponents.Button"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_weight="1"
+                            android:text="Gravar"
+                            android:textAllCaps="false"
+                            android:textSize="11sp"
+                            android:textColor="@color/attachment_button_text"
+                            app:icon="@drawable/ic_mic"
+                            app:iconTint="@color/attachment_button_text"
+                            app:iconSize="16dp"
+                            app:iconPadding="2dp"
+                            app:backgroundTint="@null"
+                            android:background="@drawable/button_attachment_compact_background"
+                            app:cornerRadius="22dp"
+                            android:elevation="2dp"
+                            android:layout_marginStart="3dp"
+                            android:layout_marginEnd="3dp"
+                            android:paddingHorizontal="6dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnTranscribeAudioCompact"
+                            style="@style/Widget.MaterialComponents.Button"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_weight="1"
+                            android:text="Texto"
+                            android:textAllCaps="false"
+                            android:textSize="11sp"
+                            android:textColor="@color/attachment_button_text"
+                            app:icon="@drawable/ic_mic"
+                            app:iconTint="@color/attachment_button_text"
+                            app:iconSize="16dp"
+                            app:iconPadding="2dp"
+                            app:backgroundTint="@null"
+                            android:background="@drawable/button_attachment_compact_background"
+                            app:cornerRadius="22dp"
+                            android:elevation="2dp"
+                            android:layout_marginStart="3dp"
+                            android:paddingHorizontal="6dp" />
 
                     </LinearLayout>
 

@@ -23,10 +23,16 @@ import com.example.psipro.ui.viewmodels.PatientNoteViewModel
 import com.example.psipro.utils.AttachmentManager
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
+import java.io.FileOutputStream
+import java.io.FileInputStream
 import java.util.Date
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.UUID
+import android.app.AlertDialog
+import android.view.View
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 
 @AndroidEntryPoint
 class NoteEditActivity : AppCompatActivity() {
@@ -60,6 +66,16 @@ class NoteEditActivity : AppCompatActivity() {
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.data?.let { uri ->
                 addAudioAttachment(uri)
+            }
+        }
+    }
+    
+    private val transcribeAudioLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                transcribeAudioFromUri(uri)
             }
         }
     }
@@ -118,6 +134,49 @@ class NoteEditActivity : AppCompatActivity() {
             layoutManager = LinearLayoutManager(this@NoteEditActivity)
             adapter = attachmentAdapter
         }
+        
+        // Configurar layout de botões baseado no tamanho da tela
+        setupButtonLayout()
+    }
+    
+    private fun setupButtonLayout() {
+        val displayMetrics = resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels / displayMetrics.density
+        
+        // Se a tela for menor que 360dp, usar layout compacto
+        if (screenWidth < 360) {
+            binding.btnAddImage.visibility = View.GONE
+            binding.btnAddAudio.visibility = View.GONE
+            binding.btnTranscribeAudio.visibility = View.GONE
+            
+            binding.compactButtonsLayout.visibility = View.VISIBLE
+            
+            // Configurar click listeners para botões compactos
+            binding.btnAddImageCompact.setOnClickListener {
+                animateButtonPress(binding.btnAddImageCompact) {
+                    checkImagePermissionAndPick()
+                }
+            }
+            
+            binding.btnAddAudioCompact.setOnClickListener {
+                animateButtonPress(binding.btnAddAudioCompact) {
+                    openAudioPicker()
+                }
+            }
+            
+            binding.btnTranscribeAudioCompact.setOnClickListener {
+                animateButtonPress(binding.btnTranscribeAudioCompact) {
+                    showTranscribeChoiceDialog()
+                }
+            }
+        } else {
+            // Usar layout normal
+            binding.btnAddImage.visibility = View.VISIBLE
+            binding.btnAddAudio.visibility = View.VISIBLE
+            binding.btnTranscribeAudio.visibility = View.VISIBLE
+            
+            binding.compactButtonsLayout.visibility = View.GONE
+        }
     }
     
     private fun setupClickListeners() {
@@ -134,12 +193,35 @@ class NoteEditActivity : AppCompatActivity() {
         }
         
         binding.btnAddImage.setOnClickListener {
-            checkImagePermissionAndPick()
+            animateButtonPress(binding.btnAddImage) {
+                checkImagePermissionAndPick()
+            }
         }
         
         binding.btnAddAudio.setOnClickListener {
-            openAudioPicker()
+            animateButtonPress(binding.btnAddAudio) {
+                openAudioPicker()
+            }
         }
+        
+        binding.btnTranscribeAudio.setOnClickListener {
+            animateButtonPress(binding.btnTranscribeAudio) {
+                showTranscribeChoiceDialog()
+            }
+        }
+    }
+    
+    private fun animateButtonPress(button: View, action: () -> Unit) {
+        val animation = AnimationUtils.loadAnimation(this, R.anim.button_press)
+        button.startAnimation(animation)
+        
+        animation.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationStart(animation: Animation?) {}
+            override fun onAnimationEnd(animation: Animation?) {
+                action()
+            }
+            override fun onAnimationRepeat(animation: Animation?) {}
+        })
     }
     
     private fun toggleFavorite() {
@@ -378,5 +460,106 @@ class NoteEditActivity : AppCompatActivity() {
         }.addOnFailureListener {
             onError(it)
         }
+    }
+
+    private fun transcribeAudioFromUri(uri: Uri) {
+        // Chama uma função utilitária ou ViewModel para transcrever o áudio
+        // Aqui, exemplo simplificado usando Vosk (pode ser adaptado para seu fluxo)
+        binding.editTextNote.setText("Transcrevendo áudio...")
+        Thread {
+            try {
+                val context = this
+                val inputStream = contentResolver.openInputStream(uri)
+                val tempFile = File.createTempFile("audio_transcribe", ".wav", cacheDir)
+                inputStream?.use { input ->
+                    FileOutputStream(tempFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                // Aqui você pode chamar sua lógica de transcrição offline (Vosk)
+                // Exemplo:
+                val model = org.vosk.Model("${filesDir}/model-pt")
+                val recognizer = org.vosk.Recognizer(model, 16000.0f)
+                val audioInput = FileInputStream(tempFile)
+                val buffer = ByteArray(4096)
+                var bytesRead: Int
+                while (audioInput.read(buffer).also { bytesRead = it } >= 0) {
+                    recognizer.acceptWaveForm(buffer, bytesRead)
+                }
+                val result = recognizer.finalResult
+                val texto = org.json.JSONObject(result).optString("text")
+                runOnUiThread {
+                    binding.editTextNote.setText(texto)
+                    Toast.makeText(context, "Transcrição concluída!", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    Toast.makeText(this, "Erro na transcrição: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }.start()
+    }
+
+    private fun showTranscribeChoiceDialog() {
+        val options = arrayOf("Transcrever áudio anexado", "Selecionar novo arquivo")
+        AlertDialog.Builder(this)
+            .setTitle("Transcrever áudio")
+            .setItems(options) { dialog, which ->
+                when (which) {
+                    0 -> showAnexosAudioDialog()
+                    1 -> {
+                        val intent = Intent(Intent.ACTION_PICK, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
+                        transcribeAudioLauncher.launch(intent)
+                    }
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun showAnexosAudioDialog() {
+        val audios = attachmentManager.getAudioAttachments(currentAudioAttachments)
+        if (audios.isEmpty()) {
+            Toast.makeText(this, "Nenhum áudio anexado.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val fileNames = audios.map { File(it).name }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("Escolha o áudio para transcrever")
+            .setItems(fileNames) { dialog, which ->
+                val audioPath = audios[which]
+                transcribeAudioFromFile(audioPath)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun transcribeAudioFromFile(path: String) {
+        binding.editTextNote.setText("Transcrevendo áudio...")
+        Thread {
+            try {
+                val context = this
+                val tempFile = File(path)
+                // Aqui você pode chamar sua lógica de transcrição offline (Vosk)
+                val model = org.vosk.Model("${filesDir}/model-pt")
+                val recognizer = org.vosk.Recognizer(model, 16000.0f)
+                val audioInput = FileInputStream(tempFile)
+                val buffer = ByteArray(4096)
+                var bytesRead: Int
+                while (audioInput.read(buffer).also { bytesRead = it } >= 0) {
+                    recognizer.acceptWaveForm(buffer, bytesRead)
+                }
+                val result = recognizer.finalResult
+                val texto = org.json.JSONObject(result).optString("text")
+                runOnUiThread {
+                    binding.editTextNote.setText(texto)
+                    Toast.makeText(context, "Transcrição concluída!", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    Toast.makeText(this, "Erro na transcrição: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }.start()
     }
 } 

@@ -1,14 +1,20 @@
 package com.example.psipro.ui.screens
 
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.psipro.ui.viewmodels.AudioTranscriptionViewModel
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun AudioTranscriptionScreen(
@@ -20,6 +26,14 @@ fun AudioTranscriptionScreen(
     val status by viewModel.status.collectAsState()
     var texto by remember { mutableStateOf("") }
     val transcription by viewModel.transcription.collectAsState()
+    val context = LocalContext.current
+    val selectAudioLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.transcribeFromUri(context, uri, pacienteId, dataSessao)
+        }
+    }
 
     LaunchedEffect(transcription) {
         texto = transcription
@@ -31,6 +45,14 @@ fun AudioTranscriptionScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(if (!isRecording) "Gravar Áudio" else "Parar Gravação")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = { selectAudioLauncher.launch("audio/*") },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isRecording
+        ) {
+            Text("Selecionar Áudio para Transcrição")
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(
