@@ -22,5 +22,9 @@ data class PatientNote(
     val patientId: Long,
     val content: String,
     val createdAt: Date = Date(),
-    val updatedAt: Date = Date()
+    val updatedAt: Date = Date(),
+    val isFavorite: Boolean = false,
+    val imageAttachments: String = "", // JSON array de caminhos de imagens
+    val audioAttachments: String = "", // JSON array de caminhos de áudios
+    val signaturePath: String = "" // Caminho da imagem da assinatura digital
 ) 

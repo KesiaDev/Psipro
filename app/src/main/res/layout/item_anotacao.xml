@@ -21,10 +21,22 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_calendar"
-            android:tint="?attr/colorPrimary"
+            android:tint="?attr/colorOnSurface"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
+
+        <!-- Ícone favorito -->
+        <ImageView
+            android:id="@+id/iconFavorite"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_star"
+            android:tint="@color/bronze_gold"
+            android:contentDescription="Favoritar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginEnd="4dp" />
 
         <!-- Data da sessão -->
         <TextView
@@ -33,10 +45,10 @@
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="?attr/colorPrimary"
+            android:textColor="@color/bronze_or_on_surface"
             app:layout_constraintStart_toEndOf="@id/iconCalendar"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/iconArrow"
+            app:layout_constraintEnd_toStartOf="@id/iconFavorite"
             app:layout_constraintHorizontal_bias="0.0"
             android:layout_marginStart="12dp"
             android:layout_marginEnd="12dp"
@@ -48,7 +60,7 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:src="@drawable/ic_chevron_right"
-            android:tint="?attr/colorPrimary"
+            android:tint="?attr/colorOnSurface"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
@@ -59,12 +71,85 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textSize="14sp"
-            android:textColor="?attr/colorOnSurface"
+            android:textColor="@color/bronze_or_on_surface"
             app:layout_constraintStart_toStartOf="@id/dataText"
             app:layout_constraintTop_toBottomOf="@id/dataText"
             app:layout_constraintEnd_toEndOf="@id/dataText"
             android:layout_marginTop="4dp"
             tools:text="Resumo da anotação da sessão..." />
+
+        <!-- Área de anexos -->
+        <LinearLayout
+            android:id="@+id/attachmentsLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/anotacaoText"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <!-- Indicador de imagens -->
+            <LinearLayout
+                android:id="@+id/imageIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/circle_background"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:layout_marginEnd="8dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_camera_alt"
+                    android:tint="?attr/colorOnSurface" />
+
+                <TextView
+                    android:id="@+id/imageCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_marginStart="4dp"
+                    tools:text="2" />
+
+            </LinearLayout>
+
+            <!-- Indicador de áudios -->
+            <LinearLayout
+                android:id="@+id/audioIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/circle_background"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_mic"
+                    android:tint="?attr/colorOnSurface" />
+
+                <TextView
+                    android:id="@+id/audioCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_marginStart="4dp"
+                    tools:text="1" />
+
+            </LinearLayout>
+
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

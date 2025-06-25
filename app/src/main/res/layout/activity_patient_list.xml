@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
-            app:title="Lista de Pacientes"
+            app:title="Pac"
             app:titleTextColor="@color/bronze_gold"
             app:subtitleTextColor="@color/bronze_gold"
             app:navigationIconTint="@color/bronze_gold"/>

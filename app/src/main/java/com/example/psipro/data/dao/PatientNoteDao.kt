@@ -23,4 +23,7 @@ interface PatientNoteDao {
 
     @Query("SELECT * FROM patient_notes")
     fun getAllNotes(): kotlinx.coroutines.flow.Flow<List<PatientNote>>
+
+    @Query("SELECT * FROM patient_notes WHERE id = :noteId LIMIT 1")
+    suspend fun getNoteById(noteId: Long): PatientNote?
 } 

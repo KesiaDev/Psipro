@@ -24,4 +24,7 @@ class PatientNoteRepository @Inject constructor(
 
     suspend fun deleteAllNotesForPatient(patientId: Long) = 
         patientNoteDao.deleteAllNotesForPatient(patientId)
+
+    suspend fun getNoteById(noteId: Long): PatientNote? =
+        patientNoteDao.getNoteById(noteId)
 } 

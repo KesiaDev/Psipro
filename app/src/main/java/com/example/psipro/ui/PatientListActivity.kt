@@ -2,8 +2,11 @@ package com.example.psipro.ui
 
 import android.content.Intent
 import android.os.Bundle
+import com.example.psipro.R
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -106,5 +109,25 @@ class PatientListActivity : SecureActivity() {
     override fun onSupportNavigateUp(): Boolean {
         onBackPressed()
         return true
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_patient_list, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_import_patients -> {
+                // TODO: Iniciar fluxo de importação de pacientes
+                android.widget.Toast.makeText(this, "Importar Pacientes clicado", android.widget.Toast.LENGTH_SHORT).show()
+                true
+            }
+            android.R.id.home -> {
+                onBackPressed()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 } 

@@ -22,5 +22,6 @@ data class Prontuario(
     val patientId: Long,
     val content: String,
     val createdAt: Date = Date(),
-    val updatedAt: Date = Date()
+    val updatedAt: Date = Date(),
+    val isFavorite: Boolean = false
 ) 

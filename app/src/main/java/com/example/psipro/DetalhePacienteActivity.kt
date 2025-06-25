@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.psipro.adapter.MenuAdapter
 import com.example.psipro.ui.screens.WhatsAppHistoryActivity
 import com.example.psipro.DashboardActivity
+import com.example.psipro.ProntuarioListActivity
 
 @AndroidEntryPoint
 class DetalhePacienteActivity : AppCompatActivity() {
@@ -52,7 +53,11 @@ class DetalhePacienteActivity : AppCompatActivity() {
                 intent.putExtra("PATIENT_ID", currentPatientId)
                 startActivity(intent)
             },
-            MenuItem(R.drawable.ic_assignment, "Prontuário") { /* abrir prontuário */ },
+            MenuItem(R.drawable.ic_assignment, "Prontuário") {
+                val intent = Intent(this, ProntuarioListActivity::class.java)
+                intent.putExtra("patient_id", currentPatientId)
+                startActivity(intent)
+            },
             MenuItem(R.drawable.ic_anamnese, "Anamnese") { /* abrir anamnese */ },
             MenuItem(R.drawable.ic_note, "Anotações da Sessão") { /* abrir anotações */ },
             MenuItem(R.drawable.ic_account_balance_wallet, "Financeiro") { /* abrir financeiro */ },

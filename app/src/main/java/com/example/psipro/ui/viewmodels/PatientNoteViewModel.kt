@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import androidx.lifecycle.asLiveData
 
 @HiltViewModel
 class PatientNoteViewModel @Inject constructor(
@@ -16,6 +17,8 @@ class PatientNoteViewModel @Inject constructor(
 
     fun getNotesByPatient(patientId: Long): Flow<List<PatientNote>> =
         repository.getNotesForPatient(patientId)
+
+    fun getNotesByPatientLiveData(patientId: Long) = repository.getNotesForPatient(patientId).asLiveData()
 
     fun insertNote(
         note: PatientNote,
@@ -73,6 +76,17 @@ class PatientNoteViewModel @Inject constructor(
                 onSuccess()
             } catch (e: Exception) {
                 onError(e)
+            }
+        }
+    }
+
+    fun getNoteById(noteId: Long, onResult: (PatientNote?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val note = repository.getNoteById(noteId)
+                onResult(note)
+            } catch (e: Exception) {
+                onResult(null)
             }
         }
     }

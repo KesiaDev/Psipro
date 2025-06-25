@@ -80,6 +80,21 @@
                 android:hint="Telefone"/>
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Email -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/LoginInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/emailEditText"
+                style="@style/LoginInputEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Email"
+                android:inputType="textEmailAddress"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
         <!-- Informações Clínicas -->
         <TextView
             android:id="@+id/infoClinicasTitle"
