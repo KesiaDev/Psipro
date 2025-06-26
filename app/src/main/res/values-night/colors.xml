@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Cores da Marca -->
-    <color name="primary_bronze">#CD7F32</color>
-    <color name="secondary_bronze">#B87333</color>
-    <color name="accent_bronze">#D2691E</color>
-    <color name="bronze_gold">#B8860B</color>
-    <color name="bronze_gold_dark">#8B6914</color>
+    <color name="primary_bronze">#9e742c</color>
+    <color name="secondary_bronze">#9e742c</color>
+    <color name="accent_bronze">#9e742c</color>
+    <color name="bronze_gold">#9e742c</color>
+    <color name="bronze_gold_dark">#9e742c</color>
 
     <!-- Cores de Texto -->
     <color name="text_black">#FFFFFFFF</color>
@@ -32,16 +32,20 @@
     <color name="ic_launcher_background">#1E1E1E</color>
 
     <!-- Cores Legadas da Agenda (a serem revisadas/removidas) -->
-    <color name="agenda_bronze">#B8860B</color>
-    <color name="agenda_bronze_30">#4DB8860B</color>
-    <color name="agenda_event_bg">#26B8860B</color>
+    <color name="agenda_bronze">#9e742c</color>
+    <color name="agenda_bronze_30">#4D9e742c</color>
+    <color name="agenda_event_bg">#269e742c</color>
     <color name="agenda_event_text">#F5F5F5</color>
-    <color name="agenda_divider">#4DB8860B</color>
-    <color name="agenda_toggle_selected">#B8860B</color>
+    <color name="agenda_divider">#4D9e742c</color>
+    <color name="agenda_toggle_selected">#9e742c</color>
     <color name="agenda_toggle_unselected">#333333</color>
     <color name="agenda_toggle_text">#F5F5F5</color>
-    <color name="agenda_fab">#B8860B</color>
-    <color name="agenda_fab_ripple">#4DB8860B</color>
+    <color name="agenda_fab">#9e742c</color>
+    <color name="agenda_fab_ripple">#4D9e742c</color>
 
     <color name="colorCardBackground">@color/surface_black</color>
+
+    <color name="attachment_button_primary">#9e742c</color>
+    <color name="attachment_button_secondary">#9e742c</color>
+    <color name="attachment_button_stroke">#9e742c</color>
 </resources>

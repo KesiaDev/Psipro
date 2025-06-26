@@ -121,6 +121,14 @@ class EditProfileActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Checagem de autenticação Firebase
+        if (com.google.firebase.auth.FirebaseAuth.getInstance().currentUser == null) {
+            val intent = Intent(this, com.example.psipro.MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+            return
+        }
         // Inicializa o Places API
         if (!Places.isInitialized()) {
             Places.initialize(applicationContext, "YOUR_API_KEY") // Substitua YOUR_API_KEY pela sua chave da API do Google
@@ -160,6 +168,7 @@ class EditProfileActivity : AppCompatActivity() {
         binding.btnSave.setOnClickListener { salvarPerfilComFoto() }
         binding.btnCancel.setOnClickListener { finish() }
         binding.btnExportCard.setOnClickListener {
+            salvarCamposNasSharedPreferences()
             exportarCartaoDeVisitas()
         }
 
@@ -747,6 +756,44 @@ class EditProfileActivity : AppCompatActivity() {
                 System.currentTimeMillis() - file.lastModified() > 60 * 60 * 1000) {
                 file.delete()
             }
+        }
+    }
+
+    private fun salvarCamposNasSharedPreferences() {
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+        prefs.edit().apply {
+            putString("profile_name", binding.editTextName.text.toString().trim())
+            putString("profile_crp", binding.editTextCRP.text.toString().trim())
+            putString("profile_title", binding.editTextTitle.text.toString().trim())
+            putString("profile_specialties", binding.editTextSpecialties.text.toString().trim())
+            putString("profile_about", binding.editTextAbout.text.toString().trim())
+            putString("profile_address", binding.editTextAddress.text.toString().trim())
+            putString("profile_whatsapp", binding.editTextWhatsapp.text.toString().trim())
+            putString("profile_email", binding.editTextEmail.text.toString().trim())
+            putString("profile_site", binding.editTextSite.text.toString().trim())
+            // Salvar modalidades como string separada por vírgulas
+            val modalidades = mutableListOf<String>()
+            for (i in 0 until binding.chipGroupModalities.childCount) {
+                val chip = binding.chipGroupModalities.getChildAt(i) as Chip
+                if (chip.isChecked) modalidades.add(chip.text.toString())
+            }
+            putString("profile_modalities", modalidades.joinToString(", "))
+            if (profileImageUri != null) {
+                val file = File(cacheDir, "profile_photo.jpg")
+                contentResolver.openInputStream(profileImageUri!!)?.use { input ->
+                    file.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                putString("profile_photo_path", file.absolutePath)
+            } else {
+                // Se não mudou a foto, mantenha o caminho anterior
+                val fotoPath = getSharedPreferences("settings", MODE_PRIVATE).getString("profile_photo_path", null)
+                if (!fotoPath.isNullOrEmpty()) {
+                    putString("profile_photo_path", fotoPath)
+                }
+            }
+            apply()
         }
     }
 } 

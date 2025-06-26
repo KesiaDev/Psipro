@@ -134,6 +134,11 @@
             android:exported="false"
             android:label="Editar Anotação" />
         
+        <activity
+            android:name=".AnamneseActivity"
+            android:exported="false"
+            android:label="Anamnese" />
+        
     </application>
 
 </manifest>

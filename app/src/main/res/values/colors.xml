@@ -53,4 +53,6 @@
     <color name="attachment_button_secondary">#B87333</color>
     <color name="attachment_button_text">#FFFFFF</color>
     <color name="attachment_button_stroke">#A0522D</color>
+    <color name="attachment_button_gold">@color/bronze_gold</color>
+    <color name="attachment_button_text_black">#000000</color>
 </resources>

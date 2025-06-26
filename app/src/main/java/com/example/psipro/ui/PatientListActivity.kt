@@ -63,6 +63,16 @@ class PatientListActivity : SecureActivity() {
                     putExtra("patient_name", patient.name)
                 }
                 startActivity(intent)
+            },
+            onDeleteClick = { patient ->
+                androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("Excluir paciente")
+                    .setMessage("Tem certeza que deseja excluir este paciente?")
+                    .setPositiveButton("Excluir") { _, _ ->
+                        viewModel.deletePatient(patient)
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
             }
         )
 

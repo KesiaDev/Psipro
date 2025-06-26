@@ -15,7 +15,8 @@ import java.util.Locale
 
 class PatientAdapter(
     private val onItemClick: (Patient) -> Unit,
-    private val onScheduleClick: (Patient) -> Unit
+    private val onScheduleClick: (Patient) -> Unit,
+    private val onDeleteClick: (Patient) -> Unit
 ) : ListAdapter<Patient, PatientAdapter.PatientViewHolder>(PatientDiffCallback()) {
 
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
@@ -36,6 +37,7 @@ class PatientAdapter(
         private val infoText: TextView = itemView.findViewById(R.id.patientInfoText)
         private val viewDetailsButton: MaterialButton = itemView.findViewById(R.id.viewDetailsButton)
         private val scheduleButton: MaterialButton = itemView.findViewById(R.id.scheduleButton)
+        private val deleteButton: View = itemView.findViewById(R.id.deleteButton)
 
         fun bind(patient: Patient) {
             nameText.text = patient.name
@@ -51,6 +53,10 @@ class PatientAdapter(
 
             scheduleButton.setOnClickListener {
                 onScheduleClick(patient)
+            }
+
+            deleteButton.setOnClickListener {
+                onDeleteClick(patient)
             }
         }
 

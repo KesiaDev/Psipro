@@ -58,7 +58,12 @@ class DetalhePacienteActivity : AppCompatActivity() {
                 intent.putExtra("patient_id", currentPatientId)
                 startActivity(intent)
             },
-            MenuItem(R.drawable.ic_anamnese, "Anamnese") { /* abrir anamnese */ },
+            MenuItem(R.drawable.ic_anamnese, "Anamnese") { 
+                val intent = Intent(this, AnamneseActivity::class.java)
+                intent.putExtra("PATIENT_ID", currentPatientId)
+                intent.putExtra("PATIENT_NAME", patientName)
+                startActivity(intent)
+            },
             MenuItem(R.drawable.ic_note, "Anotações da Sessão") { /* abrir anotações */ },
             MenuItem(R.drawable.ic_account_balance_wallet, "Financeiro") { /* abrir financeiro */ },
             MenuItem(R.drawable.ic_attach_money, "Cobranças") { /* abrir cobranças */ },

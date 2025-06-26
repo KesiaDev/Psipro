@@ -146,6 +146,16 @@ class PatientsFragment : Fragment() {
                     // Fallback: tenta obter o NavController da Activity
                     requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottom_navigation)?.selectedItemId = R.id.navigation_schedule
                 }
+            },
+            onDeleteClick = { patient ->
+                androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Excluir paciente")
+                    .setMessage("Tem certeza que deseja excluir este paciente?")
+                    .setPositiveButton("Excluir") { _, _ ->
+                        patientViewModel.deletePatient(patient)
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
             }
         )
         binding.patientsRecyclerView.layoutManager = LinearLayoutManager(requireContext())

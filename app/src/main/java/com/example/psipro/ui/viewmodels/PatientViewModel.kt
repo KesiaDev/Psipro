@@ -1,6 +1,9 @@
 package com.example.psipro.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.example.psipro.data.entities.Patient
 import com.example.psipro.data.repository.PatientRepository
@@ -12,6 +15,8 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlinx.coroutines.flow.asStateFlow
+import com.example.psipro.data.dao.AnamneseCampoDao
+import com.example.psipro.data.entities.AnamneseCampo
 
 @HiltViewModel
 class PatientViewModel @Inject constructor(
@@ -39,6 +44,9 @@ class PatientViewModel @Inject constructor(
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
+
+    var anamneseCampos: List<AnamneseCampo> by mutableStateOf(emptyList())
+        private set
 
     init {
         loadPatients()
@@ -178,6 +186,12 @@ class PatientViewModel @Inject constructor(
 
     fun loadAllPatients() {
         loadPatients()
+    }
+
+    fun carregarCamposAnamnese(anamneseCampoDao: AnamneseCampoDao, modeloId: Long) {
+        viewModelScope.launch {
+            anamneseCampos = anamneseCampoDao.getByModeloId(modeloId)
+        }
     }
 }
 

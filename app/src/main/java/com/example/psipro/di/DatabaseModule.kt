@@ -3,6 +3,8 @@ package com.example.psipro.di
 import android.content.Context
 import com.example.psipro.data.AppDatabase
 import com.example.psipro.security.EncryptionManager
+import com.example.psipro.data.dao.AnamneseCampoDao
+import com.example.psipro.data.dao.AnamnesePreenchidaDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -37,4 +39,16 @@ object DatabaseModule {
 
     @Provides
     fun provideProntuarioDao(db: AppDatabase) = db.prontuarioDao()
+
+    @Provides
+    @Singleton
+    fun provideAnamneseCampoDao(db: AppDatabase): AnamneseCampoDao = db.anamneseCampoDao()
+
+    @Provides
+    @Singleton
+    fun provideAnamnesePreenchidaDao(db: AppDatabase): AnamnesePreenchidaDao = db.anamnesePreenchidaDao()
+
+    @Provides
+    @Singleton
+    fun provideAnamneseModelDao(db: AppDatabase) = db.anamneseModelDao()
 } 
