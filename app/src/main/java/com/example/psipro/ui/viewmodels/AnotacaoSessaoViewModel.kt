@@ -54,7 +54,9 @@ class AnotacaoSessaoViewModel @Inject constructor(
         observacoes: String,
         tipoSessaoId: Long?,
         valorSessao: Double?,
-        anexos: String = ""
+        anexos: String = "",
+        metaTerapeutica: String = "",
+        proximoAgendamento: String = ""
     ) {
         viewModelScope.launch {
             val anotacao = AnotacaoSessao(
@@ -68,6 +70,8 @@ class AnotacaoSessaoViewModel @Inject constructor(
                 evolucao = evolucao,
                 observacoes = observacoes,
                 anexos = anexos,
+                metaTerapeutica = metaTerapeutica,
+                proximoAgendamento = proximoAgendamento,
                 updatedAt = Date()
             )
             val anotacaoId = repository.insert(anotacao)

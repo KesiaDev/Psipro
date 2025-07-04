@@ -26,6 +26,8 @@ data class AnotacaoSessao(
     val evolucao: String = "",
     val observacoes: String = "",
     val anexos: String = "", // JSON array de caminhos de anexos
+    val metaTerapeutica: String = "", // Meta terapêutica da sessão
+    val proximoAgendamento: String = "", // Próximo agendamento sugerido
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),
     val tipoSessaoId: Long? = null

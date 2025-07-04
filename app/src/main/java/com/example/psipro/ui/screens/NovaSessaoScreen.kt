@@ -32,6 +32,23 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.foundation.border
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.net.Uri
+import androidx.compose.foundation.Image
+import coil.compose.rememberAsyncImagePainter
+import androidx.compose.foundation.shape.CircleShape
 
 @Composable
 fun NovaSessaoScreen(
@@ -51,6 +68,9 @@ fun NovaSessaoScreen(
     var tarefas by remember { mutableStateOf("") }
     var evolucao by remember { mutableStateOf("") }
     var observacoes by remember { mutableStateOf("") }
+    var metaTerapeutica by remember { mutableStateOf("") }
+    var proximoAgendamento by remember { mutableStateOf("") }
+    var anexos by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var tipoBusca by remember { mutableStateOf("") }
     val tiposFiltrados = if (tipoBusca.isBlank()) tiposSessao else tiposSessao.filter { it.nome.contains(tipoBusca, ignoreCase = true) }
     val campoShape = RoundedCornerShape(16.dp)
@@ -275,6 +295,120 @@ fun NovaSessaoScreen(
                     maxLines = 6,
                     minLines = 1
                 )
+                
+                // Meta terapêutica da sessão
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = metaTerapeutica,
+                    onValueChange = { metaTerapeutica = it },
+                    label = { Text("Meta terapêutica (curto prazo)") },
+                    leadingIcon = { Icon(Icons.Default.Flag, contentDescription = null) },
+                    shape = campoShape,
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 4,
+                    minLines = 1,
+                    placeholder = { Text("Ex: Reduzir ansiedade, Melhorar comunicação, etc.") }
+                )
+                
+                // Próximo agendamento sugerido
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = proximoAgendamento,
+                    onValueChange = { proximoAgendamento = it },
+                    label = { Text("Próximo agendamento sugerido") },
+                    leadingIcon = { Icon(Icons.Default.DateRange, contentDescription = null) },
+                    shape = campoShape,
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    placeholder = { Text("Ex: Próxima semana, 15 dias, etc.") }
+                )
+                
+                // Seção de anexos
+                Spacer(Modifier.height(16.dp))
+                Text("Anexos", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                Spacer(Modifier.height(8.dp))
+                
+                val context = LocalContext.current
+                val imagePickerLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.GetContent()
+                ) { uri: Uri? ->
+                    uri?.let { anexos = anexos + it }
+                }
+                
+                val cameraLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.TakePicture()
+                ) { success ->
+                    // A câmera será implementada posteriormente
+                }
+                
+                // Botões de anexo
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = { imagePickerLauncher.launch("image/*") },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.AttachFile, contentDescription = null)
+                        Spacer(Modifier.width(4.dp))
+                        Text("Anexar arquivo")
+                    }
+                    
+                    OutlinedButton(
+                        onClick = { imagePickerLauncher.launch("image/*") },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.CameraAlt, contentDescription = null)
+                        Spacer(Modifier.width(4.dp))
+                        Text("Tirar foto")
+                    }
+                }
+                
+                // Lista de anexos
+                if (anexos.isNotEmpty()) {
+                    Spacer(Modifier.height(12.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(anexos) { uri ->
+                            Box(
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                            ) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(uri),
+                                    contentDescription = "Anexo",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                                
+                                // Botão de remover
+                                IconButton(
+                                    onClick = { anexos = anexos - uri },
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .size(24.dp)
+                                        .background(
+                                            MaterialTheme.colorScheme.error,
+                                            CircleShape
+                                        )
+                                ) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Remover",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                
                 Spacer(Modifier.height(8.dp))
                 // Chips de tipos de sessão mais comuns
                 Text("Tipos mais usados:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
@@ -341,7 +475,10 @@ fun NovaSessaoScreen(
                                 evolucao = evolucao,
                                 observacoes = observacoes,
                                 tipoSessaoId = tipoSelecionado?.id,
-                                valorSessao = valorSessao.toDoubleOrNull()
+                                valorSessao = valorSessao.toDoubleOrNull(),
+                                metaTerapeutica = metaTerapeutica,
+                                proximoAgendamento = proximoAgendamento,
+                                anexos = anexos.map { it.toString() }.joinToString("|")
                             )
                             onSave()
                         },
@@ -368,7 +505,10 @@ fun NovaSessaoScreen(
                     evolucao = evolucao,
                     observacoes = observacoes,
                     tipoSessaoId = tipoSelecionado?.id,
-                    valorSessao = valorSessao.toDoubleOrNull()
+                    valorSessao = valorSessao.toDoubleOrNull(),
+                    metaTerapeutica = metaTerapeutica,
+                    proximoAgendamento = proximoAgendamento,
+                    anexos = anexos.map { it.toString() }.joinToString("|")
                 )
                 onSave()
             },
