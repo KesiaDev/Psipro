@@ -61,6 +61,16 @@ fun NovaSessaoScreen(
     val ultimasTarefas = viewModel.anotacoes.value.map { it.tarefas }.filter { it.isNotBlank() }.distinct().takeLast(5).reversed()
     var showSugestoesAssuntos by remember { mutableStateOf(false) }
     var showSugestoesTarefas by remember { mutableStateOf(false) }
+    
+    // Tipos mais usados pelo psicólogo
+    val tiposMaisUsados = viewModel.anotacoes.value
+        .mapNotNull { it.tipoSessaoId }
+        .groupBy { it }
+        .mapValues { it.value.size }
+        .entries
+        .sortedByDescending { it.value }
+        .take(3)
+        .mapNotNull { entry -> tiposSessao.find { it.id == entry.key } }
 
     LaunchedEffect(tipoSelecionado) {
         tipoSelecionado?.let { valorSessao = it.valorPadrao.toString() }
@@ -181,6 +191,33 @@ fun NovaSessaoScreen(
                     maxLines = 4,
                     minLines = 1
                 )
+                // Chips de estados emocionais comuns
+                Spacer(Modifier.height(8.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val estadosComuns = listOf("Calmo", "Ansioso", "Triste", "Irritado", "Feliz", "Confuso", "Estressado", "Motivado")
+                    items(estadosComuns) { estado ->
+                        AssistChip(
+                            onClick = { 
+                                if (estadoEmocional.isBlank()) {
+                                    estadoEmocional = estado
+                                } else {
+                                    estadoEmocional = if (estadoEmocional.contains(estado)) {
+                                        estadoEmocional.replace(estado, "").trim().replace(",,", ",").trim(',')
+                                    } else {
+                                        "$estadoEmocional, $estado"
+                                    }
+                                }
+                            },
+                            label = { Text(estado) },
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = if (estadoEmocional.contains(estado)) 
+                                    MaterialTheme.colorScheme.primaryContainer 
+                                else 
+                                    MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        )
+                    }
+                }
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = intervencoes,
@@ -238,7 +275,59 @@ fun NovaSessaoScreen(
                     maxLines = 6,
                     minLines = 1
                 )
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(8.dp))
+                // Chips de tipos de sessão mais comuns
+                Text("Tipos mais usados:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                Spacer(Modifier.height(8.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val tiposComuns = listOf("Terapia Individual", "Avaliação", "Retorno", "Emergência", "Primeira Consulta")
+                    items(tiposComuns) { tipoNome ->
+                        val tipo = tiposSessao.find { it.nome.equals(tipoNome, ignoreCase = true) }
+                        AssistChip(
+                            onClick = {
+                                tipo?.let {
+                                    tipoSelecionado = it
+                                    tipoBusca = it.nome
+                                    valorSessao = it.valorPadrao.toString()
+                                }
+                            },
+                            label = { Text(tipoNome) },
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = if (tipoSelecionado?.nome == tipoNome) 
+                                    MaterialTheme.colorScheme.primaryContainer 
+                                else 
+                                    MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        )
+                    }
+                }
+                
+                // Chips dos tipos mais usados pelo psicólogo
+                if (tiposMaisUsados.isNotEmpty()) {
+                    Spacer(Modifier.height(12.dp))
+                    Text("Seus tipos mais usados:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                    Spacer(Modifier.height(8.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(tiposMaisUsados) { tipo ->
+                            AssistChip(
+                                onClick = {
+                                    tipoSelecionado = tipo
+                                    tipoBusca = tipo.nome
+                                    valorSessao = tipo.valorPadrao.toString()
+                                },
+                                label = { Text(tipo.nome) },
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = if (tipoSelecionado?.id == tipo.id) 
+                                        MaterialTheme.colorScheme.secondaryContainer 
+                                    else 
+                                        MaterialTheme.colorScheme.surfaceVariant
+                                )
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(Modifier.height(16.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     Button(
                         onClick = {
