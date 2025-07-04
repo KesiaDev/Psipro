@@ -15,4 +15,5 @@ class AnotacaoSessaoRepository @Inject constructor(
     suspend fun insert(anotacao: AnotacaoSessao): Long = dao.insert(anotacao)
     suspend fun update(anotacao: AnotacaoSessao) = dao.update(anotacao)
     suspend fun delete(anotacao: AnotacaoSessao) = dao.delete(anotacao)
+    suspend fun deleteById(id: Long) = dao.deleteById(id)
 } 

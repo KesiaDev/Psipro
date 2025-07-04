@@ -46,4 +46,7 @@ interface CobrancaSessaoDao {
 
     @Query("UPDATE cobrancas_sessao SET status = :status, dataPagamento = :dataPagamento WHERE id = :cobrancaId")
     suspend fun marcarComoPago(cobrancaId: Long, status: StatusPagamento, dataPagamento: Date?)
+
+    @Query("DELETE FROM cobrancas_sessao WHERE anotacaoSessaoId = :anotacaoSessaoId")
+    suspend fun deleteByAnotacaoSessaoId(anotacaoSessaoId: Long)
 } 

@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -79,6 +80,8 @@ fun AnotacoesSessaoScreen(
     val campoShape = RoundedCornerShape(16.dp)
     val botaoShape = RoundedCornerShape(28.dp)
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
+
+    var showDeleteDialog by remember { mutableStateOf<Long?>(null) }
 
     // Carregar anotações reais ao abrir
     LaunchedEffect(patientId) {
@@ -151,6 +154,17 @@ fun AnotacoesSessaoScreen(
                                         "R$ %.2f".format(tipoSessao.valorPadrao),
                                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                         color = MaterialTheme.colorScheme.secondary
+                                    )
+                                }
+                                // Botão de exclusão
+                                IconButton(
+                                    onClick = { showDeleteDialog = anotacao.id },
+                                    modifier = Modifier.padding(start = 4.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = "Excluir sessão",
+                                        tint = MaterialTheme.colorScheme.error
                                     )
                                 }
                             }
@@ -318,5 +332,31 @@ fun AnotacoesSessaoScreen(
                 }
             }
         }
+    }
+    
+    // Dialog de confirmação de exclusão
+    showDeleteDialog?.let { anotacaoId ->
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = null },
+            title = { Text("Excluir Sessão") },
+            text = { Text("Tem certeza que deseja excluir esta sessão? Esta ação não pode ser desfeita.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.excluirAnotacao(anotacaoId)
+                        showDeleteDialog = null
+                        // Recarregar anotações após exclusão
+                        viewModel.carregarAnotacoes(patientId)
+                    }
+                ) {
+                    Text("Excluir", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = null }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 } 

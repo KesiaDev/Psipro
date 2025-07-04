@@ -115,4 +115,24 @@ class AnotacaoSessaoViewModel @Inject constructor(
         val maxSession = _anotacoes.value.maxOfOrNull { it.numeroSessao } ?: 0
         return maxSession + 1
     }
+
+    fun excluirAnotacao(anotacaoId: Long) {
+        viewModelScope.launch {
+            try {
+                // Primeiro, excluir a cobrança associada (se existir)
+                cobrancaRepository.deleteByAnotacaoSessaoId(anotacaoId)
+                
+                // Depois, excluir a anotação
+                repository.deleteById(anotacaoId)
+                
+                // Limpar anotação selecionada se for a mesma que foi excluída
+                if (_anotacaoSelecionada.value?.id == anotacaoId) {
+                    _anotacaoSelecionada.value = null
+                }
+            } catch (e: Exception) {
+                // Log do erro
+                println("Erro ao excluir anotação: ${e.message}")
+            }
+        }
+    }
 } 

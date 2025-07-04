@@ -29,6 +29,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.focus.onFocusChanged
 
 @Composable
 fun NovaSessaoScreen(
@@ -52,6 +55,12 @@ fun NovaSessaoScreen(
     val tiposFiltrados = if (tipoBusca.isBlank()) tiposSessao else tiposSessao.filter { it.nome.contains(tipoBusca, ignoreCase = true) }
     val campoShape = RoundedCornerShape(16.dp)
     val botaoShape = RoundedCornerShape(28.dp)
+
+    // Sugestões automáticas
+    val ultimosAssuntos = viewModel.anotacoes.value.map { it.assuntos }.filter { it.isNotBlank() }.distinct().takeLast(5).reversed()
+    val ultimasTarefas = viewModel.anotacoes.value.map { it.tarefas }.filter { it.isNotBlank() }.distinct().takeLast(5).reversed()
+    var showSugestoesAssuntos by remember { mutableStateOf(false) }
+    var showSugestoesTarefas by remember { mutableStateOf(false) }
 
     LaunchedEffect(tipoSelecionado) {
         tipoSelecionado?.let { valorSessao = it.valorPadrao.toString() }
@@ -144,10 +153,23 @@ fun NovaSessaoScreen(
                     label = { Text("Assuntos abordados") },
                     leadingIcon = { Icon(Icons.Default.ChatBubbleOutline, contentDescription = null) },
                     shape = campoShape,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onFocusChanged { showSugestoesAssuntos = it.isFocused },
                     maxLines = 8,
                     minLines = 2
                 )
+                if (showSugestoesAssuntos && ultimosAssuntos.isNotEmpty()) {
+                    LazyRow(Modifier.padding(vertical = 4.dp)) {
+                        items(ultimosAssuntos) { sugestao ->
+                            AssistChip(
+                                onClick = { assuntos = sugestao },
+                                label = { Text(sugestao, maxLines = 1) },
+                                modifier = Modifier.padding(end = 4.dp)
+                            )
+                        }
+                    }
+                }
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = estadoEmocional,
@@ -177,10 +199,23 @@ fun NovaSessaoScreen(
                     label = { Text("Tarefas propostas") },
                     leadingIcon = { Icon(Icons.Default.Checklist, contentDescription = null) },
                     shape = campoShape,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onFocusChanged { showSugestoesTarefas = it.isFocused },
                     maxLines = 6,
                     minLines = 1
                 )
+                if (showSugestoesTarefas && ultimasTarefas.isNotEmpty()) {
+                    LazyRow(Modifier.padding(vertical = 4.dp)) {
+                        items(ultimasTarefas) { sugestao ->
+                            AssistChip(
+                                onClick = { tarefas = sugestao },
+                                label = { Text(sugestao, maxLines = 1) },
+                                modifier = Modifier.padding(end = 4.dp)
+                            )
+                        }
+                    }
+                }
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = evolucao,

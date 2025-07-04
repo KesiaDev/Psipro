@@ -26,4 +26,7 @@ interface AnotacaoSessaoDao {
 
     @Delete
     suspend fun delete(anotacao: AnotacaoSessao)
+
+    @Query("DELETE FROM anotacoes_sessao WHERE id = :id")
+    suspend fun deleteById(id: Long)
 } 

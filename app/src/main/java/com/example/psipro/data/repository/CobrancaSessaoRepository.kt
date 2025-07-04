@@ -39,4 +39,7 @@ class CobrancaSessaoRepository @Inject constructor(
     
     suspend fun marcarComoVencido(cobrancaId: Long) = 
         dao.marcarComoPago(cobrancaId, StatusPagamento.VENCIDO, null)
+    
+    suspend fun deleteByAnotacaoSessaoId(anotacaoSessaoId: Long) = 
+        dao.deleteByAnotacaoSessaoId(anotacaoSessaoId)
 } 
