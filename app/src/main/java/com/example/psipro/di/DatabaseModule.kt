@@ -5,6 +5,7 @@ import com.example.psipro.data.AppDatabase
 import com.example.psipro.security.EncryptionManager
 import com.example.psipro.data.dao.AnamneseCampoDao
 import com.example.psipro.data.dao.AnamnesePreenchidaDao
+import com.example.psipro.data.dao.TipoSessaoDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -51,4 +52,32 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideAnamneseModelDao(db: AppDatabase) = db.anamneseModelDao()
+
+    @Provides
+    @Singleton
+    fun provideHistoricoMedicoDao(db: AppDatabase) = db.historicoMedicoDao()
+
+    @Provides
+    @Singleton
+    fun provideHistoricoFamiliarDao(db: AppDatabase) = db.historicoFamiliarDao()
+
+    @Provides
+    @Singleton
+    fun provideVidaEmocionalDao(db: AppDatabase) = db.vidaEmocionalDao()
+
+    @Provides
+    @Singleton
+    fun provideObservacoesClinicasDao(db: AppDatabase) = db.observacoesClinicasDao()
+
+    @Provides
+    @Singleton
+    fun provideAnotacaoSessaoDao(db: AppDatabase) = db.anotacaoSessaoDao()
+
+    @Provides
+    @Singleton
+    fun provideCobrancaSessaoDao(db: AppDatabase) = db.cobrancaSessaoDao()
+
+    @Provides
+    @Singleton
+    fun provideTipoSessaoDao(db: AppDatabase): TipoSessaoDao = db.tipoSessaoDao()
 } 

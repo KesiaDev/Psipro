@@ -1,0 +1,118 @@
+package com.example.psipro.ui.viewmodels
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.psipro.data.entities.AnotacaoSessao
+import com.example.psipro.data.entities.CobrancaSessao
+import com.example.psipro.data.entities.StatusPagamento
+import com.example.psipro.data.repository.AnotacaoSessaoRepository
+import com.example.psipro.data.repository.CobrancaSessaoRepository
+import com.example.psipro.data.repository.PatientRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.util.Calendar
+import java.util.Date
+import javax.inject.Inject
+
+@HiltViewModel
+class AnotacaoSessaoViewModel @Inject constructor(
+    private val repository: AnotacaoSessaoRepository,
+    private val cobrancaRepository: CobrancaSessaoRepository,
+    private val patientRepository: PatientRepository
+) : ViewModel() {
+    private val _anotacoes = MutableStateFlow<List<AnotacaoSessao>>(emptyList())
+    val anotacoes: StateFlow<List<AnotacaoSessao>> = _anotacoes.asStateFlow()
+
+    private val _anotacaoSelecionada = MutableStateFlow<AnotacaoSessao?>(null)
+    val anotacaoSelecionada: StateFlow<AnotacaoSessao?> = _anotacaoSelecionada.asStateFlow()
+
+    fun carregarAnotacoes(patientId: Long) {
+        viewModelScope.launch {
+            repository.getByPatientId(patientId).collect { anotacoes ->
+                _anotacoes.value = anotacoes
+            }
+        }
+    }
+
+    fun carregarAnotacao(patientId: Long, numeroSessao: Int) {
+        viewModelScope.launch {
+            _anotacaoSelecionada.value = repository.getByPatientAndSession(patientId, numeroSessao)
+        }
+    }
+
+    fun salvarAnotacao(
+        patientId: Long,
+        numeroSessao: Int,
+        assuntos: String,
+        estadoEmocional: String,
+        intervencoes: String,
+        tarefas: String,
+        evolucao: String,
+        observacoes: String,
+        tipoSessaoId: Long?,
+        valorSessao: Double?,
+        anexos: String = ""
+    ) {
+        viewModelScope.launch {
+            val anotacao = AnotacaoSessao(
+                patientId = patientId,
+                numeroSessao = numeroSessao,
+                dataHora = Date(),
+                assuntos = assuntos,
+                estadoEmocional = estadoEmocional,
+                intervencoes = intervencoes,
+                tarefas = tarefas,
+                evolucao = evolucao,
+                observacoes = observacoes,
+                anexos = anexos,
+                updatedAt = Date()
+            )
+            val anotacaoId = repository.insert(anotacao)
+            _anotacaoSelecionada.value = anotacao
+            
+            // Criar cobrança automática
+            try {
+                val valor = valorSessao ?: 0.0
+                if (valor > 0) {
+                    val dataVencimento = Calendar.getInstance().apply {
+                        add(Calendar.DAY_OF_MONTH, 7) // Vencimento em 7 dias
+                    }.time
+                    
+                    val cobranca = CobrancaSessao(
+                        patientId = patientId,
+                        anotacaoSessaoId = anotacaoId,
+                        numeroSessao = numeroSessao,
+                        valor = valor,
+                        dataSessao = anotacao.dataHora,
+                        dataVencimento = dataVencimento,
+                        status = StatusPagamento.A_RECEBER,
+                        observacoes = "",
+                        pixCopiaCola = "",
+                        createdAt = Date(),
+                        updatedAt = Date()
+                    )
+                    cobrancaRepository.insert(cobranca)
+                }
+            } catch (e: Exception) {
+                // Log do erro, mas não falha a operação principal
+                println("Erro ao criar cobrança automática: ${e.message}")
+            }
+        }
+    }
+
+    fun editarAnotacao(anotacao: AnotacaoSessao) {
+        viewModelScope.launch {
+            val anotacaoAtualizada = anotacao.copy(updatedAt = Date())
+            repository.update(anotacaoAtualizada)
+            _anotacaoSelecionada.value = anotacaoAtualizada
+        }
+    }
+
+    fun getProximoNumeroSessao(patientId: Long): Int {
+        val maxSession = _anotacoes.value.maxOfOrNull { it.numeroSessao } ?: 0
+        return maxSession + 1
+    }
+} 

@@ -29,4 +29,7 @@ interface PatientDao {
 
     @Query("SELECT COUNT(*) FROM patients")
     suspend fun getPatientCount(): Int
+
+    @Query("SELECT * FROM patients")
+    suspend fun getAll(): List<Patient>
 } 

@@ -156,6 +156,33 @@
                         android:textSize="16sp"
                         android:fontFamily="sans-serif-medium" />
                 </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_cake"
+                        app:tint="@color/bronze_gold" />
+                    <EditText
+                        android:id="@+id/edtDataNascimento"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@android:color/transparent"
+                        android:hint="Data de Nascimento"
+                        android:inputType="date"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/textColorSecondary"
+                        android:textSize="16sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:enabled="false" />
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

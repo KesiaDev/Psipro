@@ -35,6 +35,16 @@ import androidx.compose.runtime.collectAsState
 import com.example.psipro.ui.viewmodels.PatientViewModel
 import java.util.Calendar
 import java.util.Date
+import com.example.psipro.ui.screens.HistoricoFamiliarScreen
+import com.example.psipro.ui.screens.HistoricoMedicoScreen
+import androidx.appcompat.app.AppCompatDelegate
+import android.content.Context
+import com.example.psipro.ui.screens.VidaEmocionalScreen
+import com.example.psipro.ui.screens.ObservacoesClinicasScreen
+import com.example.psipro.ui.screens.AnotacoesSessaoScreen
+import com.example.psipro.ui.screens.SessaoInfo
+import com.example.psipro.ui.screens.AnotacaoSessaoData
+import com.example.psipro.ui.screens.SecaoAnamneseType
 
 @AndroidEntryPoint
 class AnamneseActivity : ComponentActivity() {
@@ -58,8 +68,8 @@ class AnamneseActivity : ComponentActivity() {
             androidx.compose.runtime.LaunchedEffect(patientId) {
                 patientViewModel.loadPatient(patientId)
             }
-            PsiproTheme {
-                var secaoSelecionada by remember { mutableStateOf<String?>(null) }
+            PsiproTheme(useDarkTheme = isDarkModeActive(this)) {
+                var secaoSelecionada by remember { mutableStateOf<SecaoAnamneseType?>(null) }
                 val paciente = patientState?.let {
                     PacienteInfo(
                         nome = it.name,
@@ -71,39 +81,82 @@ class AnamneseActivity : ComponentActivity() {
                     MenuAnamneseScreen(
                         paciente = paciente ?: PacienteInfo("-", 0),
                         secoes = secoes,
-                        onSecaoClick = { secao -> secaoSelecionada = secao.titulo },
+                        onSecaoClick = { secao -> secaoSelecionada = secao.tipo },
                         onBack = { finish() }
                     )
                 } else {
-                    if (secaoSelecionada == "Dados Pessoais") {
-                        Scaffold(
-                            topBar = {},
-                            snackbarHost = { SnackbarHost(remember { SnackbarHostState() }) }
-                        ) { innerPadding ->
-                            Column(
-                                modifier = Modifier
-                                    .padding(innerPadding)
-                                    .fillMaxSize()
-                                    .padding(24.dp)
-                            ) {
-                                Text(
-                                    text = "Dados Pessoais",
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(text = "Nome: ${paciente?.nome ?: "-"}", style = MaterialTheme.typography.bodyLarge)
-                                Text(text = "Idade: ${paciente?.idade ?: "-"} anos", style = MaterialTheme.typography.bodyLarge)
+                    when (secaoSelecionada) {
+                        SecaoAnamneseType.DADOS_PESSOAIS -> {
+                            Scaffold(
+                                topBar = {},
+                                snackbarHost = { SnackbarHost(remember { SnackbarHostState() }) }
+                            ) { innerPadding ->
+                                Column(
+                                    modifier = Modifier
+                                        .padding(innerPadding)
+                                        .fillMaxSize()
+                                        .padding(24.dp)
+                                ) {
+                                    Text(
+                                        text = "Dados Pessoais",
+                                        style = MaterialTheme.typography.titleLarge
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(text = "Nome: ${paciente?.nome ?: "-"}", style = MaterialTheme.typography.bodyLarge)
+                                    Text(text = "Idade: ${paciente?.idade ?: "-"} anos", style = MaterialTheme.typography.bodyLarge)
+                                }
                             }
                         }
-                    } else {
-                        Scaffold(
-                            topBar = {},
-                            snackbarHost = { SnackbarHost(remember { SnackbarHostState() }) }
-                        ) { innerPadding ->
-                            androidx.compose.material3.Text(
-                                text = "Seção: $secaoSelecionada",
-                                modifier = androidx.compose.ui.Modifier.padding(innerPadding).fillMaxSize()
+                        SecaoAnamneseType.HISTORICO_FAMILIAR -> {
+                            HistoricoFamiliarScreen(
+                                patientId = patientId,
+                                onSave = { secaoSelecionada = null },
+                                onBack = { secaoSelecionada = null },
+                                viewModel = androidx.hilt.navigation.compose.hiltViewModel()
                             )
+                        }
+                        SecaoAnamneseType.HISTORICO_MEDICO -> {
+                            HistoricoMedicoScreen(
+                                patientId = patientId,
+                                onSave = { secaoSelecionada = null },
+                                onBack = { secaoSelecionada = null },
+                                viewModel = androidx.hilt.navigation.compose.hiltViewModel()
+                            )
+                        }
+                        SecaoAnamneseType.VIDA_EMOCIONAL -> {
+                            VidaEmocionalScreen(
+                                patientId = patientId,
+                                onSave = { secaoSelecionada = null },
+                                onBack = { secaoSelecionada = null },
+                                viewModel = androidx.hilt.navigation.compose.hiltViewModel()
+                            )
+                        }
+                        SecaoAnamneseType.OBSERVACOES_CLINICAS -> {
+                            ObservacoesClinicasScreen(
+                                patientId = patientId,
+                                onSave = { secaoSelecionada = null },
+                                onBack = { secaoSelecionada = null },
+                                viewModel = androidx.hilt.navigation.compose.hiltViewModel()
+                            )
+                        }
+                        SecaoAnamneseType.ANOTACOES_SESSAO -> {
+                            AnotacoesSessaoScreen(
+                                patientId = patientId,
+                                onSave = { secaoSelecionada = null },
+                                onBack = { secaoSelecionada = null },
+                                viewModel = androidx.hilt.navigation.compose.hiltViewModel()
+                            )
+                        }
+                        null -> {
+                            Scaffold(
+                                topBar = {},
+                                snackbarHost = { SnackbarHost(remember { SnackbarHostState() }) }
+                            ) { innerPadding ->
+                                androidx.compose.material3.Text(
+                                    text = "Seção: ${secaoSelecionada?.name}",
+                                    modifier = androidx.compose.ui.Modifier.padding(innerPadding).fillMaxSize()
+                                )
+                            }
                         }
                     }
                 }
@@ -121,4 +174,16 @@ fun calcularIdade(dataNascimento: Date): Int {
         idade--
     }
     return idade
+}
+
+// Função utilitária para saber se o modo escuro está ativo
+fun isDarkModeActive(context: Context): Boolean {
+    return when (AppCompatDelegate.getDefaultNightMode()) {
+        AppCompatDelegate.MODE_NIGHT_YES -> true
+        AppCompatDelegate.MODE_NIGHT_NO -> false
+        else -> {
+            val uiMode = context.resources.configuration.uiMode
+            (uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+        }
+    }
 } 

@@ -46,6 +46,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.ui.zIndex
 
 val hourBoxHeight = 70.dp
 val thinLine = 0.8.dp
@@ -214,14 +215,22 @@ fun WeeklyAgendaScreen(
         }
 
         if (showAppointmentForm.value) {
-            AppointmentForm(
-                onDismiss = { showAppointmentForm.value = false },
-                initialDate = selectedDateForForm.value,
-                initialHour = selectedHourForForm.value,
-                patients = patients,
-                viewModel = appointmentViewModel,
-                existingAppointment = editingAppointment.value
-            )
+            android.util.Log.d("AgendaDebug", "Exibindo AppointmentForm")
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.3f))
+                    .zIndex(10f)
+            ) {
+                AppointmentForm(
+                    onDismiss = { showAppointmentForm.value = false },
+                    initialDate = selectedDateForForm.value,
+                    initialHour = selectedHourForForm.value,
+                    patients = patients,
+                    viewModel = appointmentViewModel,
+                    existingAppointment = editingAppointment.value
+                )
+            }
         }
     }
 }
@@ -266,7 +275,12 @@ fun DayView(
         }
 
         appointmentsOnThisDay.forEach { appointment ->
-            val cardModifier = Modifier.clickable { onAppointmentClick(appointment) }
+            val cardModifier = Modifier
+                .zIndex(1f)
+                .clickable {
+                    android.util.Log.d("AgendaDebug", "Clicou no agendamento: ${appointment.title}")
+                    onAppointmentClick(appointment)
+                }
             AppointmentCard(
                 appointment = appointment,
                 firstHour = firstHour,
@@ -385,7 +399,7 @@ fun AppointmentCard(
         ) {
             Text(
                 text = title,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = dynamicFontSize,
                 maxLines = maxLines,
                 overflow = TextOverflow.Ellipsis,

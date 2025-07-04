@@ -221,6 +221,7 @@ fun FormularioAnamneseScreen(
 fun AssinaturaDigitalField(
     onAssinaturaChange: (String?) -> Unit
 ) {
+    val backgroundColor = MaterialTheme.colorScheme.background
     val path = remember { mutableStateListOf<List<Offset>>() }
     var currentPath by remember { mutableStateOf<List<Offset>>(emptyList()) }
     val strokeWidth = 3.dp
@@ -245,8 +246,7 @@ fun AssinaturaDigitalField(
                                 path.add(currentPath)
                                 currentPath = emptyList()
                             }
-                            // Exportar para base64
-                            onAssinaturaChange(exportSignatureToBase64(path, strokeWidth, color))
+                            onAssinaturaChange(exportSignatureToBase64(path, strokeWidth, color, backgroundColor))
                         },
                         onDragCancel = {
                             currentPath = emptyList()
@@ -301,14 +301,15 @@ fun AssinaturaDigitalField(
 fun exportSignatureToBase64(
     path: List<List<Offset>>,
     strokeWidth: Dp,
-    color: Color
+    color: Color,
+    backgroundColor: Color
 ): String? {
     if (path.isEmpty()) return null
     val width = 800
     val height = 300
     val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
     val canvas = AndroidCanvas(bitmap)
-    canvas.drawColor(AndroidColor.WHITE)
+    canvas.drawColor(backgroundColor.toArgb())
     val paint = Paint().apply {
         this.color = color.toArgb()
         this.strokeWidth = strokeWidth.value * 2 // Ajuste para densidade

@@ -157,12 +157,12 @@ class CadastroPacienteActivity : AppCompatActivity() {
         val historico = binding.historicoEditText.text?.toString()?.trim()
         val valorSessaoStr = binding.valorSessaoEditText.text?.toString()?.trim() ?: ""
         val valorSessaoNumerico = valorSessaoStr
-            .replace("[^\\d,.]".toRegex(), "") // remove tudo exceto dígitos, vírgula e ponto
+            .replace(Regex("[^\\d,.]"), "") // remove tudo exceto dígitos, vírgula e ponto
             .replace(".", "") // remove pontos (milhar)
             .replace(",", ".") // troca vírgula por ponto
-            .toDoubleOrNull()
+            .toDoubleOrNull() ?: 0.0
         android.util.Log.d("CadastroPaciente", "Valor convertido: $valorSessaoNumerico")
-        val diaCobranca = binding.diaCobrancaEditText.text?.toString()?.trim()
+        val diaCobranca = binding.diaCobrancaEditText.text?.toString()?.trim()?.toIntOrNull() ?: 1
         val lembreteCobranca = binding.lembreteCobrancaSwitch.isChecked
         val contatoNome = binding.contatoNomeEditText.text?.toString()?.trim()
         val contatoWhatsapp = binding.contatoWhatsappEditText.text?.toString()?.trim()
@@ -189,7 +189,7 @@ class CadastroPacienteActivity : AppCompatActivity() {
                 showError("Valor da sessão inválido")
                 return false
             }
-            diaCobranca.isNullOrEmpty() || diaCobranca?.toIntOrNull() !in 1..31 -> {
+            diaCobranca !in 1..31 -> {
                 showError("Dia da cobrança inválido")
                 return false
             }
@@ -223,8 +223,8 @@ class CadastroPacienteActivity : AppCompatActivity() {
             cidade = "", // Adapte se houver campo de cidade
             estado = "", // Adapte se houver campo de estado
             complemento = "", // Adapte se houver campo de complemento
-            sessionValue = valorSessaoNumerico ?: 0.0,
-            diaCobranca = diaCobranca?.toIntOrNull() ?: 1,
+            sessionValue = valorSessaoNumerico,
+            diaCobranca = diaCobranca,
             lembreteCobranca = lembreteCobranca,
             clinicalHistory = historico,
             medications = null, // Adapte se houver campo de medicamentos

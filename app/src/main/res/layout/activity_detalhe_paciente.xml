@@ -145,18 +145,4 @@
         android:overScrollMode="never"
         android:background="@android:color/transparent" />
 
-    <!-- Botão Exportar -->
-    <Button
-        android:id="@+id/btnExportar"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:text="Exportar"
-        android:textAllCaps="false"
-        android:textColor="?attr/colorOnPrimary"
-        android:textStyle="bold"
-        android:textSize="15sp"
-        android:backgroundTint="?attr/colorPrimary"
-        android:layout_margin="16dp"
-        android:layout_gravity="bottom" />
-
 </LinearLayout> 

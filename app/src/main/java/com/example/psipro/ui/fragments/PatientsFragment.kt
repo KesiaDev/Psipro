@@ -38,6 +38,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.text.Normalizer
 
 @AndroidEntryPoint
 class PatientsFragment : Fragment() {
@@ -45,6 +46,16 @@ class PatientsFragment : Fragment() {
     private val binding get() = _binding!!
     private val patientViewModel: PatientViewModel by viewModels()
     private lateinit var patientAdapter: PatientAdapter
+
+    // Função para normalizar headers
+    fun normalizeHeader(header: String): String {
+        return Normalizer.normalize(header.lowercase(), Normalizer.Form.NFD)
+            .replace(Regex("""\p{InCombiningDiacriticalMarks}+"""), "")
+            .replace(Regex("""[^a-z0-9 ]"""), "")
+            .replace(Regex("""\s+"""), " ")
+            .trim()
+    }
+
     private val importExcelLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val data: Intent? = result.data
@@ -55,37 +66,66 @@ class PatientsFragment : Fragment() {
                         val inputStream = requireContext().contentResolver.openInputStream(uri)
                         val workbook = WorkbookFactory.create(inputStream)
                         val sheet = workbook.getSheetAt(0)
-                        val dateFormat = SimpleDateFormat("dd/MM/yyyy")
+                        val dateFormats = listOf("dd/MM/yyyy", "yyyy-MM-dd", "MM/dd/yyyy")
                         var importedCount = 0
                         var duplicatedCount = 0
                         var invalidCount = 0
                         val ignoredRows = mutableListOf<Int>()
+                        val headerRow = sheet.getRow(0)
+                        val colMap = mutableMapOf<String, Int>()
+                        for (cellIdx in 0 until headerRow.lastCellNum) {
+                            val header = headerRow.getCell(cellIdx)?.toString()?.trim() ?: ""
+                            val normalized = normalizeHeader(header)
+                            colMap[normalized] = cellIdx
+                        }
+                        val nomeKeys = listOf("nome", "nome completo")
+                        val telefoneKeys = listOf("telefone", "celular")
+                        val emailKeys = listOf("email", "e-mail")
+                        val nascimentoKeys = listOf("data de nascimento", "nascimento")
+                        val cpfKeys = listOf("cpf")
+                        val obsKeys = listOf("observacoes", "observacao", "obs")
+                        fun getCell(row: org.apache.poi.ss.usermodel.Row, keys: List<String>): String {
+                            for (key in keys) {
+                                val idx = colMap[key]
+                                if (idx != null) return row.getCell(idx)?.toString()?.trim() ?: ""
+                            }
+                            return ""
+                        }
                         for (rowIndex in 1..sheet.lastRowNum) { // Pula o header
                             val row = sheet.getRow(rowIndex)
                             if (row != null) {
-                                val nome = row.getCell(0)?.toString()?.trim() ?: ""
-                                val telefone = row.getCell(1)?.toString()?.trim() ?: ""
-                                val email = row.getCell(2)?.toString()?.trim() ?: ""
-                                val nascimentoStr = row.getCell(3)?.toString()?.trim() ?: ""
-                                val cpf = row.getCell(4)?.toString()?.trim() ?: ""
-                                val observacoes = row.getCell(5)?.toString()?.trim() ?: ""
+                                val nome = getCell(row, nomeKeys)
+                                val telefone = getCell(row, telefoneKeys)
+                                val email = getCell(row, emailKeys)
+                                val nascimentoStr = getCell(row, nascimentoKeys)
+                                val cpf = getCell(row, cpfKeys)
+                                val observacoes = getCell(row, obsKeys)
                                 if (nome.isBlank() || nascimentoStr.isBlank()) {
                                     invalidCount++
                                     ignoredRows.add(rowIndex+1)
                                     continue
                                 }
-                                val birthDate: Date? = try { dateFormat.parse(nascimentoStr) } catch (e: Exception) { null }
+                                // Tenta converter a data
+                                val birthDate: Date? = try {
+                                    val idx = nascimentoKeys.mapNotNull { colMap[it] }.firstOrNull() ?: -1
+                                    val cell = if (idx >= 0) row.getCell(idx) else null
+                                    when {
+                                        cell == null -> null
+                                        cell.cellType == org.apache.poi.ss.usermodel.CellType.NUMERIC -> cell.dateCellValue
+                                        else -> {
+                                            var parsed: Date? = null
+                                            for (fmt in dateFormats) {
+                                                try {
+                                                    parsed = SimpleDateFormat(fmt).parse(nascimentoStr)
+                                                    if (parsed != null) break
+                                                } catch (_: Exception) {}
+                                            }
+                                            parsed
+                                        }
+                                    }
+                                } catch (e: Exception) { null }
                                 if (birthDate == null) {
                                     invalidCount++
-                                    ignoredRows.add(rowIndex+1)
-                                    continue
-                                }
-                                // Evitar duplicidade por CPF (se informado)
-                                val exists = withContext(Dispatchers.IO) {
-                                    if (cpf.isNotBlank()) patientViewModel.getPatientByCpf(cpf) else null
-                                }
-                                if (exists != null) {
-                                    duplicatedCount++
                                     ignoredRows.add(rowIndex+1)
                                     continue
                                 }

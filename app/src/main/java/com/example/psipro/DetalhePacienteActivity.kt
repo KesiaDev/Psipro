@@ -19,6 +19,7 @@ import com.example.psipro.adapter.MenuAdapter
 import com.example.psipro.ui.screens.WhatsAppHistoryActivity
 import com.example.psipro.DashboardActivity
 import com.example.psipro.ProntuarioListActivity
+import com.example.psipro.ui.screens.AnamneseActivity
 
 @AndroidEntryPoint
 class DetalhePacienteActivity : AppCompatActivity() {
@@ -58,15 +59,24 @@ class DetalhePacienteActivity : AppCompatActivity() {
                 intent.putExtra("patient_id", currentPatientId)
                 startActivity(intent)
             },
-            MenuItem(R.drawable.ic_anamnese, "Anamnese") { 
-                val intent = Intent(this, AnamneseActivity::class.java)
+            MenuItem(R.drawable.ic_assignment, "Anamnese Dinâmica") {
+                val intent = Intent(this, com.example.psipro.ui.screens.AnamneseActivity::class.java).apply {
+                    putExtra("PACIENTE_ID", currentPatientId)
+                    putExtra("PACIENTE_NOME", patientName)
+                }
+                startActivity(intent)
+            },
+            MenuItem(R.drawable.ic_note, "Anotações da Sessão") {
+                val intent = Intent(this, com.example.psipro.ui.screens.AnotacoesSessaoActivity::class.java)
+                intent.putExtra("PATIENT_ID", currentPatientId)
+                startActivity(intent)
+            },
+            MenuItem(R.drawable.ic_account_balance_wallet, "Financeiro") {
+                val intent = Intent(this, FinanceiroPacienteActivity::class.java)
                 intent.putExtra("PATIENT_ID", currentPatientId)
                 intent.putExtra("PATIENT_NAME", patientName)
                 startActivity(intent)
             },
-            MenuItem(R.drawable.ic_note, "Anotações da Sessão") { /* abrir anotações */ },
-            MenuItem(R.drawable.ic_account_balance_wallet, "Financeiro") { /* abrir financeiro */ },
-            MenuItem(R.drawable.ic_attach_money, "Cobranças") { /* abrir cobranças */ },
             MenuItem(R.drawable.ic_insert_drive_file, "Documentos") { /* abrir documentos */ },
             MenuItem(R.drawable.baseline_folder_24, "Arquivos") { /* abrir arquivos */ },
             MenuItem(R.drawable.ic_whatsapp, "WhatsApp") {
@@ -78,7 +88,6 @@ class DetalhePacienteActivity : AppCompatActivity() {
             MenuItem(R.drawable.ic_calendar, "Agendar consulta") {
                 val intent = Intent(this, DashboardActivity::class.java).apply {
                     putExtra("NAVIGATE_TO", R.id.navigation_schedule)
-                    // Limpa a pilha de atividades e cria uma nova tarefa para a Dashboard
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 }
                 startActivity(intent)
@@ -87,11 +96,6 @@ class DetalhePacienteActivity : AppCompatActivity() {
         val adapter = MenuAdapter(menuItems)
         binding.menuPacienteRecyclerView.layoutManager = LinearLayoutManager(this)
         binding.menuPacienteRecyclerView.adapter = adapter
-
-        // Botão exportar (exemplo)
-        binding.btnExportar.setOnClickListener {
-            Toast.makeText(this, "Exportar dados do paciente", Toast.LENGTH_SHORT).show()
-        }
 
         // Botão de voltar
         binding.btnVoltarFicha.setOnClickListener {

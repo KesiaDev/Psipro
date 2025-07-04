@@ -49,4 +49,6 @@ class PatientRepository @Inject constructor(
         // Exemplo: alerta se >= 90 pacientes
         return getPatientCount() >= 90
     }
+
+    suspend fun getAllPatientsWithLembrete(): List<Patient> = patientDao.getAll().filter { it.lembreteCobranca }
 } 

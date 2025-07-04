@@ -120,7 +120,7 @@ fun MessageBubble(
         ) {
             Text(
                 text = message,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
         Row(

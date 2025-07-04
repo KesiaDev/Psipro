@@ -116,7 +116,10 @@ class PatientViewModel @Inject constructor(
             } else {
                 repository.updatePatient(encryptedPatient)
             }
-            loadPatients()
+            // Otimização: só atualiza o paciente atual se for o mesmo
+            if (_currentPatient.value?.id == patient.id) {
+                _currentPatient.value = patient
+            }
         }
     }
 

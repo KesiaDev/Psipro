@@ -122,7 +122,7 @@
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+            android:theme="@style/Theme.Psipro"/>
         
         <activity
             android:name=".ProntuarioListActivity"
@@ -138,6 +138,29 @@
             android:name=".AnamneseActivity"
             android:exported="false"
             android:label="Anamnese" />
+        
+        <activity
+            android:name=".ui.screens.AnamneseActivity"
+            android:exported="false"
+            android:label="Anamnese Dinâmica"
+            android:theme="@style/Theme.Psipro" />
+        
+        <activity
+            android:name=".FinanceiroPacienteActivity"
+            android:exported="false"
+            android:label="Financeiro do Paciente" />
+        
+        <activity
+            android:name=".ui.screens.AnotacoesSessaoActivity"
+            android:exported="false"
+            android:label="Anotações da Sessão"
+            android:theme="@style/Theme.Psipro" />
+        
+        <activity
+            android:name=".ui.screens.NovaSessaoActivity"
+            android:exported="false"
+            android:label="Nova Sessão"
+            android:theme="@style/Theme.Psipro" />
         
     </application>
 

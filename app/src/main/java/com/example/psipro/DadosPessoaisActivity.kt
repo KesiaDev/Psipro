@@ -22,6 +22,7 @@ class DadosPessoaisActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDadosPessoaisBinding
     private val viewModel: DadosPessoaisViewModel by viewModels()
     private var patientId: Long = -1
+    private var birthDate: Date? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,14 +104,25 @@ class DadosPessoaisActivity : AppCompatActivity() {
         binding.edtValorSessao.setText(patient.sessionValue.toString())
         binding.edtDiaCobranca.setText(patient.diaCobranca.toString())
         binding.switchLembreteCobranca.isChecked = patient.lembreteCobranca
+        birthDate = patient.birthDate
+        // Exibir data de nascimento formatada (apenas leitura)
+        binding.edtDataNascimento.setText(java.text.SimpleDateFormat("dd/MM/yyyy").format(patient.birthDate))
+        binding.edtDataNascimento.isEnabled = false
     }
 
     private fun coletarDadosDosCampos(): Patient {
+        // Só altera a data de nascimento se o campo for editável e diferente do valor original
+        val dataNascimentoInformada = binding.edtDataNascimento.text.toString()
+        val dataNascimentoFinal = if (binding.edtDataNascimento.isEnabled && dataNascimentoInformada.isNotBlank()) {
+            java.text.SimpleDateFormat("dd/MM/yyyy").parse(dataNascimentoInformada)
+        } else {
+            birthDate ?: error("Data de nascimento não carregada!")
+        }
         return Patient(
             id = patientId,
             name = binding.edtNome.text.toString(),
             cpf = binding.edtCpf.text.toString(),
-            birthDate = Date(), // Ajuste conforme necessário
+            birthDate = dataNascimentoFinal,
             phone = binding.edtTelefone.text.toString(),
             email = binding.edtEmail.text.toString(),
             cep = binding.edtCep.text.toString(),
@@ -120,7 +132,10 @@ class DadosPessoaisActivity : AppCompatActivity() {
             cidade = binding.edtCidade.text.toString(),
             estado = binding.edtEstado.text.toString(),
             complemento = binding.edtComplemento.text.toString(),
-            sessionValue = binding.edtValorSessao.text.toString().toDoubleOrNull() ?: 0.0,
+            sessionValue = binding.edtValorSessao.text.toString()
+                .replace("[^\\d,.]".toRegex(), "")
+                .replace(",", ".")
+                .toDoubleOrNull() ?: 0.0,
             diaCobranca = binding.edtDiaCobranca.text.toString().toIntOrNull() ?: 1,
             lembreteCobranca = binding.switchLembreteCobranca.isChecked,
             clinicalHistory = null,

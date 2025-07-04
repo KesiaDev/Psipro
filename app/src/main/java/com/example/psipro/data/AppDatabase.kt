@@ -29,17 +29,31 @@ import com.example.psipro.data.entities.WhatsAppConversation
 import com.example.psipro.data.entities.AnamneseModel
 import com.example.psipro.data.entities.AnamneseCampo
 import com.example.psipro.data.entities.AnamnesePreenchida
+import com.example.psipro.data.entities.HistoricoFamiliar
+import com.example.psipro.data.entities.HistoricoMedico
+import com.example.psipro.data.entities.VidaEmocional
+import com.example.psipro.data.entities.ObservacoesClinicas
+import com.example.psipro.data.entities.AnotacaoSessao
+import com.example.psipro.data.entities.CobrancaSessao
+import com.example.psipro.data.entities.TipoSessao
 import com.example.psipro.data.dao.AnamneseModelDao
 import com.example.psipro.data.dao.AnamneseCampoDao
 import com.example.psipro.data.dao.AnamnesePreenchidaDao
+import com.example.psipro.data.dao.HistoricoFamiliarDao
+import com.example.psipro.data.dao.HistoricoMedicoDao
+import com.example.psipro.data.dao.VidaEmocionalDao
+import com.example.psipro.data.dao.ObservacoesClinicasDao
+import com.example.psipro.data.dao.AnotacaoSessaoDao
+import com.example.psipro.data.dao.CobrancaSessaoDao
+import com.example.psipro.data.dao.TipoSessaoDao
 import com.example.psipro.data.converters.DateConverter
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [User::class, Patient::class, Appointment::class, PatientNote::class, PatientMessage::class, PatientReport::class, FinancialRecord::class, Prontuario::class, AuditLog::class, WhatsAppConversation::class, AnamneseModel::class, AnamneseCampo::class, AnamnesePreenchida::class],
-    version = 9,
+    entities = [User::class, Patient::class, Appointment::class, PatientNote::class, PatientMessage::class, PatientReport::class, FinancialRecord::class, Prontuario::class, AuditLog::class, WhatsAppConversation::class, AnamneseModel::class, AnamneseCampo::class, AnamnesePreenchida::class, HistoricoFamiliar::class, HistoricoMedico::class, VidaEmocional::class, ObservacoesClinicas::class, AnotacaoSessao::class, CobrancaSessao::class, TipoSessao::class],
+    version = 17,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -57,6 +71,13 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun anamneseModelDao(): AnamneseModelDao
     abstract fun anamneseCampoDao(): AnamneseCampoDao
     abstract fun anamnesePreenchidaDao(): AnamnesePreenchidaDao
+    abstract fun historicoFamiliarDao(): HistoricoFamiliarDao
+    abstract fun historicoMedicoDao(): HistoricoMedicoDao
+    abstract fun vidaEmocionalDao(): VidaEmocionalDao
+    abstract fun observacoesClinicasDao(): ObservacoesClinicasDao
+    abstract fun anotacaoSessaoDao(): AnotacaoSessaoDao
+    abstract fun cobrancaSessaoDao(): CobrancaSessaoDao
+    abstract fun tipoSessaoDao(): TipoSessaoDao
 
     companion object {
         @Volatile
@@ -73,26 +94,50 @@ abstract class AppDatabase : RoomDatabase() {
                  .addCallback(object : RoomDatabase.Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         super.onCreate(db)
+                        // Seed dos tipos de sessão padrão
+                        GlobalScope.launch(Dispatchers.IO) {
+                            val database = getInstance(context)
+                            val tipoSessaoDao = database.tipoSessaoDao()
+                            if (tipoSessaoDao.countTiposSessao() == 0) {
+                                tipoSessaoDao.insert(com.example.psipro.data.entities.TipoSessao(nome = "Individual", valorPadrao = 150.0))
+                                tipoSessaoDao.insert(com.example.psipro.data.entities.TipoSessao(nome = "Casal", valorPadrao = 200.0))
+                                tipoSessaoDao.insert(com.example.psipro.data.entities.TipoSessao(nome = "Avaliação", valorPadrao = 180.0))
+                            }
+                        }
                         // Seed dos modelos prontos
                         GlobalScope.launch(Dispatchers.IO) {
                             val database = getInstance(context)
                             val modelDao = database.anamneseModelDao()
                             val campoDao = database.anamneseCampoDao()
-                            // Modelos prontos
-                            val adultoId = modelDao.insert(com.example.psipro.data.entities.AnamneseModel(nome = "Anamnese Adulto"))
-                            val infantilId = modelDao.insert(com.example.psipro.data.entities.AnamneseModel(nome = "Anamnese Infantil"))
-                            val casalId = modelDao.insert(com.example.psipro.data.entities.AnamneseModel(nome = "Anamnese Casal"))
-                            // Campos exemplo para Adulto
-                            campoDao.insert(com.example.psipro.data.entities.AnamneseCampo(modeloId = adultoId, tipo = "TEXTO_CURTO", label = "Nome", obrigatorio = true))
-                            campoDao.insert(com.example.psipro.data.entities.AnamneseCampo(modeloId = adultoId, tipo = "DATA", label = "Data de nascimento", obrigatorio = true))
-                            campoDao.insert(com.example.psipro.data.entities.AnamneseCampo(modeloId = adultoId, tipo = "TEXTO_LONGO", label = "Queixa principal", obrigatorio = true))
-                            // Campos exemplo para Infantil
-                            campoDao.insert(com.example.psipro.data.entities.AnamneseCampo(modeloId = infantilId, tipo = "TEXTO_CURTO", label = "Nome da criança", obrigatorio = true))
-                            campoDao.insert(com.example.psipro.data.entities.AnamneseCampo(modeloId = infantilId, tipo = "DATA", label = "Data de nascimento", obrigatorio = true))
-                            campoDao.insert(com.example.psipro.data.entities.AnamneseCampo(modeloId = infantilId, tipo = "TEXTO_LONGO", label = "Comportamento", obrigatorio = false))
-                            // Campos exemplo para Casal
-                            campoDao.insert(com.example.psipro.data.entities.AnamneseCampo(modeloId = casalId, tipo = "TEXTO_CURTO", label = "Nome do parceiro(a)", obrigatorio = true))
-                            campoDao.insert(com.example.psipro.data.entities.AnamneseCampo(modeloId = casalId, tipo = "TEXTO_LONGO", label = "Histórico do relacionamento", obrigatorio = false))
+                            
+                            // Verificar se já existem modelos
+                            val modelosExistentes = modelDao.getAll()
+                            if (modelosExistentes.isEmpty()) {
+                                // Inserir modelos de exemplo
+                                val adultoId = modelDao.insert(com.example.psipro.data.entities.AnamneseModel(nome = "Anamnese Adulto", isDefault = true))
+                                val infantilId = modelDao.insert(com.example.psipro.data.entities.AnamneseModel(nome = "Anamnese Infantil", isDefault = true))
+                                val casalId = modelDao.insert(com.example.psipro.data.entities.AnamneseModel(nome = "Anamnese Casal", isDefault = true))
+                                
+                                // Inserir campos usando AnamneseTestUtils
+                                val camposAdulto = com.example.psipro.utils.AnamneseTestUtils.createAdultoFields()
+                                val camposInfantil = com.example.psipro.utils.AnamneseTestUtils.createInfantilFields()
+                                val camposCasal = com.example.psipro.utils.AnamneseTestUtils.createCasalFields()
+                                
+                                // Inserir campos do adulto
+                                camposAdulto.forEach { campo ->
+                                    campoDao.insert(campo.copy(modeloId = adultoId))
+                                }
+                                
+                                // Inserir campos do infantil
+                                camposInfantil.forEach { campo ->
+                                    campoDao.insert(campo.copy(modeloId = infantilId))
+                                }
+                                
+                                // Inserir campos do casal
+                                camposCasal.forEach { campo ->
+                                    campoDao.insert(campo.copy(modeloId = casalId))
+                                }
+                            }
                         }
                     }
                 })
