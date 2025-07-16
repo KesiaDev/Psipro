@@ -29,12 +29,16 @@ class AnotacaoSessaoViewModel @Inject constructor(
     private val _anotacaoSelecionada = MutableStateFlow<AnotacaoSessao?>(null)
     val anotacaoSelecionada: StateFlow<AnotacaoSessao?> = _anotacaoSelecionada.asStateFlow()
 
+    private val _statusPagamentos = MutableStateFlow<Map<Long, StatusPagamento>>(emptyMap())
+    val statusPagamentos: StateFlow<Map<Long, StatusPagamento>> = _statusPagamentos.asStateFlow()
+
     fun carregarAnotacoes(patientId: Long) {
         viewModelScope.launch {
             repository.getByPatientId(patientId).collect { anotacoes ->
                 _anotacoes.value = anotacoes
             }
         }
+        carregarStatusPagamentos(patientId)
     }
 
     fun carregarAnotacao(patientId: Long, numeroSessao: Int) {
@@ -138,5 +142,39 @@ class AnotacaoSessaoViewModel @Inject constructor(
                 println("Erro ao excluir anotação: ${e.message}")
             }
         }
+    }
+
+    fun carregarStatusPagamentos(patientId: Long) {
+        viewModelScope.launch {
+            val anotacoes = repository.getByPatientId(patientId)
+            anotacoes.collect { lista ->
+                val mapa = mutableMapOf<Long, StatusPagamento>()
+                for (anotacao in lista) {
+                    val cobranca = cobrancaRepository.getByAnotacaoSessao(anotacao.id)
+                    mapa[anotacao.id] = cobranca?.status ?: StatusPagamento.A_RECEBER
+                }
+                _statusPagamentos.value = mapa
+            }
+        }
+    }
+
+    fun marcarCobrancaComoPaga(anotacaoSessaoId: Long) {
+        viewModelScope.launch {
+            val cobranca = cobrancaRepository.getByAnotacaoSessao(anotacaoSessaoId)
+            cobranca?.let {
+                cobrancaRepository.marcarComoPago(it.id)
+                // Atualizar statusPagamentos
+                val mapa = _statusPagamentos.value.toMutableMap()
+                mapa[anotacaoSessaoId] = StatusPagamento.PAGO
+                _statusPagamentos.value = mapa
+            }
+        }
+    }
+
+    /**
+     * Retorna o status da cobrança associada à anotação de sessão informada, ou null se não houver cobrança.
+     */
+    suspend fun getStatusCobrancaPorAnotacao(anotacaoId: Long): StatusPagamento? {
+        return cobrancaRepository.getByAnotacaoSessao(anotacaoId)?.status
     }
 } 

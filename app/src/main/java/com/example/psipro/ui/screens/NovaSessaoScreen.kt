@@ -49,10 +49,12 @@ import android.net.Uri
 import androidx.compose.foundation.Image
 import coil.compose.rememberAsyncImagePainter
 import androidx.compose.foundation.shape.CircleShape
+import kotlinx.coroutines.runBlocking
 
 @Composable
 fun NovaSessaoScreen(
     patientId: Long,
+    anotacaoId: Long = -1,
     onSave: () -> Unit,
     onCancel: () -> Unit,
     viewModel: AnotacaoSessaoViewModel = hiltViewModel(),
@@ -92,8 +94,39 @@ fun NovaSessaoScreen(
         .take(3)
         .mapNotNull { entry -> tiposSessao.find { it.id == entry.key } }
 
+    // Buscar status da cobrança para exibir botão 'Marcar como pago'
+    val cobrancaPendente = remember(anotacaoId, viewModel.anotacoes.value) {
+        if (anotacaoId > 0) {
+            viewModel.anotacoes.value.find { it.id == anotacaoId }?.let { anotacao ->
+                runBlocking {
+                    viewModel.getStatusCobrancaPorAnotacao(anotacao.id) == com.example.psipro.data.entities.StatusPagamento.A_RECEBER
+                }
+            }
+        } else false
+    }
+
     LaunchedEffect(tipoSelecionado) {
         tipoSelecionado?.let { valorSessao = it.valorPadrao.toString() }
+    }
+
+    // Carregar dados se for edição
+    LaunchedEffect(anotacaoId) {
+        if (anotacaoId > 0) {
+            val anotacao = viewModel.anotacoes.value.find { it.id == anotacaoId }
+            anotacao?.let {
+                assuntos = it.assuntos
+                estadoEmocional = it.estadoEmocional
+                intervencoes = it.intervencoes
+                tarefas = it.tarefas
+                evolucao = it.evolucao
+                observacoes = it.observacoes
+                metaTerapeutica = it.metaTerapeutica
+                proximoAgendamento = it.proximoAgendamento
+                tipoSelecionado = tiposSessao.find { t -> t.id == it.tipoSessaoId }
+                valorSessao = it.tipoSessaoId?.let { tid -> tiposSessao.find { t -> t.id == tid }?.valorPadrao?.toString() } ?: ""
+                anexos = it.anexos.split("|").filter { s -> s.isNotBlank() }.map { uri -> Uri.parse(uri) }
+            }
+        }
     }
 
     Box(Modifier.fillMaxSize()) {
@@ -465,21 +498,43 @@ fun NovaSessaoScreen(
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     Button(
                         onClick = {
-                            viewModel.salvarAnotacao(
-                                patientId = patientId,
-                                numeroSessao = viewModel.getProximoNumeroSessao(patientId),
-                                assuntos = assuntos,
-                                estadoEmocional = estadoEmocional,
-                                intervencoes = intervencoes,
-                                tarefas = tarefas,
-                                evolucao = evolucao,
-                                observacoes = observacoes,
-                                tipoSessaoId = tipoSelecionado?.id,
-                                valorSessao = valorSessao.toDoubleOrNull(),
-                                metaTerapeutica = metaTerapeutica,
-                                proximoAgendamento = proximoAgendamento,
-                                anexos = anexos.map { it.toString() }.joinToString("|")
-                            )
+                            if (anotacaoId > 0) {
+                                // Editar sessão existente
+                                val anotacao = viewModel.anotacoes.value.find { it.id == anotacaoId }
+                                if (anotacao != null) {
+                                    viewModel.editarAnotacao(
+                                        anotacao.copy(
+                                            assuntos = assuntos,
+                                            estadoEmocional = estadoEmocional,
+                                            intervencoes = intervencoes,
+                                            tarefas = tarefas,
+                                            evolucao = evolucao,
+                                            observacoes = observacoes,
+                                            metaTerapeutica = metaTerapeutica,
+                                            proximoAgendamento = proximoAgendamento,
+                                            tipoSessaoId = tipoSelecionado?.id,
+                                            anexos = anexos.map { it.toString() }.joinToString("|")
+                                        )
+                                    )
+                                }
+                            } else {
+                                // Nova sessão
+                                viewModel.salvarAnotacao(
+                                    patientId = patientId,
+                                    numeroSessao = viewModel.getProximoNumeroSessao(patientId),
+                                    assuntos = assuntos,
+                                    estadoEmocional = estadoEmocional,
+                                    intervencoes = intervencoes,
+                                    tarefas = tarefas,
+                                    evolucao = evolucao,
+                                    observacoes = observacoes,
+                                    tipoSessaoId = tipoSelecionado?.id,
+                                    valorSessao = valorSessao.toDoubleOrNull(),
+                                    metaTerapeutica = metaTerapeutica,
+                                    proximoAgendamento = proximoAgendamento,
+                                    anexos = anexos.map { it.toString() }.joinToString("|")
+                                )
+                            }
                             onSave()
                         },
                         shape = botaoShape,
@@ -490,26 +545,54 @@ fun NovaSessaoScreen(
                         shape = botaoShape,
                         modifier = Modifier.weight(1f)
                     ) { Text("Cancelar") }
+                    // Botão Marcar como pago
+                    if (anotacaoId > 0 && cobrancaPendente == true) {
+                        Button(
+                            onClick = { viewModel.marcarCobrancaComoPaga(anotacaoId) },
+                            shape = botaoShape,
+                            modifier = Modifier.weight(1f)
+                        ) { Text("Marcar como pago") }
+                    }
                 }
             }
         }
         FloatingActionButton(
             onClick = {
-                viewModel.salvarAnotacao(
-                    patientId = patientId,
-                    numeroSessao = viewModel.getProximoNumeroSessao(patientId),
-                    assuntos = assuntos,
-                    estadoEmocional = estadoEmocional,
-                    intervencoes = intervencoes,
-                    tarefas = tarefas,
-                    evolucao = evolucao,
-                    observacoes = observacoes,
-                    tipoSessaoId = tipoSelecionado?.id,
-                    valorSessao = valorSessao.toDoubleOrNull(),
-                    metaTerapeutica = metaTerapeutica,
-                    proximoAgendamento = proximoAgendamento,
-                    anexos = anexos.map { it.toString() }.joinToString("|")
-                )
+                if (anotacaoId > 0) {
+                    val anotacao = viewModel.anotacoes.value.find { it.id == anotacaoId }
+                    if (anotacao != null) {
+                        viewModel.editarAnotacao(
+                            anotacao.copy(
+                                assuntos = assuntos,
+                                estadoEmocional = estadoEmocional,
+                                intervencoes = intervencoes,
+                                tarefas = tarefas,
+                                evolucao = evolucao,
+                                observacoes = observacoes,
+                                metaTerapeutica = metaTerapeutica,
+                                proximoAgendamento = proximoAgendamento,
+                                tipoSessaoId = tipoSelecionado?.id,
+                                anexos = anexos.map { it.toString() }.joinToString("|")
+                            )
+                        )
+                    }
+                } else {
+                    viewModel.salvarAnotacao(
+                        patientId = patientId,
+                        numeroSessao = viewModel.getProximoNumeroSessao(patientId),
+                        assuntos = assuntos,
+                        estadoEmocional = estadoEmocional,
+                        intervencoes = intervencoes,
+                        tarefas = tarefas,
+                        evolucao = evolucao,
+                        observacoes = observacoes,
+                        tipoSessaoId = tipoSelecionado?.id,
+                        valorSessao = valorSessao.toDoubleOrNull(),
+                        metaTerapeutica = metaTerapeutica,
+                        proximoAgendamento = proximoAgendamento,
+                        anexos = anexos.map { it.toString() }.joinToString("|")
+                    )
+                }
                 onSave()
             },
             modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp)

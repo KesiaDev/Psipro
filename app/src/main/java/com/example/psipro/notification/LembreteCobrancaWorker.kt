@@ -41,7 +41,12 @@ class LembreteCobrancaWorker(
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setAutoCancel(true)
                     .setContentIntent(pendingIntent)
-                notificationManager.notify(3000 + index, builder.build())
+                try {
+                    notificationManager.notify(3000 + index, builder.build())
+                } catch (e: SecurityException) {
+                    // Log do erro de permissão
+                    android.util.Log.e("LembreteCobrancaWorker", "Erro de permissão para notificação: ${e.message}")
+                }
             }
             Result.success()
         } catch (e: Exception) {

@@ -47,6 +47,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.ui.zIndex
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 
 val hourBoxHeight = 70.dp
 val thinLine = 0.8.dp
@@ -248,7 +251,7 @@ fun DayView(
 
     Box(modifier = Modifier.padding(horizontal = 8.dp)) {
         Column {
-            hours.forEach { hour ->
+            hours.forEachIndexed { index, hour ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -265,6 +268,16 @@ fun DayView(
                             .width(64.dp)
                             .padding(end = 2.dp),
                         textAlign = TextAlign.End
+                    )
+                }
+                
+                // Adicionar linha divisória horizontal após cada horário (exceto o último)
+                if (index < hours.size - 1) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(thinLineColor.copy(alpha = 0.5f))
                     )
                 }
             }
@@ -375,9 +388,9 @@ fun AppointmentCard(
         ),
     ) {
         val title = if (appointment.type == AppointmentType.PESSOAL) {
-            appointment.title
+            appointment.title ?: "Compromisso Pessoal"
         } else {
-            appointment.patientName
+            appointment.patientName ?: "Paciente"
         }
 
         // Ajusta o tamanho da fonte e maxLines com base na visualização e duração
@@ -428,8 +441,17 @@ private fun AgendaView(
     onTimeSlotClick: (LocalDate, Int) -> Unit,
     onAppointmentClick: (Appointment) -> Unit
 ) {
-    val days = (0 until numDays).map { startDate.plusDays(it.toLong()) }
-    val firstHour = hours.minOrNull() ?: 8
+    val days = remember(numDays, startDate) { 
+        (0 until numDays).map { startDate.plusDays(it.toLong()) } 
+    }
+    val firstHour = remember(hours) { hours.minOrNull() ?: 8 }
+
+    // Otimizar: pré-calcular appointments por data
+    val appointmentsByDate = remember(appointments) {
+        appointments.groupBy { 
+            it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() 
+        }
+    }
 
     Row(
         modifier = Modifier
@@ -480,24 +502,44 @@ private fun AgendaView(
                 }
 
                 // Corpo do Dia
-                Box {
-                    Column {
-                        hours.forEach { hour ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(hourBoxHeight)
-                                    .border(thinLine, thinLineColor)
-                                    .clickable { onTimeSlotClick(date, hour) }
-                            )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height((hours.size * hourBoxHeight.value).dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        hours.forEachIndexed { index, hour ->
+                            Column {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(hourBoxHeight)
+                                        .clickable { onTimeSlotClick(date, hour) }
+                                )
+                                
+                                // Adicionar linha divisória horizontal após cada horário (exceto o último)
+                                if (index < hours.size - 1) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(1.dp)
+                                            .background(thinLineColor.copy(alpha = 0.5f))
+                                    )
+                                }
+                            }
                         }
                     }
 
-                    val appointmentsOnThisDay = appointments
-                        .filter { it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == date }
-                        .sortedBy { parseTime(it.startTime) }
+                    // Otimizar: usar appointments pré-calculados
+                    val appointmentsOnThisDay = remember(date, appointmentsByDate) {
+                        appointmentsByDate[date]?.sortedBy { parseTime(it.startTime) } ?: emptyList()
+                    }
 
-                    val appointmentLayouts = calculateAppointmentLayout(appointmentsOnThisDay)
+                    val appointmentLayouts = remember(appointmentsOnThisDay) {
+                        if (appointmentsOnThisDay.isEmpty()) emptyList() else calculateAppointmentLayout(appointmentsOnThisDay)
+                    }
 
                     appointmentLayouts.forEach { layoutInfo ->
                         Box(modifier = Modifier.fillMaxWidth(layoutInfo.width).offset(x = (100 * layoutInfo.xOffset).dp * layoutInfo.width)) {
@@ -521,16 +563,22 @@ private data class AppointmentLayoutInfo(
 )
 
 private fun calculateAppointmentLayout(appointments: List<Appointment>): List<AppointmentLayoutInfo> {
+    if (appointments.isEmpty()) return emptyList()
+    
     val layouts = mutableListOf<AppointmentLayoutInfo>()
-    if (appointments.isEmpty()) return layouts
-
     val columns = mutableListOf<MutableList<Appointment>>()
     columns.add(mutableListOf())
+
+    // Cache para parseTime para evitar recálculos
+    val timeCache = mutableMapOf<String, LocalTime>()
+    fun getCachedTime(time: String): LocalTime {
+        return timeCache.getOrPut(time) { parseTime(time) }
+    }
 
     for (appointment in appointments) {
         var placed = false
         for (col in columns) {
-            if (col.isEmpty() || !overlaps(appointment, col.last())) {
+            if (col.isEmpty() || !overlapsWithCache(appointment, col.last()) { time -> getCachedTime(time) }) {
                 col.add(appointment)
                 placed = true
                 break
@@ -557,11 +605,11 @@ private fun calculateAppointmentLayout(appointments: List<Appointment>): List<Ap
     return layouts
 }
 
-private fun overlaps(a: Appointment, b: Appointment): Boolean {
-    val startA = parseTime(a.startTime)
-    val endA = parseTime(a.endTime)
-    val startB = parseTime(b.startTime)
-    val endB = parseTime(b.endTime)
+private fun overlapsWithCache(a: Appointment, b: Appointment, getTime: (String) -> LocalTime): Boolean {
+    val startA = getTime(a.startTime)
+    val endA = getTime(a.endTime)
+    val startB = getTime(b.startTime)
+    val endB = getTime(b.endTime)
     return startA.isBefore(endB) && startB.isBefore(endA)
 }
 
@@ -572,15 +620,22 @@ fun MonthView(
     onAppointmentClick: (Appointment) -> Unit
 ) {
     val context = LocalContext.current
-    val daysInMonth = currentMonth.lengthOfMonth()
-    val firstDayOfMonth = currentMonth.withDayOfMonth(1)
-    val startDayOfWeek = firstDayOfMonth.dayOfWeek.value
+    val daysInMonth = remember(currentMonth) { currentMonth.lengthOfMonth() }
+    val firstDayOfMonth = remember(currentMonth) { currentMonth.withDayOfMonth(1) }
+    val startDayOfWeek = remember(firstDayOfMonth) { firstDayOfMonth.dayOfWeek.value }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
 
-    val appointmentsForSelectedDay = remember(selectedDate) {
-        appointments.filter {
-            it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == selectedDate
-        }.sortedBy { parseTime(it.startTime) }
+    // Otimizar: pré-calcular appointments por data
+    val appointmentsByDate = remember(appointments) {
+        appointments.groupBy { 
+            it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() 
+        }
+    }
+
+    val appointmentsForSelectedDay = remember(selectedDate, appointmentsByDate) {
+        selectedDate?.let { date ->
+            appointmentsByDate[date]?.sortedBy { parseTime(it.startTime) }
+        } ?: emptyList()
     }
 
     Column(modifier = Modifier.padding(8.dp)) {
@@ -605,7 +660,9 @@ fun MonthView(
                         val dayOfMonth = week * 7 + day - startDayOfWeek + 2
                         if (dayOfMonth > 0 && dayOfMonth <= daysInMonth) {
                             val date = currentMonth.withDayOfMonth(dayOfMonth)
-                            val appointmentsOnDay = appointments.count { it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == date }
+                            val appointmentsOnDay = remember(date, appointmentsByDate) {
+                                appointmentsByDate[date]?.size ?: 0
+                            }
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
@@ -675,7 +732,7 @@ fun MonthView(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Column {
-                                    Text(text = appointment.patientName, fontWeight = FontWeight.Bold)
+                                    Text(text = appointment.patientName ?: "Paciente", fontWeight = FontWeight.Bold)
                                     Text(text = "Horário: ${appointment.startTime} - ${appointment.endTime}", fontSize = 14.sp)
                                 }
                                 Icon(Icons.Filled.ChevronRight, contentDescription = "Ver detalhes")

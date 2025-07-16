@@ -51,7 +51,12 @@ class CobrancaNotificationService @Inject constructor(
             .setAutoCancel(true)
 
         val notificationManager = NotificationManagerCompat.from(context)
-        notificationManager.notify(NOTIFICATION_ID_VENCIDA, builder.build())
+        try {
+            notificationManager.notify(NOTIFICATION_ID_VENCIDA, builder.build())
+        } catch (e: SecurityException) {
+            // Log do erro de permissão
+            android.util.Log.e("CobrancaNotification", "Erro de permissão para notificação: ${e.message}")
+        }
     }
 
     fun notificarCobrancasPendentes(quantidade: Int) {
@@ -63,6 +68,11 @@ class CobrancaNotificationService @Inject constructor(
             .setAutoCancel(true)
 
         val notificationManager = NotificationManagerCompat.from(context)
-        notificationManager.notify(NOTIFICATION_ID_PENDENTE, builder.build())
+        try {
+            notificationManager.notify(NOTIFICATION_ID_PENDENTE, builder.build())
+        } catch (e: SecurityException) {
+            // Log do erro de permissão
+            android.util.Log.e("CobrancaNotification", "Erro de permissão para notificação: ${e.message}")
+        }
     }
 } 

@@ -22,6 +22,7 @@ class NovaSessaoActivity : ComponentActivity() {
                 Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier) {
                     NovaSessaoScreen(
                         patientId = patientId,
+                        anotacaoId = intent.getLongExtra("ANOTACAO_ID", -1),
                         onSave = {
                             setResult(Activity.RESULT_OK)
                             finish()

@@ -53,7 +53,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [User::class, Patient::class, Appointment::class, PatientNote::class, PatientMessage::class, PatientReport::class, FinancialRecord::class, Prontuario::class, AuditLog::class, WhatsAppConversation::class, AnamneseModel::class, AnamneseCampo::class, AnamnesePreenchida::class, HistoricoFamiliar::class, HistoricoMedico::class, VidaEmocional::class, ObservacoesClinicas::class, AnotacaoSessao::class, CobrancaSessao::class, TipoSessao::class],
-    version = 17,
+    version = 18,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -83,6 +83,53 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        private suspend fun seedDatabase(database: AppDatabase) {
+            try {
+                // Seed dos tipos de sessão padrão
+                val tipoSessaoDao = database.tipoSessaoDao()
+                if (tipoSessaoDao.countTiposSessao() == 0) {
+                    tipoSessaoDao.insert(com.example.psipro.data.entities.TipoSessao(nome = "Individual", valorPadrao = 150.0))
+                    tipoSessaoDao.insert(com.example.psipro.data.entities.TipoSessao(nome = "Casal", valorPadrao = 200.0))
+                    tipoSessaoDao.insert(com.example.psipro.data.entities.TipoSessao(nome = "Avaliação", valorPadrao = 180.0))
+                }
+                
+                // Seed dos modelos prontos
+                val modelDao = database.anamneseModelDao()
+                val campoDao = database.anamneseCampoDao()
+                
+                // Verificar se já existem modelos
+                val modelosExistentes = modelDao.getAll()
+                if (modelosExistentes.isEmpty()) {
+                    // Inserir modelos de exemplo
+                    val adultoId = modelDao.insert(com.example.psipro.data.entities.AnamneseModel(nome = "Anamnese Adulto", isDefault = true))
+                    val infantilId = modelDao.insert(com.example.psipro.data.entities.AnamneseModel(nome = "Anamnese Infantil", isDefault = true))
+                    val casalId = modelDao.insert(com.example.psipro.data.entities.AnamneseModel(nome = "Anamnese Casal", isDefault = true))
+                    
+                    // Inserir campos usando AnamneseTestUtils
+                    val camposAdulto = com.example.psipro.utils.AnamneseTestUtils.createAdultoFields()
+                    val camposInfantil = com.example.psipro.utils.AnamneseTestUtils.createInfantilFields()
+                    val camposCasal = com.example.psipro.utils.AnamneseTestUtils.createCasalFields()
+                    
+                    // Inserir campos do adulto
+                    camposAdulto.forEach { campo ->
+                        campoDao.insert(campo.copy(modeloId = adultoId))
+                    }
+                    
+                    // Inserir campos do infantil
+                    camposInfantil.forEach { campo ->
+                        campoDao.insert(campo.copy(modeloId = infantilId))
+                    }
+                    
+                    // Inserir campos do casal
+                    camposCasal.forEach { campo ->
+                        campoDao.insert(campo.copy(modeloId = casalId))
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("AppDatabase", "Erro no seed do banco", e)
+            }
+        }
+
         @JvmStatic
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
@@ -94,49 +141,13 @@ abstract class AppDatabase : RoomDatabase() {
                  .addCallback(object : RoomDatabase.Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         super.onCreate(db)
-                        // Seed dos tipos de sessão padrão
+                        // Executar seeds de forma assíncrona para evitar ANR
                         GlobalScope.launch(Dispatchers.IO) {
-                            val database = getInstance(context)
-                            val tipoSessaoDao = database.tipoSessaoDao()
-                            if (tipoSessaoDao.countTiposSessao() == 0) {
-                                tipoSessaoDao.insert(com.example.psipro.data.entities.TipoSessao(nome = "Individual", valorPadrao = 150.0))
-                                tipoSessaoDao.insert(com.example.psipro.data.entities.TipoSessao(nome = "Casal", valorPadrao = 200.0))
-                                tipoSessaoDao.insert(com.example.psipro.data.entities.TipoSessao(nome = "Avaliação", valorPadrao = 180.0))
-                            }
-                        }
-                        // Seed dos modelos prontos
-                        GlobalScope.launch(Dispatchers.IO) {
-                            val database = getInstance(context)
-                            val modelDao = database.anamneseModelDao()
-                            val campoDao = database.anamneseCampoDao()
-                            
-                            // Verificar se já existem modelos
-                            val modelosExistentes = modelDao.getAll()
-                            if (modelosExistentes.isEmpty()) {
-                                // Inserir modelos de exemplo
-                                val adultoId = modelDao.insert(com.example.psipro.data.entities.AnamneseModel(nome = "Anamnese Adulto", isDefault = true))
-                                val infantilId = modelDao.insert(com.example.psipro.data.entities.AnamneseModel(nome = "Anamnese Infantil", isDefault = true))
-                                val casalId = modelDao.insert(com.example.psipro.data.entities.AnamneseModel(nome = "Anamnese Casal", isDefault = true))
-                                
-                                // Inserir campos usando AnamneseTestUtils
-                                val camposAdulto = com.example.psipro.utils.AnamneseTestUtils.createAdultoFields()
-                                val camposInfantil = com.example.psipro.utils.AnamneseTestUtils.createInfantilFields()
-                                val camposCasal = com.example.psipro.utils.AnamneseTestUtils.createCasalFields()
-                                
-                                // Inserir campos do adulto
-                                camposAdulto.forEach { campo ->
-                                    campoDao.insert(campo.copy(modeloId = adultoId))
-                                }
-                                
-                                // Inserir campos do infantil
-                                camposInfantil.forEach { campo ->
-                                    campoDao.insert(campo.copy(modeloId = infantilId))
-                                }
-                                
-                                // Inserir campos do casal
-                                camposCasal.forEach { campo ->
-                                    campoDao.insert(campo.copy(modeloId = casalId))
-                                }
+                            try {
+                                val database = getInstance(context)
+                                seedDatabase(database)
+                            } catch (e: Exception) {
+                                android.util.Log.e("AppDatabase", "Erro ao fazer seed do banco", e)
                             }
                         }
                     }

@@ -27,6 +27,10 @@ import com.google.firebase.auth.FirebaseAuth
 import android.os.Build
 import android.content.res.Configuration
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
     private lateinit var binding: ActivityMainBinding
@@ -41,45 +45,27 @@ class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Inicializar componentes básicos primeiro
+        initializeBasicComponents()
+        
+        // Configurar UI
+        setupViews()
+        
+        // Inicializar componentes pesados de forma assíncrona
+        initializeHeavyComponents()
+    }
+    
+    private fun initializeBasicComponents() {
         viewModel = ViewModelProvider(this)[AuthViewModel::class.java]
-
+        
         // Aplicar tema salvo
         val themePrefs = getSharedPreferences("settings", MODE_PRIVATE)
         when (themePrefs.getString("app_theme", "light")) {
             "dark" -> androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES)
             "light" -> androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO)
         }
-
-        // Configuração do Google Sign-In
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestEmail()
-            .build()
-        googleSignInClient = GoogleSignIn.getClient(this, gso)
-
-        // Registrar para receber callbacks de autenticação
-        AuthManager.getInstance().addAuthStateListener(this)
-
-        // Verificar se já está logado
-        if (viewModel.isLoggedIn()) {
-            startDashboard()
-            return
-        }
-
-        // Exibir termo LGPD se ainda não aceito
-        val prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(this)
-        val aceitouLgpd = prefs.getBoolean("aceitou_lgpd", false)
-        if (!aceitouLgpd) {
-            val termo = "Este aplicativo coleta e armazena dados pessoais de pacientes para fins de gestão clínica, em conformidade com a LGPD (Lei Geral de Proteção de Dados). Ao prosseguir, você concorda com o tratamento dos dados conforme descrito na nossa política de privacidade. Você pode solicitar a exclusão ou exportação dos seus dados a qualquer momento."
-            androidx.appcompat.app.AlertDialog.Builder(ContextThemeWrapper(this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert))
-                .setTitle("Consentimento LGPD")
-                .setMessage(HtmlCompat.fromHtml(termo, HtmlCompat.FROM_HTML_MODE_LEGACY))
-                .setCancelable(false)
-                .setPositiveButton("Aceito") { _, _ ->
-                    prefs.edit().putBoolean("aceitou_lgpd", true).apply()
-                }
-                .show()
-        }
-
+        
+        // Configurar cores da barra de status
         val nightModeFlags = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
         if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -87,8 +73,49 @@ class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
                 window.navigationBarColor = ContextCompat.getColor(this, R.color.background_black)
             }
         }
-
-        setupViews()
+    }
+    
+    private fun initializeHeavyComponents() {
+        // Executar operações pesadas de forma assíncrona
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                // Configuração do Google Sign-In
+                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestEmail()
+                    .build()
+                googleSignInClient = GoogleSignIn.getClient(this@MainActivity, gso)
+                
+                // Registrar para receber callbacks de autenticação
+                AuthManager.getInstance().addAuthStateListener(this@MainActivity)
+                
+                // Verificar se já está logado
+                if (viewModel.isLoggedIn()) {
+                    withContext(Dispatchers.Main) {
+                        startDashboard()
+                    }
+                    return@launch
+                }
+                
+                // Exibir termo LGPD se ainda não aceito
+                withContext(Dispatchers.Main) {
+                    val prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(this@MainActivity)
+                    val aceitouLgpd = prefs.getBoolean("aceitou_lgpd", false)
+                    if (!aceitouLgpd) {
+                        val termo = "Este aplicativo coleta e armazena dados pessoais de pacientes para fins de gestão clínica, em conformidade com a LGPD (Lei Geral de Proteção de Dados). Ao prosseguir, você concorda com o tratamento dos dados conforme descrito na nossa política de privacidade. Você pode solicitar a exclusão ou exportação dos seus dados a qualquer momento."
+                        androidx.appcompat.app.AlertDialog.Builder(ContextThemeWrapper(this@MainActivity, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert))
+                            .setTitle("Consentimento LGPD")
+                            .setMessage(HtmlCompat.fromHtml(termo, HtmlCompat.FROM_HTML_MODE_LEGACY))
+                            .setCancelable(false)
+                            .setPositiveButton("Aceito") { _, _ ->
+                                prefs.edit().putBoolean("aceitou_lgpd", true).apply()
+                            }
+                            .show()
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Erro na inicialização", e)
+            }
+        }
     }
 
     private fun setupViews() {

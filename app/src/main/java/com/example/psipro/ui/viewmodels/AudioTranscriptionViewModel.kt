@@ -1,10 +1,13 @@
 package com.example.psipro.ui.viewmodels
 
+import android.Manifest
 import android.app.Application
+import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.os.Environment
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
@@ -39,27 +42,43 @@ class AudioTranscriptionViewModel(app: Application) : AndroidViewModel(app) {
     val docId: StateFlow<String?> = _docId
 
     fun startRecording() {
-        val dir = getApplication<Application>().getExternalFilesDir(Environment.DIRECTORY_MUSIC)
+        val context = getApplication<Application>()
+        
+        // Verificar permissão de microfone
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) 
+            != PackageManager.PERMISSION_GRANTED) {
+            _status.value = "Permissão de microfone necessária"
+            return
+        }
+        
+        val dir = context.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
         wavFile = File(dir, "audio.wav")
         val sampleRate = 16000
         val channelConfig = AudioFormat.CHANNEL_IN_MONO
         val audioFormat = AudioFormat.ENCODING_PCM_16BIT
         val bufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
-        audioRecord = AudioRecord(
-            MediaRecorder.AudioSource.MIC,
-            sampleRate,
-            channelConfig,
-            audioFormat,
-            bufferSize
-        )
-        audioRecord?.startRecording()
-        isRecordingAudio = true
-        _isRecording.value = true
-        _status.value = "Gravando..."
-        recordingThread = Thread {
-            writeAudioDataToWavFile(bufferSize, sampleRate, channelConfig, audioFormat)
+        
+        try {
+            audioRecord = AudioRecord(
+                MediaRecorder.AudioSource.MIC,
+                sampleRate,
+                channelConfig,
+                audioFormat,
+                bufferSize
+            )
+            audioRecord?.startRecording()
+            isRecordingAudio = true
+            _isRecording.value = true
+            _status.value = "Gravando..."
+            recordingThread = Thread {
+                writeAudioDataToWavFile(bufferSize, sampleRate, channelConfig, audioFormat)
+            }
+            recordingThread?.start()
+        } catch (e: SecurityException) {
+            _status.value = "Erro de permissão: ${e.message}"
+        } catch (e: Exception) {
+            _status.value = "Erro ao iniciar gravação: ${e.message}"
         }
-        recordingThread?.start()
     }
 
     fun stopRecording() {
@@ -72,11 +91,10 @@ class AudioTranscriptionViewModel(app: Application) : AndroidViewModel(app) {
         _status.value = "Áudio gravado: ${wavFile?.absolutePath}"
     }
 
-    private fun writeAudioDataToWavFile(bufferSize: Int, sampleRate: Int, channelConfig: Int, audioFormat: Int) {
+    private fun writeAudioDataToWavFile(bufferSize: Int, sampleRate: Int, _channelConfig: Int, _audioFormat: Int) {
         val pcmBuffer = ByteArray(bufferSize)
         val outputStream = FileOutputStream(wavFile)
         val dataOutputStream = DataOutputStream(BufferedOutputStream(outputStream))
-        val totalAudioLen = ByteArrayOutputStream()
         try {
             // Placeholder for WAV header
             for (i in 0 until 44) dataOutputStream.write(0)
@@ -106,10 +124,10 @@ class AudioTranscriptionViewModel(app: Application) : AndroidViewModel(app) {
         val totalDataLen = totalAudioLen + 36
         val byteRate = sampleRate * channels * bitsPerSample / 8
         val header = ByteArray(44)
-        header[0] = 'R'.toByte(); header[1] = 'I'.toByte(); header[2] = 'F'.toByte(); header[3] = 'F'.toByte()
+        header[0] = 'R'.code.toByte(); header[1] = 'I'.code.toByte(); header[2] = 'F'.code.toByte(); header[3] = 'F'.code.toByte()
         writeInt(header, 4, totalDataLen)
-        header[8] = 'W'.toByte(); header[9] = 'A'.toByte(); header[10] = 'V'.toByte(); header[11] = 'E'.toByte()
-        header[12] = 'f'.toByte(); header[13] = 'm'.toByte(); header[14] = 't'.toByte(); header[15] = ' '.toByte()
+        header[8] = 'W'.code.toByte(); header[9] = 'A'.code.toByte(); header[10] = 'V'.code.toByte(); header[11] = 'E'.code.toByte()
+        header[12] = 'f'.code.toByte(); header[13] = 'm'.code.toByte(); header[14] = 't'.code.toByte(); header[15] = ' '.code.toByte()
         writeInt(header, 16, 16)
         writeShort(header, 20, 1.toShort())
         writeShort(header, 22, channels.toShort())
@@ -117,7 +135,7 @@ class AudioTranscriptionViewModel(app: Application) : AndroidViewModel(app) {
         writeInt(header, 28, byteRate)
         writeShort(header, 32, (channels * bitsPerSample / 8).toShort())
         writeShort(header, 34, bitsPerSample.toShort())
-        header[36] = 'd'.toByte(); header[37] = 'a'.toByte(); header[38] = 't'.toByte(); header[39] = 'a'.toByte()
+        header[36] = 'd'.code.toByte(); header[37] = 'a'.code.toByte(); header[38] = 't'.code.toByte(); header[39] = 'a'.code.toByte()
         writeInt(header, 40, totalAudioLen)
         return header
     }

@@ -62,7 +62,7 @@ class HelpActivity : AppCompatActivity() {
     }
     
     override fun onSupportNavigateUp(): Boolean {
-        onBackPressed()
+        finish()
         return true
     }
 } 

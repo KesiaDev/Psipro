@@ -21,25 +21,25 @@ class App : Application() {
         super.onCreate()
         
         try {
-            // Inicializar banco de dados de forma síncrona para garantir que está pronto
-            database = AppDatabase.getInstance(applicationContext)
-            
-            // Inicializar AuthManager primeiro
-            AuthManager.init(applicationContext)
-            
-            // Inicializar outros componentes de forma assíncrona
-            initializeApp()
+            // Inicializar componentes de forma assíncrona para evitar ANR
+            initializeAppAsync()
             
             Log.d(TAG, "Aplicativo inicializado com sucesso")
         } catch (e: Exception) {
             Log.e(TAG, "Erro fatal na inicialização do aplicativo", e)
-            throw e // Relança a exceção para que o sistema saiba que houve falha na inicialização
+            // Não relançar exceção para evitar crash
         }
     }
     
-    private fun initializeApp() {
+    private fun initializeAppAsync() {
         applicationScope.launch {
             try {
+                // Inicializar banco de dados de forma assíncrona
+                database = AppDatabase.getInstance(applicationContext)
+                
+                // Inicializar AuthManager
+                AuthManager.init(applicationContext)
+                
                 // Verificar se já existe um usuário admin
                 val userDao = database.userDao()
                 val adminExists = userDao.getUserByEmail("admin@teste.com") != null
@@ -65,6 +65,8 @@ class App : Application() {
             }
         }
     }
+    
+
     
     companion object {
         private const val TAG = "App"

@@ -26,15 +26,23 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         lifecycleScope.launch {
-            delay(2000) // 2 segundos
-            val isFirstRun = withContext(Dispatchers.IO) { appConfig.isFirstRun }
-            val intent = if (isFirstRun) {
-                Intent(this@SplashActivity, OnboardingActivity::class.java)
-            } else {
-                Intent(this@SplashActivity, MainActivity::class.java)
+            try {
+                // Reduzir delay para evitar ANR
+                delay(1000) // 1 segundo
+                val isFirstRun = withContext(Dispatchers.IO) { appConfig.isFirstRun }
+                val intent = if (isFirstRun) {
+                    Intent(this@SplashActivity, OnboardingActivity::class.java)
+                } else {
+                    Intent(this@SplashActivity, MainActivity::class.java)
+                }
+                startActivity(intent)
+                finish()
+            } catch (e: Exception) {
+                // Em caso de erro, ir direto para MainActivity
+                val intent = Intent(this@SplashActivity, MainActivity::class.java)
+                startActivity(intent)
+                finish()
             }
-            startActivity(intent)
-            finish()
         }
     }
 } 

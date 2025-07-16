@@ -27,6 +27,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import android.content.Context
 import android.content.Intent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import android.util.Log
 
 // Dados auxiliares
 
@@ -83,6 +87,13 @@ fun AnotacoesSessaoScreen(
 
     var showDeleteDialog by remember { mutableStateOf<Long?>(null) }
 
+    val statusPagamentos by viewModel.statusPagamentos.collectAsState()
+
+    // Debug: logar statusPagamentos
+    LaunchedEffect(statusPagamentos) {
+        Log.d("StatusPagamentos", statusPagamentos.toString())
+    }
+    
     // Carregar anotações reais ao abrir
     LaunchedEffect(patientId) {
         viewModel.carregarAnotacoes(patientId)
@@ -121,11 +132,22 @@ fun AnotacoesSessaoScreen(
             // Lista de sessões
             LazyColumn(Modifier.weight(1f).padding(8.dp)) {
                 items(anotacoes) { anotacao ->
+                    val context = LocalContext.current
                     val tipoSessao = tiposSessao.find { it.id == anotacao.tipoSessaoId }
+                    val status = statusPagamentos[anotacao.id]
+                    val (statusCor, statusTexto) = when (status) {
+                        com.example.psipro.data.entities.StatusPagamento.PAGO -> Pair(Color(0xFF2196F3), "Realizado") // Azul
+                        com.example.psipro.data.entities.StatusPagamento.A_RECEBER -> Pair(Color(0xFFFFC107), "Pendente") // Amarelo
+                        com.example.psipro.data.entities.StatusPagamento.VENCIDO -> Pair(Color(0xFFF44336), "Vencido") // Vermelho
+                        com.example.psipro.data.entities.StatusPagamento.CANCELADO -> Pair(Color(0xFF9E9E9E), "Cancelado") // Cinza
+                        null -> Pair(Color(0xFF9E9E9E), "Sem cobrança") // Forçar exibição se não houver cobrança
+                    }
                     Card(
                         onClick = {
-                            sessaoSelecionada = anotacao.numeroSessao
-                            viewModel.carregarAnotacao(patientId, anotacao.numeroSessao)
+                            val intent = Intent(context, NovaSessaoActivity::class.java)
+                            intent.putExtra("PATIENT_ID", patientId)
+                            intent.putExtra("ANOTACAO_ID", anotacao.id)
+                            context.startActivity(intent)
                         },
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                         shape = campoShape
@@ -153,13 +175,24 @@ fun AnotacoesSessaoScreen(
                                     Text(
                                         "R$ %.2f".format(tipoSessao.valorPadrao),
                                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = MaterialTheme.colorScheme.secondary
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        modifier = Modifier.padding(end = 8.dp)
                                     )
+                                }
+                                // Status colorido e texto
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 8.dp)) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(12.dp)
+                                            .background(statusCor, shape = CircleShape)
+                                    )
+                                    Spacer(Modifier.width(4.dp))
+                                    Text(statusTexto, color = statusCor, style = MaterialTheme.typography.bodySmall)
                                 }
                                 // Botão de exclusão
                                 IconButton(
                                     onClick = { showDeleteDialog = anotacao.id },
-                                    modifier = Modifier.padding(start = 4.dp)
+                                    modifier = Modifier.size(28.dp)
                                 ) {
                                     Icon(
                                         Icons.Default.Delete,
@@ -180,6 +213,7 @@ fun AnotacoesSessaoScreen(
                         onClick = {
                             val intent = Intent(context, NovaSessaoActivity::class.java)
                             intent.putExtra("PATIENT_ID", patientId)
+                            intent.putExtra("ANOTACAO_ID", anotacaoSelecionada?.id)
                             context.startActivity(intent)
                         },
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),

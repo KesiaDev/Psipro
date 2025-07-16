@@ -60,6 +60,7 @@ import android.graphics.Canvas
 import androidx.core.content.FileProvider
 import java.net.URL
 import android.widget.ImageView
+import androidx.activity.result.contract.ActivityResultContracts
 
 data class PsicologoProfile(
     val nome: String = "",
@@ -102,6 +103,25 @@ class EditProfileActivity : AppCompatActivity() {
         "Psicologia do Luto e Cuidados Paliativos",
         "Outro"
     )
+
+    // Launcher para seleção de imagem
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                limparArquivosAntigosProfilePictures()
+                // Salva o arquivo cropped em um diretório persistente
+                val externalDir = getExternalFilesDir("ProfilePictures")
+                if (externalDir != null && externalDir.exists().not()) externalDir.mkdirs()
+                val destinationFile = File(externalDir, "profile_cropped_${System.currentTimeMillis()}.jpg")
+                val destinationUri = Uri.fromFile(destinationFile)
+                val uCrop = UCrop.of(uri, destinationUri)
+                    .withAspectRatio(1f, 1f)
+                    .withMaxResultSize(800, 800)
+                    .withOptions(getUCropOptions())
+                uCrop.start(this)
+            }
+        }
+    }
 
     // Novo launcher para o cropper
     private val cropImageLauncher = registerForActivityResult(CropImageContract()) { result ->
@@ -196,7 +216,7 @@ class EditProfileActivity : AppCompatActivity() {
         binding.btnChangePhoto.setOnClickListener {
             val intent = Intent(Intent.ACTION_GET_CONTENT)
             intent.type = "image/*"
-            startActivityForResult(Intent.createChooser(intent, "Escolha uma imagem"), PICK_IMAGE_REQUEST)
+            pickImageLauncher.launch(Intent.createChooser(intent, "Escolha uma imagem"))
         }
     }
 
@@ -356,21 +376,6 @@ class EditProfileActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK) {
             when (requestCode) {
-                PICK_IMAGE_REQUEST -> {
-                    data?.data?.let { uri ->
-                        limparArquivosAntigosProfilePictures()
-                        // Salva o arquivo cropped em um diretório persistente
-                        val externalDir = getExternalFilesDir("ProfilePictures")
-                        if (externalDir != null && externalDir.exists().not()) externalDir.mkdirs()
-                        val destinationFile = File(externalDir, "profile_cropped_${System.currentTimeMillis()}.jpg")
-                        val destinationUri = Uri.fromFile(destinationFile)
-                        val uCrop = UCrop.of(uri, destinationUri)
-                            .withAspectRatio(1f, 1f)
-                            .withMaxResultSize(800, 800)
-                            .withOptions(getUCropOptions())
-                        uCrop.start(this)
-                    }
-                }
                 UCROP_REQUEST_CODE -> {
                     val resultUri = UCrop.getOutput(data!!)
                     if (resultUri != null) {
