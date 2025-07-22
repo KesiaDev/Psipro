@@ -53,10 +53,10 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [User::class, Patient::class, Appointment::class, PatientNote::class, PatientMessage::class, PatientReport::class, FinancialRecord::class, Prontuario::class, AuditLog::class, WhatsAppConversation::class, AnamneseModel::class, AnamneseCampo::class, AnamnesePreenchida::class, HistoricoFamiliar::class, HistoricoMedico::class, VidaEmocional::class, ObservacoesClinicas::class, AnotacaoSessao::class, CobrancaSessao::class, TipoSessao::class],
-    version = 18,
+    version = 19,
     exportSchema = false
 )
-@TypeConverters(DateConverter::class)
+@TypeConverters(DateConverter::class, com.example.psipro.data.converters.AnamneseGroupConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun patientDao(): PatientDao
@@ -85,6 +85,17 @@ abstract class AppDatabase : RoomDatabase() {
 
         private suspend fun seedDatabase(database: AppDatabase) {
             try {
+                // Migrar pacientes existentes que podem ter anamneseGroup nulo
+                val patientDao = database.patientDao()
+                val allPatients = patientDao.getAll()
+                allPatients.forEach { patient ->
+                    if (patient.anamneseGroup == null) {
+                        android.util.Log.d("AppDatabase", "Migrando paciente ${patient.name} com anamneseGroup nulo")
+                        val updatedPatient = patient.copy(anamneseGroup = com.example.psipro.data.entities.AnamneseGroup.ADULTO)
+                        patientDao.updatePatient(updatedPatient)
+                    }
+                }
+                
                 // Seed dos tipos de sessão padrão
                 val tipoSessaoDao = database.tipoSessaoDao()
                 if (tipoSessaoDao.countTiposSessao() == 0) {

@@ -1,6 +1,8 @@
 package com.example.psipro.config
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import javax.inject.Inject
@@ -11,17 +13,23 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 class AppConfig @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    private val masterKey = MasterKey.Builder(context)
-        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-        .build()
-    
-    private val securePrefs = EncryptedSharedPreferences.create(
-        context,
-        "app_config",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+    private val securePrefs: SharedPreferences = try {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        
+        EncryptedSharedPreferences.create(
+            context,
+            "app_config",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    } catch (e: Exception) {
+        Log.w("AppConfig", "Erro ao criar EncryptedSharedPreferences, usando SharedPreferences normal", e)
+        // Fallback para SharedPreferences normal
+        context.getSharedPreferences("app_config", Context.MODE_PRIVATE)
+    }
     
     var isFirstRun: Boolean
         get() = securePrefs.getBoolean(KEY_FIRST_RUN, true)
@@ -52,6 +60,7 @@ class AppConfig @Inject constructor(
         set(value) = securePrefs.edit().putString(KEY_LANGUAGE, value).apply()
     
     companion object {
+        private const val TAG = "AppConfig"
         private const val KEY_FIRST_RUN = "first_run"
         private const val KEY_DARK_MODE = "dark_mode"
         private const val KEY_LAST_BACKUP = "last_backup"

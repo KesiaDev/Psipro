@@ -20,6 +20,7 @@ import com.example.psipro.ui.screens.WhatsAppHistoryActivity
 import com.example.psipro.DashboardActivity
 import com.example.psipro.ProntuarioListActivity
 import com.example.psipro.ui.screens.AnamneseActivity
+import com.example.psipro.ui.screens.SimplifiedAnamneseActivity
 
 @AndroidEntryPoint
 class DetalhePacienteActivity : AppCompatActivity() {
@@ -59,12 +60,20 @@ class DetalhePacienteActivity : AppCompatActivity() {
                 intent.putExtra("patient_id", currentPatientId)
                 startActivity(intent)
             },
-            MenuItem(R.drawable.ic_assignment, "Anamnese Dinâmica") {
-                val intent = Intent(this, com.example.psipro.ui.screens.AnamneseActivity::class.java).apply {
-                    putExtra("PACIENTE_ID", currentPatientId)
-                    putExtra("PACIENTE_NOME", patientName)
+            MenuItem(R.drawable.ic_assignment, "Anamnese") {
+                // Buscar o paciente para obter o grupo de anamnese
+                lifecycleScope.launch {
+                    val patient = patientViewModel.getPatientById(currentPatientId) { patient ->
+                        patient?.let {
+                            val intent = Intent(this@DetalhePacienteActivity, SimplifiedAnamneseActivity::class.java).apply {
+                                putExtra("PATIENT_ID", currentPatientId)
+                                putExtra("PATIENT_NAME", patientName)
+                                putExtra("ANAMNESE_GROUP", it.anamneseGroup.name)
+                            }
+                            startActivity(intent)
+                        }
+                    }
                 }
-                startActivity(intent)
             },
             MenuItem(R.drawable.ic_note, "Anotações da Sessão") {
                 val intent = Intent(this, com.example.psipro.ui.screens.AnotacoesSessaoActivity::class.java)

@@ -2,6 +2,7 @@ package com.example.psipro.security
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.example.psipro.data.entities.User
@@ -23,17 +24,23 @@ class SessionManager @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var sessionJob: kotlinx.coroutines.Job? = null
     
-    private val masterKey = MasterKey.Builder(context)
-        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-        .build()
-    
-    private val securePrefs: SharedPreferences = EncryptedSharedPreferences.create(
-        context,
-        "secure_prefs",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+    private val securePrefs: SharedPreferences = try {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        
+        EncryptedSharedPreferences.create(
+            context,
+            "secure_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    } catch (e: Exception) {
+        Log.w("SessionManager", "Erro ao criar EncryptedSharedPreferences, usando SharedPreferences normal", e)
+        // Fallback para SharedPreferences normal
+        context.getSharedPreferences("secure_prefs", Context.MODE_PRIVATE)
+    }
     
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser
@@ -113,15 +120,16 @@ class SessionManager @Inject constructor(
     }
     
     sealed class SessionState {
-        object NotAuthenticated : SessionState()
         object Authenticated : SessionState()
+        object NotAuthenticated : SessionState()
         object Expired : SessionState()
     }
     
     companion object {
+        private const val TAG = "SessionManager"
         private const val KEY_USER_ID = "user_id"
         private const val KEY_LAST_ACTIVITY = "last_activity"
-        private val SESSION_TIMEOUT = java.util.concurrent.TimeUnit.HOURS.toMillis(24) // 24 horas
-        private val SESSION_CHECK_INTERVAL = java.util.concurrent.TimeUnit.MINUTES.toMillis(5) // 5 minutos
+        private const val SESSION_TIMEOUT = 24L * 60L * 60L * 1000L // 24 horas em millisegundos
+        private const val SESSION_CHECK_INTERVAL = 5L * 60L * 1000L // 5 minutos em millisegundos
     }
 } 

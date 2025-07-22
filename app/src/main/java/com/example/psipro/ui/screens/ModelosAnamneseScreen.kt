@@ -27,7 +27,10 @@ fun ModelosAnamneseScreen(
             Text("Novo Modelo")
         }
         Spacer(Modifier.height(16.dp))
-        LazyColumn(modifier = Modifier.weight(1f)) {
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(bottom = 16.dp)
+        ) {
             items(modelos) { modelo ->
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),

@@ -53,7 +53,10 @@ fun FormularioAnamneseScreen(
     var erro by remember { mutableStateOf<String?>(null) }
     var anexos by remember { mutableStateOf(listOf<Uri>()) }
 
-    LazyColumn(modifier = Modifier.padding(16.dp)) {
+    LazyColumn(
+        modifier = Modifier.padding(16.dp),
+        contentPadding = PaddingValues(bottom = 16.dp)
+    ) {
         items(campos) { campo ->
             val obrigatorio = campo.obrigatorio
             val labelText = if (obrigatorio) "${campo.label} *" else campo.label

@@ -95,6 +95,32 @@
                 android:inputType="textEmailAddress"/>
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Grupo de Anamnese -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/LoginInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp">
+            <AutoCompleteTextView
+                android:id="@+id/grupoAnamneseAutoComplete"
+                style="@style/LoginInputEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Grupo de anamnese *"
+                android:inputType="none"
+                android:focusable="true"
+                android:clickable="true"
+                android:completionThreshold="1"/>
+        </com.google.android.material.textfield.TextInputLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Utilizado para importar o formulário de anamnese"
+            android:textSize="12sp"
+            android:textColor="@android:color/darker_gray"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="8dp"/>
+
         <!-- Informações Clínicas -->
         <TextView
             android:id="@+id/infoClinicasTitle"

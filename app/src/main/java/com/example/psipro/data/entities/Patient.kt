@@ -6,6 +6,10 @@ import androidx.room.TypeConverters
 import java.util.Date
 import com.example.psipro.data.converters.EncryptionConverter
 
+enum class AnamneseGroup {
+    ADULTO, CRIANCAS, ADOLESCENTES, IDOSOS
+}
+
 @Entity(tableName = "patients")
 data class Patient(
     @PrimaryKey(autoGenerate = true)
@@ -34,5 +38,7 @@ data class Patient(
     val isEncrypted: Boolean = false,
     val notes: String? = null,
     val createdAt: Date = Date(),
-    val updatedAt: Date = Date()
+    val updatedAt: Date = Date(),
+    @TypeConverters(com.example.psipro.data.converters.AnamneseGroupConverter::class)
+    val anamneseGroup: AnamneseGroup = AnamneseGroup.ADULTO
 ) 

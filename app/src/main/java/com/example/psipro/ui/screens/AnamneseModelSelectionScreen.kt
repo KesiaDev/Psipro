@@ -79,7 +79,8 @@ fun AnamneseModelSelectionScreen(
         } else {
             LazyColumn(
                 modifier = Modifier.padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 16.dp)
             ) {
                 item {
                     Text(

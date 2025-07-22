@@ -130,7 +130,10 @@ fun AnotacoesSessaoScreen(
     ) { innerPadding ->
         Row(Modifier.padding(innerPadding)) {
             // Lista de sessões
-            LazyColumn(Modifier.weight(1f).padding(8.dp)) {
+            LazyColumn(
+                modifier = Modifier.weight(1f).padding(8.dp),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
                 items(anotacoes) { anotacao ->
                     val context = LocalContext.current
                     val tipoSessao = tiposSessao.find { it.id == anotacao.tipoSessaoId }

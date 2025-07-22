@@ -4,27 +4,34 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.isSystemInDarkTheme
+import android.util.Log
 
 private val LightColors = lightColorScheme(
     primary = Color(0xFFB8860B), // bronze_gold equilibrado
     onPrimary = Color.White,
     secondary = Color(0xFF8B6914), // bronze_gold_dark
-    onSecondary = Color.Black,
+    onSecondary = Color.White,
     background = Color.White,
     onBackground = Color.Black,
-    surface = Color(0xFFF5F5F5), // light surface
+    surface = Color.White, // 100% branco
     onSurface = Color.Black,
+    outline = Color(0xFFB8860B), // bronze_gold para bordas
+    onSurfaceVariant = Color(0xFF6C757D), // text_gray
+    surfaceVariant = Color(0xFFF5F5F5), // cinza muito claro para cartões
 )
 
 private val DarkColors = darkColorScheme(
     primary = Color(0xFFB8860B), // bronze_gold equilibrado
     onPrimary = Color.Black,
     secondary = Color(0xFF8B6914), // bronze_gold_dark
-    onSecondary = Color.Black,
+    onSecondary = Color.White,
     background = Color(0xFF121212),
     onBackground = Color.White,
     surface = Color(0xFF1E1E1E),
     onSurface = Color.White,
+    outline = Color(0xFFB8860B), // bronze_gold para bordas
+    onSurfaceVariant = Color(0xFFAAAAAA), // text_hint
+    surfaceVariant = Color(0xFF2D2D2D), // cinza escuro para cartões
 )
 
 @Composable
@@ -32,8 +39,28 @@ fun PsiproTheme(
     useDarkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
+    // Log detalhado para debug
+    Log.d("PsiproTheme", "=== TEMA DEBUG ===")
+    Log.d("PsiproTheme", "useDarkTheme parameter: $useDarkTheme")
+    Log.d("PsiproTheme", "isSystemInDarkTheme(): ${isSystemInDarkTheme()}")
+    Log.d("PsiproTheme", "Selected theme: ${if (useDarkTheme) "DARK" else "LIGHT"}")
+    
+    val selectedColors = if (useDarkTheme) DarkColors else LightColors
+    
+    // Log detalhado das cores selecionadas
+    Log.d("PsiproTheme", "=== CORES SELECIONADAS ===")
+    Log.d("PsiproTheme", "Surface: ${selectedColors.surface}")
+    Log.d("PsiproTheme", "OnSurface: ${selectedColors.onSurface}")
+    Log.d("PsiproTheme", "Background: ${selectedColors.background}")
+    Log.d("PsiproTheme", "OnBackground: ${selectedColors.onBackground}")
+    Log.d("PsiproTheme", "SurfaceVariant: ${selectedColors.surfaceVariant}")
+    Log.d("PsiproTheme", "OnSurfaceVariant: ${selectedColors.onSurfaceVariant}")
+    Log.d("PsiproTheme", "Primary: ${selectedColors.primary}")
+    Log.d("PsiproTheme", "OnPrimary: ${selectedColors.onPrimary}")
+    Log.d("PsiproTheme", "=== FIM DEBUG ===")
+    
     MaterialTheme(
-        colorScheme = if (useDarkTheme) DarkColors else LightColors,
+        colorScheme = selectedColors,
         typography = Typography(),
         content = content
     )

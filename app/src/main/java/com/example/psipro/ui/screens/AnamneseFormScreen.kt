@@ -106,7 +106,8 @@ fun AnamneseFormScreen(
         } else {
             LazyColumn(
                 modifier = Modifier.padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(bottom = 16.dp)
             ) {
                 // Mostrar erro se houver
                 erro?.let { errorMessage ->

@@ -16,6 +16,8 @@ import android.text.Editable
 import android.text.TextWatcher
 import java.text.NumberFormat
 import java.util.Locale
+import android.widget.ArrayAdapter
+import com.example.psipro.data.entities.AnamneseGroup
 
 @AndroidEntryPoint
 class DadosPessoaisActivity : AppCompatActivity() {
@@ -23,6 +25,7 @@ class DadosPessoaisActivity : AppCompatActivity() {
     private val viewModel: DadosPessoaisViewModel by viewModels()
     private var patientId: Long = -1
     private var birthDate: Date? = null
+    private var selectedAnamneseGroup: AnamneseGroup = AnamneseGroup.ADULTO
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +33,7 @@ class DadosPessoaisActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupCurrencyMask()
+        setupGrupoAnamneseDropdown()
 
         patientId = intent.getLongExtra("PATIENT_ID", -1)
         if (patientId == -1L) {
@@ -88,6 +92,27 @@ class DadosPessoaisActivity : AppCompatActivity() {
             }
         })
     }
+    
+    private fun setupGrupoAnamneseDropdown() {
+        val grupos = arrayOf("Adulto", "Crianças", "Adolescentes", "Idosos")
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, grupos)
+        binding.edtGrupoAnamnese.setAdapter(adapter)
+        
+        // Permitir que o dropdown seja clicável
+        binding.edtGrupoAnamnese.setOnClickListener {
+            binding.edtGrupoAnamnese.showDropDown()
+        }
+        
+        binding.edtGrupoAnamnese.setOnItemClickListener { _, _, position, _ ->
+            selectedAnamneseGroup = when (position) {
+                0 -> AnamneseGroup.ADULTO
+                1 -> AnamneseGroup.CRIANCAS
+                2 -> AnamneseGroup.ADOLESCENTES
+                3 -> AnamneseGroup.IDOSOS
+                else -> AnamneseGroup.ADULTO
+            }
+        }
+    }
 
     private fun preencherCampos(patient: Patient) {
         binding.edtNome.setText(patient.name)
@@ -108,6 +133,16 @@ class DadosPessoaisActivity : AppCompatActivity() {
         // Exibir data de nascimento formatada (apenas leitura)
         binding.edtDataNascimento.setText(java.text.SimpleDateFormat("dd/MM/yyyy").format(patient.birthDate))
         binding.edtDataNascimento.isEnabled = false
+        
+        // Preencher grupo de anamnese
+        selectedAnamneseGroup = patient.anamneseGroup
+        val grupoText = when (patient.anamneseGroup) {
+            AnamneseGroup.ADULTO -> "Adulto"
+            AnamneseGroup.CRIANCAS -> "Crianças"
+            AnamneseGroup.ADOLESCENTES -> "Adolescentes"
+            AnamneseGroup.IDOSOS -> "Idosos"
+        }
+        binding.edtGrupoAnamnese.setText(grupoText, false)
     }
 
     private fun coletarDadosDosCampos(): Patient {
@@ -140,7 +175,8 @@ class DadosPessoaisActivity : AppCompatActivity() {
             lembreteCobranca = binding.switchLembreteCobranca.isChecked,
             clinicalHistory = null,
             medications = null,
-            allergies = null
+            allergies = null,
+            anamneseGroup = selectedAnamneseGroup
         )
     }
 } 

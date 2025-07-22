@@ -210,7 +210,8 @@ fun AnamneseSection(
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
                     items(anamneses) { anamnese ->
                         Card(

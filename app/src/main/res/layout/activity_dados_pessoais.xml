@@ -200,6 +200,24 @@
             android:textColorHint="?attr/textColorSecondary"
             android:textSize="14sp" />
 
+        <!-- Grupo de Anamnese -->
+        <AutoCompleteTextView
+            android:id="@+id/edtGrupoAnamnese"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="6dp"
+            android:background="?attr/colorSurface"
+            android:fontFamily="sans-serif"
+            android:hint="Grupo de anamnese *"
+            android:inputType="none"
+            android:focusable="true"
+            android:clickable="true"
+            android:completionThreshold="1"
+            android:padding="8dp"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/textColorSecondary"
+            android:textSize="14sp" />
+
         <EditText
             android:id="@+id/edtRg"
             android:layout_width="match_parent"

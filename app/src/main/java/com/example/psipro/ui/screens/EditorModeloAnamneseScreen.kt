@@ -50,7 +50,10 @@ fun EditorModeloAnamneseScreen(
         Spacer(Modifier.height(16.dp))
         Text("Campos do Modelo", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
-        LazyColumn(modifier = Modifier.weight(1f)) {
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(bottom = 16.dp)
+        ) {
             itemsIndexed(listaCampos, key = { _, campo -> campo.id }) { index, campo ->
                 Card(
                     modifier = Modifier

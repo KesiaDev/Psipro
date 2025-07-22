@@ -18,12 +18,15 @@ import android.text.Editable
 import android.text.TextWatcher
 import java.text.NumberFormat
 import java.util.Locale
+import android.widget.ArrayAdapter
+import com.example.psipro.data.entities.AnamneseGroup
 
 @AndroidEntryPoint
 class CadastroPacienteActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCadastroPacienteBinding
     private val viewModel: PatientViewModel by viewModels()
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR"))
+    private var selectedAnamneseGroup: AnamneseGroup = AnamneseGroup.ADULTO
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +34,7 @@ class CadastroPacienteActivity : AppCompatActivity() {
         setContentView(binding.root)
         
         setupInputMasks()
+        setupGrupoAnamneseDropdown()
         setupObservers()
         setupListeners()
     }
@@ -122,6 +126,30 @@ class CadastroPacienteActivity : AppCompatActivity() {
                 isUpdating = false
             }
         })
+    }
+    
+    private fun setupGrupoAnamneseDropdown() {
+        val grupos = arrayOf("Adulto", "Crianças", "Adolescentes", "Idosos")
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, grupos)
+        binding.grupoAnamneseAutoComplete.setAdapter(adapter)
+        
+        // Permitir que o dropdown seja clicável
+        binding.grupoAnamneseAutoComplete.setOnClickListener {
+            binding.grupoAnamneseAutoComplete.showDropDown()
+        }
+        
+        binding.grupoAnamneseAutoComplete.setOnItemClickListener { _, _, position, _ ->
+            selectedAnamneseGroup = when (position) {
+                0 -> AnamneseGroup.ADULTO
+                1 -> AnamneseGroup.CRIANCAS
+                2 -> AnamneseGroup.ADOLESCENTES
+                3 -> AnamneseGroup.IDOSOS
+                else -> AnamneseGroup.ADULTO
+            }
+        }
+        
+        // Definir valor padrão
+        binding.grupoAnamneseAutoComplete.setText("Adulto", false)
     }
     
     private fun setupObservers() {
@@ -229,7 +257,8 @@ class CadastroPacienteActivity : AppCompatActivity() {
             clinicalHistory = historico,
             medications = null, // Adapte se houver campo de medicamentos
             allergies = null, // Adapte se houver campo de alergias
-            isEncrypted = false
+            isEncrypted = false,
+            anamneseGroup = selectedAnamneseGroup
         )
         
         viewModel.savePatient(patient)

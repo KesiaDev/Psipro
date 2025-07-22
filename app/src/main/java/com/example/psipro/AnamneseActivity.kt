@@ -14,7 +14,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
-import com.example.psipro.ui.screens.FichaPacienteScreen
+
 import com.example.psipro.ui.compose.PsiproTheme
 import dagger.hilt.android.AndroidEntryPoint
 import com.example.psipro.ui.screens.MenuAnamneseScreen

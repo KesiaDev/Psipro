@@ -145,6 +145,12 @@
             android:theme="@style/Theme.Psipro" />
         
         <activity
+            android:name=".ui.screens.SimplifiedAnamneseActivity"
+            android:exported="false"
+            android:label="Anamnese"
+            android:theme="@style/Theme.Psipro" />
+        
+        <activity
             android:name=".FinanceiroPacienteActivity"
             android:exported="false"
             android:label="Financeiro do Paciente" />
