@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.psipro.data.entities.StatusPagamento
-import com.example.psipro.ui.viewmodels.CobrancaSessaoViewModel
+import com.example.psipro.ui.viewmodels.FinanceiroUnificadoViewModel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -32,7 +32,7 @@ enum class FinanceiroTab {
 fun FinanceiroDashboardScreen(
     onBack: () -> Unit,
     onCobrancaClick: (Long) -> Unit,
-    viewModel: CobrancaSessaoViewModel = hiltViewModel()
+    viewModel: FinanceiroUnificadoViewModel = hiltViewModel()
 ) {
     var selectedTab by remember { mutableStateOf(FinanceiroTab.PAINEL) }
     var selectedDate by remember { mutableStateOf(Date()) }
@@ -41,6 +41,7 @@ fun FinanceiroDashboardScreen(
     
     val resumo by viewModel.resumoFinanceiro.collectAsState()
     val cobrancas by viewModel.cobrancas.collectAsState()
+    val financialRecords by viewModel.financialRecords.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     
     val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
@@ -49,7 +50,7 @@ fun FinanceiroDashboardScreen(
     calendar.time = selectedDate
     
     LaunchedEffect(Unit) {
-        viewModel.carregarCobrancasPorStatus(StatusPagamento.A_RECEBER)
+        viewModel.carregarDadosFinanceiros()
     }
 
     Scaffold(
@@ -154,7 +155,7 @@ fun FinanceiroDashboardScreen(
             // Conteúdo baseado na tab selecionada
             when (selectedTab) {
                 FinanceiroTab.PAINEL -> PainelContent(resumo, formatter)
-                FinanceiroTab.RECEITAS -> ReceitasContent(resumo, cobrancas, formatter, selectedClient, onCobrancaClick)
+                FinanceiroTab.RECEITAS -> ReceitasContent(resumo, cobrancas, financialRecords, formatter, selectedClient, onCobrancaClick)
                 FinanceiroTab.DESPESAS -> DespesasContent(resumo, formatter)
             }
         }
@@ -163,7 +164,7 @@ fun FinanceiroDashboardScreen(
 
 @Composable
 fun PainelContent(
-    resumo: CobrancaSessaoViewModel.ResumoFinanceiro,
+    resumo: FinanceiroUnificadoViewModel.ResumoFinanceiroUnificado,
     formatter: NumberFormat
 ) {
     LazyColumn(
@@ -202,7 +203,7 @@ fun PainelContent(
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
-                        text = formatter.format(resumo.totalAReceber - resumo.totalRecebido),
+                        text = formatter.format(resumo.resultadoPrevisto),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -264,7 +265,7 @@ fun PainelContent(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "Não pago: ${formatter.format(resumo.totalAReceber - resumo.totalRecebido)}",
+                            text = "Não pago: ${formatter.format(resumo.totalAReceber)}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -304,7 +305,7 @@ fun PainelContent(
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
-                        text = formatter.format(0.0), // Por enquanto 0, depois implementar despesas
+                        text = formatter.format(resumo.totalDespesas),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFF44336)
@@ -315,7 +316,7 @@ fun PainelContent(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Pago: ${formatter.format(0.0)}",
+                            text = "Pago: ${formatter.format(resumo.totalDespesas)}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -441,8 +442,9 @@ fun PainelContent(
 
 @Composable
 fun ReceitasContent(
-    resumo: CobrancaSessaoViewModel.ResumoFinanceiro,
+    resumo: FinanceiroUnificadoViewModel.ResumoFinanceiroUnificado,
     cobrancas: List<com.example.psipro.data.entities.CobrancaSessao>,
+    financialRecords: List<com.example.psipro.data.entities.FinancialRecord>,
     formatter: NumberFormat,
     selectedClient: String,
     onCobrancaClick: (Long) -> Unit
@@ -483,7 +485,7 @@ fun ReceitasContent(
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
-                        text = formatter.format(resumo.totalAReceber),
+                        text = formatter.format(resumo.totalAReceber + resumo.totalRecebido),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -563,7 +565,7 @@ fun ReceitasContent(
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
-                        text = formatter.format(resumo.totalAReceber - resumo.totalRecebido),
+                        text = formatter.format(resumo.totalAReceber),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFF44336)
@@ -638,7 +640,7 @@ fun ReceitasContent(
 
 @Composable
 fun DespesasContent(
-    resumo: CobrancaSessaoViewModel.ResumoFinanceiro,
+    resumo: FinanceiroUnificadoViewModel.ResumoFinanceiroUnificado,
     formatter: NumberFormat
 ) {
     LazyColumn(
@@ -677,7 +679,7 @@ fun DespesasContent(
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
-                        text = formatter.format(0.0), // Por enquanto 0, depois implementar despesas
+                        text = formatter.format(resumo.totalDespesas),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -717,7 +719,7 @@ fun DespesasContent(
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
-                        text = formatter.format(0.0),
+                        text = formatter.format(resumo.totalDespesas),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF4CAF50)
@@ -757,7 +759,7 @@ fun DespesasContent(
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
-                        text = formatter.format(0.0),
+                        text = formatter.format(0.0), // Despesas não pagas (implementar quando necessário)
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFF44336)
