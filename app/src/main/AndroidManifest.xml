@@ -98,9 +98,12 @@
         
         <activity
             android:name=".ui.OnboardingActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Psipro">
-        </activity>
+            android:exported="false" />
+            
+        <activity
+            android:name=".ui.screens.FinanceiroDashboardActivity"
+            android:exported="false"
+            android:label="Dashboard Financeiro" />
         
         <activity android:name=".ui.HelpActivity" />
         
