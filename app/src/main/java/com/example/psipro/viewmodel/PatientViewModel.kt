@@ -17,6 +17,9 @@ class PatientViewModel @Inject constructor(
     private val _patientSaved = MutableStateFlow(false)
     val patientSaved: StateFlow<Boolean> = _patientSaved
     
+    private val _patient = MutableStateFlow<Patient?>(null)
+    val patient: StateFlow<Patient?> = _patient
+    
     fun savePatient(patient: Patient) {
         launchWithRetry {
             repository.insertPatient(patient)
@@ -35,6 +38,18 @@ class PatientViewModel @Inject constructor(
         launchWithRetry {
             repository.deletePatient(patient)
             _patientSaved.value = true
+        }
+    }
+    
+    fun getPatient(id: Long) {
+        viewModelScope.launch {
+            try {
+                val patient = repository.getPatientById(id)
+                _patient.value = patient
+            } catch (e: Exception) {
+                _error.value = "Erro ao buscar paciente: "+e.message
+                _patient.value = null
+            }
         }
     }
     

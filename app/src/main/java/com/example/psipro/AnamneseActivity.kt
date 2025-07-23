@@ -35,6 +35,7 @@ import com.example.psipro.ui.compose.PsiproTheme
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.appcompat.app.AppCompatDelegate
 import android.content.Context
+import com.example.psipro.data.entities.AnamneseGroup
 
 @AndroidEntryPoint
 class AnamneseActivity : ComponentActivity() {
@@ -43,8 +44,11 @@ class AnamneseActivity : ComponentActivity() {
         
         val patientId = intent.getLongExtra("PATIENT_ID", -1)
         val patientName = intent.getStringExtra("PATIENT_NAME") ?: ""
+        val anamneseGroup = intent.getStringExtra("ANAMNESE_GROUP")?.let { 
+            AnamneseGroup.valueOf(it) 
+        } ?: AnamneseGroup.ADULTO
         
-        Log.d("AnamneseActivity", "onCreate - Patient ID: $patientId, Name: $patientName")
+        Log.d("AnamneseActivity", "onCreate - Patient ID: $patientId, Name: $patientName, Group: $anamneseGroup")
         
         if (patientId == -1L) {
             Log.e("AnamneseActivity", "Invalid patient ID")
@@ -57,6 +61,7 @@ class AnamneseActivity : ComponentActivity() {
                 AnamneseScreen(
                     patientName = patientName,
                     patientId = patientId,
+                    anamneseGroup = anamneseGroup,
                     onBack = { finish() }
                 )
             }
@@ -69,23 +74,61 @@ class AnamneseActivity : ComponentActivity() {
 fun AnamneseScreen(
     patientName: String,
     patientId: Long,
+    anamneseGroup: AnamneseGroup,
     onBack: () -> Unit
 ) {
     var expandedSections by remember { mutableStateOf(setOf<String>()) }
     var formData by remember { mutableStateOf(mutableMapOf<String, String>()) }
     
-    val secoes = listOf(
-        "Atendimento",
-        "Identificação adulto", 
-        "Profissão e escolaridade",
-        "Cônjuge e filhos",
-        "Ciclo social",
-        "Histórico familiar (relacionamento)",
-        "Histórico escolar",
-        "Histórico pessoal",
-        "Histórico médico / psiquiátrico",
-        "Queixas principais"
-    )
+    // Define seções baseadas no tipo de anamnese
+    val secoes = when (anamneseGroup) {
+        AnamneseGroup.ADULTO -> listOf(
+            "Atendimento",
+            "Identificação adulto", 
+            "Profissão e escolaridade",
+            "Cônjuge e filhos",
+            "Ciclo social",
+            "Histórico familiar (relacionamento)",
+            "Histórico escolar",
+            "Histórico pessoal",
+            "Histórico médico / psiquiátrico",
+            "Queixas principais"
+        )
+        AnamneseGroup.CRIANCAS -> listOf(
+            "Identificação da criança",
+            "Dados familiares",
+            "Desenvolvimento da saúde",
+            "Histórico escolar",
+            "Histórico médico",
+            "Comportamento e socialização",
+            "Queixas principais"
+        )
+        AnamneseGroup.ADOLESCENTES -> listOf(
+            "Identificação do adolescente",
+            "Dados familiares",
+            "Desenvolvimento psicossocial",
+            "Histórico escolar",
+            "Histórico médico",
+            "Comportamento e relacionamentos",
+            "Queixas principais"
+        )
+        AnamneseGroup.IDOSOS -> listOf(
+            "Identificação do idoso",
+            "Dados familiares",
+            "Histórico médico",
+            "Condições de vida",
+            "Aspectos cognitivos",
+            "Aspectos emocionais",
+            "Queixas principais"
+        )
+    }
+    
+    val grupoText = when (anamneseGroup) {
+        AnamneseGroup.ADULTO -> "Adulto"
+        AnamneseGroup.CRIANCAS -> "Crianças"
+        AnamneseGroup.ADOLESCENTES -> "Adolescentes"
+        AnamneseGroup.IDOSOS -> "Idosos"
+    }
     
     Column(
         modifier = Modifier
@@ -118,7 +161,7 @@ fun AnamneseScreen(
         ) {
             item {
                 Text(
-                    text = "Grupo de anamnese: Adulto",
+                    text = "Grupo de anamnese: $grupoText",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold
                     ),
@@ -147,7 +190,8 @@ fun AnamneseScreen(
                     },
                     onCancel = {
                         expandedSections = expandedSections - secao
-                    }
+                    },
+                    anamneseGroup = anamneseGroup
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -163,7 +207,8 @@ fun AnamneseSection(
     onFormDataChange: (Map<String, String>) -> Unit,
     onToggle: () -> Unit,
     onSave: () -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    anamneseGroup: AnamneseGroup
 ) {
     Card(
         modifier = Modifier
@@ -202,17 +247,12 @@ fun AnamneseSection(
                 Column(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
-                    when (title) {
-                        "Atendimento" -> AtendimentoContent(formData, onFormDataChange)
-                        "Identificação adulto" -> IdentificacaoAdultoContent(formData, onFormDataChange)
-                        "Profissão e escolaridade" -> ProfissaoEscolaridadeContent(formData, onFormDataChange)
-                        "Cônjuge e filhos" -> ConjugeFilhosContent(formData, onFormDataChange)
-                        "Ciclo social" -> CicloSocialContent(formData, onFormDataChange)
-                        "Histórico familiar (relacionamento)" -> HistoricoFamiliarContent(formData, onFormDataChange)
-                        "Histórico escolar" -> HistoricoEscolarContent(formData, onFormDataChange)
-                        "Histórico pessoal" -> HistoricoPessoalContent(formData, onFormDataChange)
-                        "Histórico médico / psiquiátrico" -> HistoricoMedicoContent(formData, onFormDataChange)
-                        "Queixas principais" -> QueixasPrincipaisContent(formData, onFormDataChange)
+                    // Renderiza conteúdo baseado no grupo de anamnese
+                    when (anamneseGroup) {
+                        AnamneseGroup.ADULTO -> renderAdultoContent(title, formData, onFormDataChange)
+                        AnamneseGroup.CRIANCAS -> renderCriancasContent(title, formData, onFormDataChange)
+                        AnamneseGroup.ADOLESCENTES -> renderAdolescentesContent(title, formData, onFormDataChange)
+                        AnamneseGroup.IDOSOS -> renderIdososContent(title, formData, onFormDataChange)
                     }
                     
                     // Botões de ação
@@ -239,6 +279,61 @@ fun AnamneseSection(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun renderAdultoContent(title: String, formData: Map<String, String>, onFormDataChange: (Map<String, String>) -> Unit) {
+    when (title) {
+        "Atendimento" -> AtendimentoContent(formData, onFormDataChange)
+        "Identificação adulto" -> IdentificacaoAdultoContent(formData, onFormDataChange)
+        "Profissão e escolaridade" -> ProfissaoEscolaridadeContent(formData, onFormDataChange)
+        "Cônjuge e filhos" -> ConjugeFilhosContent(formData, onFormDataChange)
+        "Ciclo social" -> CicloSocialContent(formData, onFormDataChange)
+        "Histórico familiar (relacionamento)" -> HistoricoFamiliarContent(formData, onFormDataChange)
+        "Histórico escolar" -> HistoricoEscolarContent(formData, onFormDataChange)
+        "Histórico pessoal" -> HistoricoPessoalContent(formData, onFormDataChange)
+        "Histórico médico / psiquiátrico" -> HistoricoMedicoContent(formData, onFormDataChange)
+        "Queixas principais" -> QueixasPrincipaisContent(formData, onFormDataChange)
+    }
+}
+
+@Composable
+fun renderCriancasContent(title: String, formData: Map<String, String>, onFormDataChange: (Map<String, String>) -> Unit) {
+    when (title) {
+        "Identificação da criança" -> IdentificacaoCriancaContent(formData, onFormDataChange)
+        "Dados familiares" -> DadosFamiliaresCriancaContent(formData, onFormDataChange)
+        "Desenvolvimento da saúde" -> DesenvolvimentoSaudeCriancaContent(formData, onFormDataChange)
+        "Histórico escolar" -> HistoricoEscolarCriancaContent(formData, onFormDataChange)
+        "Histórico médico" -> HistoricoMedicoCriancaContent(formData, onFormDataChange)
+        "Comportamento e socialização" -> ComportamentoSocializacaoCriancaContent(formData, onFormDataChange)
+        "Queixas principais" -> QueixasPrincipaisCriancaContent(formData, onFormDataChange)
+    }
+}
+
+@Composable
+fun renderAdolescentesContent(title: String, formData: Map<String, String>, onFormDataChange: (Map<String, String>) -> Unit) {
+    when (title) {
+        "Identificação do adolescente" -> IdentificacaoAdolescenteContent(formData, onFormDataChange)
+        "Dados familiares" -> DadosFamiliaresAdolescenteContent(formData, onFormDataChange)
+        "Desenvolvimento psicossocial" -> DesenvolvimentoPsicossocialAdolescenteContent(formData, onFormDataChange)
+        "Histórico escolar" -> HistoricoEscolarAdolescenteContent(formData, onFormDataChange)
+        "Histórico médico" -> HistoricoMedicoAdolescenteContent(formData, onFormDataChange)
+        "Comportamento e relacionamentos" -> ComportamentoRelacionamentosAdolescenteContent(formData, onFormDataChange)
+        "Queixas principais" -> QueixasPrincipaisAdolescenteContent(formData, onFormDataChange)
+    }
+}
+
+@Composable
+fun renderIdososContent(title: String, formData: Map<String, String>, onFormDataChange: (Map<String, String>) -> Unit) {
+    when (title) {
+        "Identificação do idoso" -> IdentificacaoIdosoContent(formData, onFormDataChange)
+        "Dados familiares" -> DadosFamiliaresIdosoContent(formData, onFormDataChange)
+        "Histórico médico" -> HistoricoMedicoIdosoContent(formData, onFormDataChange)
+        "Condições de vida" -> CondicoesVidaIdosoContent(formData, onFormDataChange)
+        "Aspectos cognitivos" -> AspectosCognitivosIdosoContent(formData, onFormDataChange)
+        "Aspectos emocionais" -> AspectosEmocionaisIdosoContent(formData, onFormDataChange)
+        "Queixas principais" -> QueixasPrincipaisIdosoContent(formData, onFormDataChange)
     }
 }
 
@@ -918,5 +1013,1487 @@ fun isDarkModeActive(context: Context): Boolean {
             val uiMode = context.resources.configuration.uiMode
             (uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
         }
+    }
+}
+
+// ===== CONTEÚDO PARA CRIANÇAS =====
+
+@Composable
+fun IdentificacaoCriancaContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    val campos = listOf(
+        "idade_crianca" to "Idade da criança:",
+        "escola_crianca" to "Escola que frequenta:",
+        "serie_crianca" to "Série/ano escolar:",
+        "responsavel_crianca" to "Responsável legal:",
+        "contato_emergencia_crianca" to "Contato de emergência:"
+    )
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        campos.forEach { (key, label) ->
+            var value by remember { mutableStateOf(TextFieldValue(formData[key] ?: "")) }
+            
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+            
+            OutlinedTextField(
+                value = value,
+                onValueChange = { 
+                    value = it
+                    onFormDataChange(mapOf(key to it.text))
+                },
+                placeholder = { Text("Digite aqui") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+fun DadosFamiliaresCriancaContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var composicaoFamiliar by remember { mutableStateOf(TextFieldValue(formData["composicao_familiar"] ?: "")) }
+    var relacionamentoPais by remember { mutableStateOf(TextFieldValue(formData["relacionamento_pais"] ?: "")) }
+    var outrosCuidadores by remember { mutableStateOf(TextFieldValue(formData["outros_cuidadores"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Composição familiar (pais, irmãos, outros):",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = composicaoFamiliar,
+            onValueChange = { 
+                composicaoFamiliar = it
+                onFormDataChange(mapOf("composicao_familiar" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Relacionamento entre os pais:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = relacionamentoPais,
+            onValueChange = { 
+                relacionamentoPais = it
+                onFormDataChange(mapOf("relacionamento_pais" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Outros cuidadores (avós, tios, etc.):",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = outrosCuidadores,
+            onValueChange = { 
+                outrosCuidadores = it
+                onFormDataChange(mapOf("outros_cuidadores" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+}
+
+@Composable
+fun DesenvolvimentoSaudeCriancaContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var gestacao by remember { mutableStateOf(TextFieldValue(formData["gestacao"] ?: "")) }
+    var parto by remember { mutableStateOf(TextFieldValue(formData["parto"] ?: "")) }
+    var desenvolvimento by remember { mutableStateOf(TextFieldValue(formData["desenvolvimento"] ?: "")) }
+    var alimentacao by remember { mutableStateOf(TextFieldValue(formData["alimentacao"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Como foi a gestação?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = gestacao,
+            onValueChange = { 
+                gestacao = it
+                onFormDataChange(mapOf("gestacao" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Como foi o parto?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = parto,
+            onValueChange = { 
+                parto = it
+                onFormDataChange(mapOf("parto" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Desenvolvimento motor e da linguagem:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = desenvolvimento,
+            onValueChange = { 
+                desenvolvimento = it
+                onFormDataChange(mapOf("desenvolvimento" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Hábitos alimentares:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = alimentacao,
+            onValueChange = { 
+                alimentacao = it
+                onFormDataChange(mapOf("alimentacao" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+}
+
+@Composable
+fun HistoricoEscolarCriancaContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var adaptacaoEscolar by remember { mutableStateOf(TextFieldValue(formData["adaptacao_escolar"] ?: "")) }
+    var dificuldadesEscolares by remember { mutableStateOf(TextFieldValue(formData["dificuldades_escolares"] ?: "")) }
+    var relacionamentoColegas by remember { mutableStateOf(TextFieldValue(formData["relacionamento_colegas"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Como foi a adaptação escolar?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = adaptacaoEscolar,
+            onValueChange = { 
+                adaptacaoEscolar = it
+                onFormDataChange(mapOf("adaptacao_escolar" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Dificuldades escolares identificadas:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = dificuldadesEscolares,
+            onValueChange = { 
+                dificuldadesEscolares = it
+                onFormDataChange(mapOf("dificuldades_escolares" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Relacionamento com colegas:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = relacionamentoColegas,
+            onValueChange = { 
+                relacionamentoColegas = it
+                onFormDataChange(mapOf("relacionamento_colegas" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+}
+
+@Composable
+fun HistoricoMedicoCriancaContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var doencas by remember { mutableStateOf(TextFieldValue(formData["doencas"] ?: "")) }
+    var medicamentos by remember { mutableStateOf(TextFieldValue(formData["medicamentos"] ?: "")) }
+    var alergias by remember { mutableStateOf(TextFieldValue(formData["alergias"] ?: "")) }
+    var hospitalizacoes by remember { mutableStateOf(TextFieldValue(formData["hospitalizacoes"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Doenças ou condições médicas:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = doencas,
+            onValueChange = { 
+                doencas = it
+                onFormDataChange(mapOf("doencas" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Medicamentos em uso:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = medicamentos,
+            onValueChange = { 
+                medicamentos = it
+                onFormDataChange(mapOf("medicamentos" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Alergias conhecidas:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = alergias,
+            onValueChange = { 
+                alergias = it
+                onFormDataChange(mapOf("alergias" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Hospitalizações ou cirurgias:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = hospitalizacoes,
+            onValueChange = { 
+                hospitalizacoes = it
+                onFormDataChange(mapOf("hospitalizacoes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+}
+
+@Composable
+fun ComportamentoSocializacaoCriancaContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var comportamento by remember { mutableStateOf(TextFieldValue(formData["comportamento"] ?: "")) }
+    var socializacao by remember { mutableStateOf(TextFieldValue(formData["socializacao"] ?: "")) }
+    var brincadeiras by remember { mutableStateOf(TextFieldValue(formData["brincadeiras"] ?: "")) }
+    var rotina by remember { mutableStateOf(TextFieldValue(formData["rotina"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Comportamento geral da criança:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = comportamento,
+            onValueChange = { 
+                comportamento = it
+                onFormDataChange(mapOf("comportamento" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Como é a socialização com outras crianças?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = socializacao,
+            onValueChange = { 
+                socializacao = it
+                onFormDataChange(mapOf("socializacao" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Tipos de brincadeiras preferidas:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = brincadeiras,
+            onValueChange = { 
+                brincadeiras = it
+                onFormDataChange(mapOf("brincadeiras" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Rotina diária da criança:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = rotina,
+            onValueChange = { 
+                rotina = it
+                onFormDataChange(mapOf("rotina" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+}
+
+@Composable
+fun QueixasPrincipaisCriancaContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var queixas by remember { mutableStateOf(TextFieldValue(formData["queixas"] ?: "")) }
+    var quandoComecou by remember { mutableStateOf(TextFieldValue(formData["quando_comecou"] ?: "")) }
+    var fatores by remember { mutableStateOf(TextFieldValue(formData["fatores"] ?: "")) }
+    var expectativas by remember { mutableStateOf(TextFieldValue(formData["expectativas"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Quais são as principais queixas sobre a criança?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = queixas,
+            onValueChange = { 
+                queixas = it
+                onFormDataChange(mapOf("queixas" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Quando começaram essas dificuldades?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = quandoComecou,
+            onValueChange = { 
+                quandoComecou = it
+                onFormDataChange(mapOf("quando_comecou" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Quais fatores podem estar relacionados?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = fatores,
+            onValueChange = { 
+                fatores = it
+                onFormDataChange(mapOf("fatores" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "O que esperam da terapia?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = expectativas,
+            onValueChange = { 
+                expectativas = it
+                onFormDataChange(mapOf("expectativas" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+} 
+
+// ===== CONTEÚDO PARA ADOLESCENTES =====
+
+@Composable
+fun IdentificacaoAdolescenteContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    val campos = listOf(
+        "idade_adolescente" to "Idade do adolescente:",
+        "escola_adolescente" to "Escola que frequenta:",
+        "serie_adolescente" to "Série/ano escolar:",
+        "responsavel_adolescente" to "Responsável legal:",
+        "contato_emergencia_adolescente" to "Contato de emergência:"
+    )
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        campos.forEach { (key, label) ->
+            var value by remember { mutableStateOf(TextFieldValue(formData[key] ?: "")) }
+            
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+            
+            OutlinedTextField(
+                value = value,
+                onValueChange = { 
+                    value = it
+                    onFormDataChange(mapOf(key to it.text))
+                },
+                placeholder = { Text("Digite aqui") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+fun DadosFamiliaresAdolescenteContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var composicaoFamiliar by remember { mutableStateOf(TextFieldValue(formData["composicao_familiar"] ?: "")) }
+    var relacionamentoPais by remember { mutableStateOf(TextFieldValue(formData["relacionamento_pais"] ?: "")) }
+    var outrosCuidadores by remember { mutableStateOf(TextFieldValue(formData["outros_cuidadores"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Composição familiar (pais, irmãos, outros):",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = composicaoFamiliar,
+            onValueChange = { 
+                composicaoFamiliar = it
+                onFormDataChange(mapOf("composicao_familiar" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Relacionamento entre os pais:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = relacionamentoPais,
+            onValueChange = { 
+                relacionamentoPais = it
+                onFormDataChange(mapOf("relacionamento_pais" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Outros cuidadores (avós, tios, etc.):",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = outrosCuidadores,
+            onValueChange = { 
+                outrosCuidadores = it
+                onFormDataChange(mapOf("outros_cuidadores" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+}
+
+@Composable
+fun DesenvolvimentoPsicossocialAdolescenteContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var desenvolvimento by remember { mutableStateOf(TextFieldValue(formData["desenvolvimento"] ?: "")) }
+    var socializacao by remember { mutableStateOf(TextFieldValue(formData["socializacao"] ?: "")) }
+    var interesses by remember { mutableStateOf(TextFieldValue(formData["interesses"] ?: "")) }
+    var rotina by remember { mutableStateOf(TextFieldValue(formData["rotina"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Desenvolvimento psicossocial:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = desenvolvimento,
+            onValueChange = { 
+                desenvolvimento = it
+                onFormDataChange(mapOf("desenvolvimento" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Como é a socialização com outros adolescentes?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = socializacao,
+            onValueChange = { 
+                socializacao = it
+                onFormDataChange(mapOf("socializacao" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Interesses e hobbies:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = interesses,
+            onValueChange = { 
+                interesses = it
+                onFormDataChange(mapOf("interesses" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Rotina diária do adolescente:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = rotina,
+            onValueChange = { 
+                rotina = it
+                onFormDataChange(mapOf("rotina" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+}
+
+@Composable
+fun HistoricoEscolarAdolescenteContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var adaptacaoEscolar by remember { mutableStateOf(TextFieldValue(formData["adaptacao_escolar"] ?: "")) }
+    var dificuldadesEscolares by remember { mutableStateOf(TextFieldValue(formData["dificuldades_escolares"] ?: "")) }
+    var relacionamentoColegas by remember { mutableStateOf(TextFieldValue(formData["relacionamento_colegas"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Como é a adaptação escolar?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = adaptacaoEscolar,
+            onValueChange = { 
+                adaptacaoEscolar = it
+                onFormDataChange(mapOf("adaptacao_escolar" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Dificuldades escolares identificadas:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = dificuldadesEscolares,
+            onValueChange = { 
+                dificuldadesEscolares = it
+                onFormDataChange(mapOf("dificuldades_escolares" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Relacionamento com colegas:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = relacionamentoColegas,
+            onValueChange = { 
+                relacionamentoColegas = it
+                onFormDataChange(mapOf("relacionamento_colegas" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+}
+
+@Composable
+fun HistoricoMedicoAdolescenteContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var doencas by remember { mutableStateOf(TextFieldValue(formData["doencas"] ?: "")) }
+    var medicamentos by remember { mutableStateOf(TextFieldValue(formData["medicamentos"] ?: "")) }
+    var alergias by remember { mutableStateOf(TextFieldValue(formData["alergias"] ?: "")) }
+    var hospitalizacoes by remember { mutableStateOf(TextFieldValue(formData["hospitalizacoes"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Doenças ou condições médicas:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = doencas,
+            onValueChange = { 
+                doencas = it
+                onFormDataChange(mapOf("doencas" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Medicamentos em uso:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = medicamentos,
+            onValueChange = { 
+                medicamentos = it
+                onFormDataChange(mapOf("medicamentos" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Alergias conhecidas:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = alergias,
+            onValueChange = { 
+                alergias = it
+                onFormDataChange(mapOf("alergias" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Hospitalizações ou cirurgias:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = hospitalizacoes,
+            onValueChange = { 
+                hospitalizacoes = it
+                onFormDataChange(mapOf("hospitalizacoes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+}
+
+@Composable
+fun ComportamentoRelacionamentosAdolescenteContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var comportamento by remember { mutableStateOf(TextFieldValue(formData["comportamento"] ?: "")) }
+    var relacionamentos by remember { mutableStateOf(TextFieldValue(formData["relacionamentos"] ?: "")) }
+    var conflitos by remember { mutableStateOf(TextFieldValue(formData["conflitos"] ?: "")) }
+    var expectativas by remember { mutableStateOf(TextFieldValue(formData["expectativas"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Comportamento geral do adolescente:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = comportamento,
+            onValueChange = { 
+                comportamento = it
+                onFormDataChange(mapOf("comportamento" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Como são os relacionamentos interpessoais?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = relacionamentos,
+            onValueChange = { 
+                relacionamentos = it
+                onFormDataChange(mapOf("relacionamentos" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Conflitos frequentes:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = conflitos,
+            onValueChange = { 
+                conflitos = it
+                onFormDataChange(mapOf("conflitos" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Expectativas para o futuro:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = expectativas,
+            onValueChange = { 
+                expectativas = it
+                onFormDataChange(mapOf("expectativas" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+}
+
+@Composable
+fun QueixasPrincipaisAdolescenteContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var queixas by remember { mutableStateOf(TextFieldValue(formData["queixas"] ?: "")) }
+    var quandoComecou by remember { mutableStateOf(TextFieldValue(formData["quando_comecou"] ?: "")) }
+    var fatores by remember { mutableStateOf(TextFieldValue(formData["fatores"] ?: "")) }
+    var expectativas by remember { mutableStateOf(TextFieldValue(formData["expectativas"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Quais são as principais queixas sobre o adolescente?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = queixas,
+            onValueChange = { 
+                queixas = it
+                onFormDataChange(mapOf("queixas" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Quando começaram essas dificuldades?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = quandoComecou,
+            onValueChange = { 
+                quandoComecou = it
+                onFormDataChange(mapOf("quando_comecou" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Quais fatores podem estar relacionados?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = fatores,
+            onValueChange = { 
+                fatores = it
+                onFormDataChange(mapOf("fatores" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "O que esperam da terapia?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = expectativas,
+            onValueChange = { 
+                expectativas = it
+                onFormDataChange(mapOf("expectativas" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+}
+
+// ===== CONTEÚDO PARA IDOSOS =====
+
+@Composable
+fun IdentificacaoIdosoContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    val campos = listOf(
+        "idade_idoso" to "Idade do idoso:",
+        "estado_civil_idoso" to "Estado civil:",
+        "responsavel_idoso" to "Responsável legal:",
+        "contato_emergencia_idoso" to "Contato de emergência:",
+        "endereco_idoso" to "Endereço:"
+    )
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        campos.forEach { (key, label) ->
+            var value by remember { mutableStateOf(TextFieldValue(formData[key] ?: "")) }
+            
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+            
+            OutlinedTextField(
+                value = value,
+                onValueChange = { 
+                    value = it
+                    onFormDataChange(mapOf(key to it.text))
+                },
+                placeholder = { Text("Digite aqui") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+fun DadosFamiliaresIdosoContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var composicaoFamiliar by remember { mutableStateOf(TextFieldValue(formData["composicao_familiar"] ?: "")) }
+    var relacionamentoFamilia by remember { mutableStateOf(TextFieldValue(formData["relacionamento_familia"] ?: "")) }
+    var suporteFamilia by remember { mutableStateOf(TextFieldValue(formData["suporte_familia"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Composição familiar:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = composicaoFamiliar,
+            onValueChange = { 
+                composicaoFamiliar = it
+                onFormDataChange(mapOf("composicao_familiar" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Relacionamento com a família:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = relacionamentoFamilia,
+            onValueChange = { 
+                relacionamentoFamilia = it
+                onFormDataChange(mapOf("relacionamento_familia" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Suporte familiar disponível:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = suporteFamilia,
+            onValueChange = { 
+                suporteFamilia = it
+                onFormDataChange(mapOf("suporte_familia" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+}
+
+@Composable
+fun HistoricoMedicoIdosoContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var doencas by remember { mutableStateOf(TextFieldValue(formData["doencas"] ?: "")) }
+    var medicamentos by remember { mutableStateOf(TextFieldValue(formData["medicamentos"] ?: "")) }
+    var alergias by remember { mutableStateOf(TextFieldValue(formData["alergias"] ?: "")) }
+    var hospitalizacoes by remember { mutableStateOf(TextFieldValue(formData["hospitalizacoes"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Doenças ou condições médicas:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = doencas,
+            onValueChange = { 
+                doencas = it
+                onFormDataChange(mapOf("doencas" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Medicamentos em uso:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = medicamentos,
+            onValueChange = { 
+                medicamentos = it
+                onFormDataChange(mapOf("medicamentos" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Alergias conhecidas:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = alergias,
+            onValueChange = { 
+                alergias = it
+                onFormDataChange(mapOf("alergias" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Hospitalizações ou cirurgias:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = hospitalizacoes,
+            onValueChange = { 
+                hospitalizacoes = it
+                onFormDataChange(mapOf("hospitalizacoes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+}
+
+@Composable
+fun CondicoesVidaIdosoContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var moradia by remember { mutableStateOf(TextFieldValue(formData["moradia"] ?: "")) }
+    var independencia by remember { mutableStateOf(TextFieldValue(formData["independencia"] ?: "")) }
+    var atividades by remember { mutableStateOf(TextFieldValue(formData["atividades"] ?: "")) }
+    var rotina by remember { mutableStateOf(TextFieldValue(formData["rotina"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Condições de moradia:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = moradia,
+            onValueChange = { 
+                moradia = it
+                onFormDataChange(mapOf("moradia" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Nível de independência:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = independencia,
+            onValueChange = { 
+                independencia = it
+                onFormDataChange(mapOf("independencia" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Atividades diárias:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = atividades,
+            onValueChange = { 
+                atividades = it
+                onFormDataChange(mapOf("atividades" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Rotina diária:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = rotina,
+            onValueChange = { 
+                rotina = it
+                onFormDataChange(mapOf("rotina" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+}
+
+@Composable
+fun AspectosCognitivosIdosoContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var memoria by remember { mutableStateOf(TextFieldValue(formData["memoria"] ?: "")) }
+    var orientacao by remember { mutableStateOf(TextFieldValue(formData["orientacao"] ?: "")) }
+    var linguagem by remember { mutableStateOf(TextFieldValue(formData["linguagem"] ?: "")) }
+    var concentracao by remember { mutableStateOf(TextFieldValue(formData["concentracao"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Avaliação da memória:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = memoria,
+            onValueChange = { 
+                memoria = it
+                onFormDataChange(mapOf("memoria" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Orientação temporal e espacial:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = orientacao,
+            onValueChange = { 
+                orientacao = it
+                onFormDataChange(mapOf("orientacao" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Linguagem e comunicação:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = linguagem,
+            onValueChange = { 
+                linguagem = it
+                onFormDataChange(mapOf("linguagem" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Concentração e atenção:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = concentracao,
+            onValueChange = { 
+                concentracao = it
+                onFormDataChange(mapOf("concentracao" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+}
+
+@Composable
+fun AspectosEmocionaisIdosoContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var humor by remember { mutableStateOf(TextFieldValue(formData["humor"] ?: "")) }
+    var ansiedade by remember { mutableStateOf(TextFieldValue(formData["ansiedade"] ?: "")) }
+    var depressao by remember { mutableStateOf(TextFieldValue(formData["depressao"] ?: "")) }
+    var motivacao by remember { mutableStateOf(TextFieldValue(formData["motivacao"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Estado de humor:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = humor,
+            onValueChange = { 
+                humor = it
+                onFormDataChange(mapOf("humor" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Sintomas de ansiedade:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = ansiedade,
+            onValueChange = { 
+                ansiedade = it
+                onFormDataChange(mapOf("ansiedade" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Sintomas de depressão:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = depressao,
+            onValueChange = { 
+                depressao = it
+                onFormDataChange(mapOf("depressao" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Motivação e interesse:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = motivacao,
+            onValueChange = { 
+                motivacao = it
+                onFormDataChange(mapOf("motivacao" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+}
+
+@Composable
+fun QueixasPrincipaisIdosoContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var queixas by remember { mutableStateOf(TextFieldValue(formData["queixas"] ?: "")) }
+    var quandoComecou by remember { mutableStateOf(TextFieldValue(formData["quando_comecou"] ?: "")) }
+    var fatores by remember { mutableStateOf(TextFieldValue(formData["fatores"] ?: "")) }
+    var expectativas by remember { mutableStateOf(TextFieldValue(formData["expectativas"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Quais são as principais queixas do idoso?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = queixas,
+            onValueChange = { 
+                queixas = it
+                onFormDataChange(mapOf("queixas" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Quando começaram essas dificuldades?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = quandoComecou,
+            onValueChange = { 
+                quandoComecou = it
+                onFormDataChange(mapOf("quando_comecou" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Quais fatores podem estar relacionados?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = fatores,
+            onValueChange = { 
+                fatores = it
+                onFormDataChange(mapOf("fatores" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "O que esperam da terapia?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = expectativas,
+            onValueChange = { 
+                expectativas = it
+                onFormDataChange(mapOf("expectativas" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
     }
 } 

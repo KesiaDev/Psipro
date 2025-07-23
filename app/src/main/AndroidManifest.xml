@@ -138,6 +138,8 @@
             android:exported="false"
             android:label="Anamnese" />
         
+
+        
         <activity
             android:name=".ui.screens.AnamneseActivity"
             android:exported="false"
