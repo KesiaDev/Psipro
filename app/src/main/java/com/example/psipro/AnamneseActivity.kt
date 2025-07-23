@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.example.psipro
 
 import android.os.Bundle
@@ -37,6 +39,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import android.content.Context
 import com.example.psipro.data.entities.AnamneseGroup
 
+@OptIn(ExperimentalMaterial3Api::class)
 @AndroidEntryPoint
 class AnamneseActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -113,13 +116,16 @@ fun AnamneseScreen(
             "Queixas principais"
         )
         AnamneseGroup.IDOSOS -> listOf(
-            "Identificação do idoso",
-            "Dados familiares",
+            "Identificação idoso",
+            "Preocupações físicas",
+            "Preocupações sensoriais",
+            "Preocupações intelectuais",
+            "Humor/comportamento/personalidade",
             "Histórico médico",
-            "Condições de vida",
-            "Aspectos cognitivos",
-            "Aspectos emocionais",
-            "Queixas principais"
+            "História da família",
+            "Histórico profissional",
+            "Lazer",
+            "Hipótese diagnóstica"
         )
     }
     
@@ -327,13 +333,16 @@ fun renderAdolescentesContent(title: String, formData: Map<String, String>, onFo
 @Composable
 fun renderIdososContent(title: String, formData: Map<String, String>, onFormDataChange: (Map<String, String>) -> Unit) {
     when (title) {
-        "Identificação do idoso" -> IdentificacaoIdosoContent(formData, onFormDataChange)
-        "Dados familiares" -> DadosFamiliaresIdosoContent(formData, onFormDataChange)
+        "Identificação idoso" -> IdentificacaoIdosoContent(formData, onFormDataChange)
+        "Preocupações físicas" -> PreocupacoesFisicasIdosoContent(formData, onFormDataChange)
+        "Preocupações sensoriais" -> PreocupacoesSensoriaisIdosoContent(formData, onFormDataChange)
+        "Preocupações intelectuais" -> PreocupacoesIntelectuaisIdosoContent(formData, onFormDataChange)
+        "Humor/comportamento/personalidade" -> HumorComportamentoPersonalidadeIdosoContent(formData, onFormDataChange)
         "Histórico médico" -> HistoricoMedicoIdosoContent(formData, onFormDataChange)
-        "Condições de vida" -> CondicoesVidaIdosoContent(formData, onFormDataChange)
-        "Aspectos cognitivos" -> AspectosCognitivosIdosoContent(formData, onFormDataChange)
-        "Aspectos emocionais" -> AspectosEmocionaisIdosoContent(formData, onFormDataChange)
-        "Queixas principais" -> QueixasPrincipaisIdosoContent(formData, onFormDataChange)
+        "História da família" -> HistoriaFamiliaIdosoContent(formData, onFormDataChange)
+        "Histórico profissional" -> HistoricoProfissionalIdosoContent(formData, onFormDataChange)
+        "Lazer" -> LazerIdosoContent(formData, onFormDataChange)
+        "Hipótese diagnóstica" -> HipotesDiagnosticaIdosoContent(formData, onFormDataChange)
     }
 }
 
@@ -1999,34 +2008,77 @@ fun IdentificacaoIdosoContent(
     formData: Map<String, String>,
     onFormDataChange: (Map<String, String>) -> Unit
 ) {
-    val campos = listOf(
-        "idade_idoso" to "Idade do idoso:",
-        "estado_civil_idoso" to "Estado civil:",
-        "responsavel_idoso" to "Responsável legal:",
-        "contato_emergencia_idoso" to "Contato de emergência:",
-        "endereco_idoso" to "Endereço:"
-    )
+    var nomeDepoente by remember { mutableStateOf(TextFieldValue(formData["nome_depoente"] ?: "")) }
+    var relacaoPaciente by remember { mutableStateOf(TextFieldValue(formData["relacao_paciente"] ?: "")) }
+    var diagnosticoMedico by remember { mutableStateOf(TextFieldValue(formData["diagnostico_medico"] ?: "")) }
+    var queixaMotivo by remember { mutableStateOf(TextFieldValue(formData["queixa_motivo"] ?: "")) }
     
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        campos.forEach { (key, label) ->
-            var value by remember { mutableStateOf(TextFieldValue(formData[key] ?: "")) }
-            
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
-            )
-            
-            OutlinedTextField(
-                value = value,
-                onValueChange = { 
-                    value = it
-                    onFormDataChange(mapOf(key to it.text))
-                },
-                placeholder = { Text("Digite aqui") },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+        Text(
+            text = "Nome do depoente:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = nomeDepoente,
+            onValueChange = { 
+                nomeDepoente = it
+                onFormDataChange(mapOf("nome_depoente" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        Text(
+            text = "Relação com paciente:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = relacaoPaciente,
+            onValueChange = { 
+                relacaoPaciente = it
+                onFormDataChange(mapOf("relacao_paciente" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        Text(
+            text = "Diagnóstico médico (se houver):",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = diagnosticoMedico,
+            onValueChange = { 
+                diagnosticoMedico = it
+                onFormDataChange(mapOf("diagnostico_medico" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        Text(
+            text = "Queixa ou motivo da consulta:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = queixaMotivo,
+            onValueChange = { 
+                queixaMotivo = it
+                onFormDataChange(mapOf("queixa_motivo" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
     }
 }
 
@@ -2098,78 +2150,134 @@ fun HistoricoMedicoIdosoContent(
     formData: Map<String, String>,
     onFormDataChange: (Map<String, String>) -> Unit
 ) {
-    var doencas by remember { mutableStateOf(TextFieldValue(formData["doencas"] ?: "")) }
-    var medicamentos by remember { mutableStateOf(TextFieldValue(formData["medicamentos"] ?: "")) }
-    var alergias by remember { mutableStateOf(TextFieldValue(formData["alergias"] ?: "")) }
-    var hospitalizacoes by remember { mutableStateOf(TextFieldValue(formData["hospitalizacoes"] ?: "")) }
+    var arteriosclerose by remember { mutableStateOf(formData["arteriosclerose"] ?: "Não") }
+    var arterioscleroseDetalhes by remember { mutableStateOf(TextFieldValue(formData["arteriosclerose_detalhes"] ?: "")) }
+    var demencia by remember { mutableStateOf(formData["demencia"] ?: "Não") }
+    var demenciaDetalhes by remember { mutableStateOf(TextFieldValue(formData["demencia_detalhes"] ?: "")) }
+    var outrasInfeccoes by remember { mutableStateOf(formData["outras_infeccoes"] ?: "Não") }
+    var outrasInfeccoesDetalhes by remember { mutableStateOf(TextFieldValue(formData["outras_infeccoes_detalhes"] ?: "")) }
+    var diabetes by remember { mutableStateOf(formData["diabetes"] ?: "Não") }
+    var diabetesDetalhes by remember { mutableStateOf(TextFieldValue(formData["diabetes_detalhes"] ?: "")) }
     
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Arteriosclerose
         Text(
-            text = "Doenças ou condições médicas:",
+            text = "Arteriosclerose?",
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium
         )
         
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = arteriosclerose,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
         OutlinedTextField(
-            value = doencas,
+            value = arterioscleroseDetalhes,
             onValueChange = { 
-                doencas = it
-                onFormDataChange(mapOf("doencas" to it.text))
+                arterioscleroseDetalhes = it
+                onFormDataChange(mapOf("arteriosclerose_detalhes" to it.text))
             },
             placeholder = { Text("Digite aqui") },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = 3
+            modifier = Modifier.fillMaxWidth()
         )
         
+        // Demência
         Text(
-            text = "Medicamentos em uso:",
+            text = "Demência?",
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium
         )
         
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = demencia,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
         OutlinedTextField(
-            value = medicamentos,
+            value = demenciaDetalhes,
             onValueChange = { 
-                medicamentos = it
-                onFormDataChange(mapOf("medicamentos" to it.text))
+                demenciaDetalhes = it
+                onFormDataChange(mapOf("demencia_detalhes" to it.text))
             },
             placeholder = { Text("Digite aqui") },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = 3
+            modifier = Modifier.fillMaxWidth()
         )
         
+        // Outras infecções no cérebro
         Text(
-            text = "Alergias conhecidas:",
+            text = "Outras infecções no cérebro ou desordens (meningite, encefalite, privação de oxigênio, etc)?",
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium
         )
         
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = outrasInfeccoes,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
         OutlinedTextField(
-            value = alergias,
+            value = outrasInfeccoesDetalhes,
             onValueChange = { 
-                alergias = it
-                onFormDataChange(mapOf("alergias" to it.text))
+                outrasInfeccoesDetalhes = it
+                onFormDataChange(mapOf("outras_infeccoes_detalhes" to it.text))
             },
             placeholder = { Text("Digite aqui") },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = 3
+            modifier = Modifier.fillMaxWidth()
         )
         
+        // Diabetes
         Text(
-            text = "Hospitalizações ou cirurgias:",
+            text = "Diabetes?",
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium
         )
         
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = diabetes,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
         OutlinedTextField(
-            value = hospitalizacoes,
+            value = diabetesDetalhes,
             onValueChange = { 
-                hospitalizacoes = it
-                onFormDataChange(mapOf("hospitalizacoes" to it.text))
+                diabetesDetalhes = it
+                onFormDataChange(mapOf("diabetes_detalhes" to it.text))
             },
             placeholder = { Text("Digite aqui") },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = 3
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
@@ -2497,3 +2605,2006 @@ fun QueixasPrincipaisIdosoContent(
         )
     }
 } 
+
+@Composable
+fun PreocupacoesFisicasIdosoContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var doresCabeca by remember { mutableStateOf(formData["dores_cabeca"] ?: "Não") }
+    var doresCabecaDetalhes by remember { mutableStateOf(TextFieldValue(formData["dores_cabeca_detalhes"] ?: "")) }
+    var observacoes by remember { mutableStateOf(TextFieldValue(formData["observacoes"] ?: "")) }
+    var tonturas by remember { mutableStateOf(formData["tonturas"] ?: "Não") }
+    var tonturasDetalhes by remember { mutableStateOf(TextFieldValue(formData["tonturas_detalhes"] ?: "")) }
+    var enjoosVomitos by remember { mutableStateOf(formData["enjoos_vomitos"] ?: "Não") }
+    var enjoosVomitosDetalhes by remember { mutableStateOf(TextFieldValue(formData["enjoos_vomitos_detalhes"] ?: "")) }
+    var fadigaExcessiva by remember { mutableStateOf(formData["fadiga_excessiva"] ?: "Não") }
+    var fadigaExcessivaDetalhes by remember { mutableStateOf(TextFieldValue(formData["fadiga_excessiva_detalhes"] ?: "")) }
+    var incontinencia by remember { mutableStateOf(formData["incontinencia"] ?: "Não") }
+    var incontinenciaDetalhes by remember { mutableStateOf(TextFieldValue(formData["incontinencia_detalhes"] ?: "")) }
+    var problemasIntestinais by remember { mutableStateOf(formData["problemas_intestinais"] ?: "Não") }
+    var problemasIntestinaisDetalhes by remember { mutableStateOf(TextFieldValue(formData["problemas_intestinais_detalhes"] ?: "")) }
+    var fraquezaCorpo by remember { mutableStateOf(formData["fraqueza_corpo"] ?: "Não") }
+    var fraquezaCorpoDetalhes by remember { mutableStateOf(TextFieldValue(formData["fraqueza_corpo_detalhes"] ?: "")) }
+    var problemasCoordenacao by remember { mutableStateOf(formData["problemas_coordenacao"] ?: "Não") }
+    var problemasCoordenacaoDetalhes by remember { mutableStateOf(TextFieldValue(formData["problemas_coordenacao_detalhes"] ?: "")) }
+    var tremores by remember { mutableStateOf(formData["tremores"] ?: "Não") }
+    var tremoresDetalhes by remember { mutableStateOf(TextFieldValue(formData["tremores_detalhes"] ?: "")) }
+    var tiquesMovimentos by remember { mutableStateOf(formData["tiques_movimentos"] ?: "Não") }
+    var tiquesMovimentosDetalhes by remember { mutableStateOf(TextFieldValue(formData["tiques_movimentos_detalhes"] ?: "")) }
+    var desmaios by remember { mutableStateOf(formData["desmaios"] ?: "Não") }
+    var desmaiosDetalhes by remember { mutableStateOf(TextFieldValue(formData["desmaios_detalhes"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Dores de cabeça
+        Text(
+            text = "Dores de cabeça?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = doresCabeca,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = doresCabecaDetalhes,
+            onValueChange = { 
+                doresCabecaDetalhes = it
+                onFormDataChange(mapOf("dores_cabeca_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        Text(
+            text = "Observações:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = observacoes,
+            onValueChange = { 
+                observacoes = it
+                onFormDataChange(mapOf("observacoes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        // Tonturas
+        Text(
+            text = "Tonturas:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = tonturas,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = tonturasDetalhes,
+            onValueChange = { 
+                tonturasDetalhes = it
+                onFormDataChange(mapOf("tonturas_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Enjoos ou vômitos
+        Text(
+            text = "Enjoos ou vômitos:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = enjoosVomitos,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = enjoosVomitosDetalhes,
+            onValueChange = { 
+                enjoosVomitosDetalhes = it
+                onFormDataChange(mapOf("enjoos_vomitos_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Fadiga excessiva
+        Text(
+            text = "Fadiga excessiva?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = fadigaExcessiva,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = fadigaExcessivaDetalhes,
+            onValueChange = { 
+                fadigaExcessivaDetalhes = it
+                onFormDataChange(mapOf("fadiga_excessiva_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Incontinência
+        Text(
+            text = "Incontinência urinária/fecal:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = incontinencia,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = incontinenciaDetalhes,
+            onValueChange = { 
+                incontinenciaDetalhes = it
+                onFormDataChange(mapOf("incontinencia_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Problemas intestinais
+        Text(
+            text = "Problemas intestinais?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = problemasIntestinais,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = problemasIntestinaisDetalhes,
+            onValueChange = { 
+                problemasIntestinaisDetalhes = it
+                onFormDataChange(mapOf("problemas_intestinais_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Fraqueza de um lado do corpo
+        Text(
+            text = "Fraqueza de um lado do corpo? qual parte?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = fraquezaCorpo,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = fraquezaCorpoDetalhes,
+            onValueChange = { 
+                fraquezaCorpoDetalhes = it
+                onFormDataChange(mapOf("fraqueza_corpo_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Problemas com coordenação
+        Text(
+            text = "Problemas com a coordenação?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = problemasCoordenacao,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = problemasCoordenacaoDetalhes,
+            onValueChange = { 
+                problemasCoordenacaoDetalhes = it
+                onFormDataChange(mapOf("problemas_coordenacao_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Tremores
+        Text(
+            text = "Tremores?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = tremores,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = tremoresDetalhes,
+            onValueChange = { 
+                tremoresDetalhes = it
+                onFormDataChange(mapOf("tremores_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Tiques ou movimentos estranhos
+        Text(
+            text = "Tiques ou movimentos estranhos?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = tiquesMovimentos,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = tiquesMovimentosDetalhes,
+            onValueChange = { 
+                tiquesMovimentosDetalhes = it
+                onFormDataChange(mapOf("tiques_movimentos_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Desmaios
+        Text(
+            text = "Desmaios:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = desmaios,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = desmaiosDetalhes,
+            onValueChange = { 
+                desmaiosDetalhes = it
+                onFormDataChange(mapOf("desmaios_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+} 
+
+@Composable
+fun PreocupacoesSensoriaisIdosoContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var perdaSensacoes by remember { mutableStateOf(formData["perda_sensacoes"] ?: "Não") }
+    var perdaSensacoesDetalhes by remember { mutableStateOf(TextFieldValue(formData["perda_sensacoes_detalhes"] ?: "")) }
+    var formigamentos by remember { mutableStateOf(formData["formigamentos"] ?: "Não") }
+    var formigamentosDetalhes by remember { mutableStateOf(TextFieldValue(formData["formigamentos_detalhes"] ?: "")) }
+    var dificuldadeQuenteFrio by remember { mutableStateOf(formData["dificuldade_quente_frio"] ?: "Não") }
+    var dificuldadeQuenteFrioDetalhes by remember { mutableStateOf(TextFieldValue(formData["dificuldade_quente_frio_detalhes"] ?: "")) }
+    var comprometimentoVisual by remember { mutableStateOf(formData["comprometimento_visual"] ?: "Não") }
+    var comprometimentoVisualDetalhes by remember { mutableStateOf(TextFieldValue(formData["comprometimento_visual_detalhes"] ?: "")) }
+    var veCoisas by remember { mutableStateOf(formData["ve_coisas"] ?: "Não") }
+    var veCoisasDetalhes by remember { mutableStateOf(TextFieldValue(formData["ve_coisas_detalhes"] ?: "")) }
+    var brevesCegueira by remember { mutableStateOf(formData["breves_cegueira"] ?: "Não") }
+    var brevesCegueiraDetalhes by remember { mutableStateOf(TextFieldValue(formData["breves_cegueira_detalhes"] ?: "")) }
+    var perdaAuditiva by remember { mutableStateOf(formData["perda_auditiva"] ?: "Não") }
+    var perdaAuditivaDetalhes by remember { mutableStateOf(TextFieldValue(formData["perda_auditiva_detalhes"] ?: "")) }
+    var zumbidos by remember { mutableStateOf(formData["zumbidos"] ?: "Não") }
+    var zumbidosDetalhes by remember { mutableStateOf(TextFieldValue(formData["zumbidos_detalhes"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Perda de sensações
+        Text(
+            text = "Perda de sensações / dormências. qual o local?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = perdaSensacoes,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = perdaSensacoesDetalhes,
+            onValueChange = { 
+                perdaSensacoesDetalhes = it
+                onFormDataChange(mapOf("perda_sensacoes_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Formigamentos
+        Text(
+            text = "Formigamentos ou sensações estranhas na pele? em qual local?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = formigamentos,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = formigamentosDetalhes,
+            onValueChange = { 
+                formigamentosDetalhes = it
+                onFormDataChange(mapOf("formigamentos_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Dificuldade diferenciar quente e frio
+        Text(
+            text = "Dificuldade de diferenciar quente e frio?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = dificuldadeQuenteFrio,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = dificuldadeQuenteFrioDetalhes,
+            onValueChange = { 
+                dificuldadeQuenteFrioDetalhes = it
+                onFormDataChange(mapOf("dificuldade_quente_frio_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Comprometimento visual
+        Text(
+            text = "Comprometimento visual?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = comprometimentoVisual,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = comprometimentoVisualDetalhes,
+            onValueChange = { 
+                comprometimentoVisualDetalhes = it
+                onFormDataChange(mapOf("comprometimento_visual_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Vê coisas que não estão lá
+        Text(
+            text = "Vê coisas que não estão lá?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = veCoisas,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = veCoisasDetalhes,
+            onValueChange = { 
+                veCoisasDetalhes = it
+                onFormDataChange(mapOf("ve_coisas_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Breves períodos de cegueira
+        Text(
+            text = "Breves períodos de cegueira:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = brevesCegueira,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = brevesCegueiraDetalhes,
+            onValueChange = { 
+                brevesCegueiraDetalhes = it
+                onFormDataChange(mapOf("breves_cegueira_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Perda auditiva
+        Text(
+            text = "Perda auditiva?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = perdaAuditiva,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = perdaAuditivaDetalhes,
+            onValueChange = { 
+                perdaAuditivaDetalhes = it
+                onFormDataChange(mapOf("perda_auditiva_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Zumbidos nos ouvidos
+        Text(
+            text = "Zumbidos nos ouvidos?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = zumbidos,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = zumbidosDetalhes,
+            onValueChange = { 
+                zumbidosDetalhes = it
+                onFormDataChange(mapOf("zumbidos_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+fun PreocupacoesIntelectuaisIdosoContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var dificuldadeResolverProblemas by remember { mutableStateOf(formData["dificuldade_resolver_problemas"] ?: "Não") }
+    var dificuldadeResolverProblemasDetalhes by remember { mutableStateOf(TextFieldValue(formData["dificuldade_resolver_problemas_detalhes"] ?: "")) }
+    var dificuldadePensarRapidamente by remember { mutableStateOf(formData["dificuldade_pensar_rapidamente"] ?: "Não") }
+    var dificuldadePensarRapidamenteDetalhes by remember { mutableStateOf(TextFieldValue(formData["dificuldade_pensar_rapidamente_detalhes"] ?: "")) }
+    var dificuldadeCompletarAtividades by remember { mutableStateOf(formData["dificuldade_completar_atividades"] ?: "Não") }
+    var dificuldadeCompletarAtividadesDetalhes by remember { mutableStateOf(TextFieldValue(formData["dificuldade_completar_atividades_detalhes"] ?: "")) }
+    var dificuldadeSequencial by remember { mutableStateOf(formData["dificuldade_sequencial"] ?: "Não") }
+    var dificuldadeSequencialDetalhes by remember { mutableStateOf(TextFieldValue(formData["dificuldade_sequencial_detalhes"] ?: "")) }
+    var linguagem by remember { mutableStateOf(formData["linguagem"] ?: "Não") }
+    var linguagemDetalhes by remember { mutableStateOf(TextFieldValue(formData["linguagem_detalhes"] ?: "")) }
+    var problemasEncontrarCaminhos by remember { mutableStateOf(formData["problemas_encontrar_caminhos"] ?: "Não") }
+    var problemasEncontrarCaminhosDetalhes by remember { mutableStateOf(TextFieldValue(formData["problemas_encontrar_caminhos_detalhes"] ?: "")) }
+    var dificuldadeReconhecer by remember { mutableStateOf(formData["dificuldade_reconhecer"] ?: "Não") }
+    var dificuldadeReconhecerDetalhes by remember { mutableStateOf(TextFieldValue(formData["dificuldade_reconhecer_detalhes"] ?: "")) }
+    var dificuldadeReconhecerCorpo by remember { mutableStateOf(formData["dificuldade_reconhecer_corpo"] ?: "Não") }
+    var dificuldadeReconhecerCorpoDetalhes by remember { mutableStateOf(TextFieldValue(formData["dificuldade_reconhecer_corpo_detalhes"] ?: "")) }
+    var dificuldadeOrientacaoTempo by remember { mutableStateOf(formData["dificuldade_orientacao_tempo"] ?: "Não") }
+    var dificuldadeOrientacaoTempoDetalhes by remember { mutableStateOf(TextFieldValue(formData["dificuldade_orientacao_tempo_detalhes"] ?: "")) }
+    var outrosProblemasNaoVerbais by remember { mutableStateOf(formData["outros_problemas_nao_verbais"] ?: "Não") }
+    var outrosProblemasNaoVerbaisDetalhes by remember { mutableStateOf(TextFieldValue(formData["outros_problemas_nao_verbais_detalhes"] ?: "")) }
+    var memoria by remember { mutableStateOf(TextFieldValue(formData["memoria"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Dificuldade resolver problemas
+        Text(
+            text = "Dificuldade de resolver problemas que a maioria consegue?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = dificuldadeResolverProblemas,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = dificuldadeResolverProblemasDetalhes,
+            onValueChange = { 
+                dificuldadeResolverProblemasDetalhes = it
+                onFormDataChange(mapOf("dificuldade_resolver_problemas_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Dificuldade pensar rapidamente
+        Text(
+            text = "Dificuldade de pensar rapidamente quando necessário?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = dificuldadePensarRapidamente,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = dificuldadePensarRapidamenteDetalhes,
+            onValueChange = { 
+                dificuldadePensarRapidamenteDetalhes = it
+                onFormDataChange(mapOf("dificuldade_pensar_rapidamente_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Dificuldade completar atividades
+        Text(
+            text = "Dificuldade de completar atividades em tempo razoável?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = dificuldadeCompletarAtividades,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = dificuldadeCompletarAtividadesDetalhes,
+            onValueChange = { 
+                dificuldadeCompletarAtividadesDetalhes = it
+                onFormDataChange(mapOf("dificuldade_completar_atividades_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Dificuldade sequencial
+        Text(
+            text = "Dificuldade de fazer coisas seqüencialmente?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = dificuldadeSequencial,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = dificuldadeSequencialDetalhes,
+            onValueChange = { 
+                dificuldadeSequencialDetalhes = it
+                onFormDataChange(mapOf("dificuldade_sequencial_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Linguagem
+        Text(
+            text = "Linguagem:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = linguagem,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = linguagemDetalhes,
+            onValueChange = { 
+                linguagemDetalhes = it
+                onFormDataChange(mapOf("linguagem_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Problemas encontrar caminhos
+        Text(
+            text = "Problemas para encontrar caminhos em lugares familiares?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = problemasEncontrarCaminhos,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = problemasEncontrarCaminhosDetalhes,
+            onValueChange = { 
+                problemasEncontrarCaminhosDetalhes = it
+                onFormDataChange(mapOf("problemas_encontrar_caminhos_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Dificuldade reconhecer objetos ou pessoas
+        Text(
+            text = "Dificuldade de reconhecer objetos ou pessoas?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = dificuldadeReconhecer,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = dificuldadeReconhecerDetalhes,
+            onValueChange = { 
+                dificuldadeReconhecerDetalhes = it
+                onFormDataChange(mapOf("dificuldade_reconhecer_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Dificuldade reconhecer partes do corpo
+        Text(
+            text = "Dificuldade de reconhecer partes do próprio corpo?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = dificuldadeReconhecerCorpo,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = dificuldadeReconhecerCorpoDetalhes,
+            onValueChange = { 
+                dificuldadeReconhecerCorpoDetalhes = it
+                onFormDataChange(mapOf("dificuldade_reconhecer_corpo_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Dificuldade orientação tempo
+        Text(
+            text = "Dificuldade de orientação do tempo (dias, meses, ano)?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = dificuldadeOrientacaoTempo,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = dificuldadeOrientacaoTempoDetalhes,
+            onValueChange = { 
+                dificuldadeOrientacaoTempoDetalhes = it
+                onFormDataChange(mapOf("dificuldade_orientacao_tempo_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Outros problemas não verbais
+        Text(
+            text = "Outros problemas não verbais?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = outrosProblemasNaoVerbais,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = outrosProblemasNaoVerbaisDetalhes,
+            onValueChange = { 
+                outrosProblemasNaoVerbaisDetalhes = it
+                onFormDataChange(mapOf("outros_problemas_nao_verbais_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Memória
+        Text(
+            text = "Memória:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = memoria,
+            onValueChange = { 
+                memoria = it
+                onFormDataChange(mapOf("memoria" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+    }
+} 
+
+@Composable
+fun HumorComportamentoPersonalidadeIdosoContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var tristezaDepressao by remember { mutableStateOf(TextFieldValue(formData["tristeza_depressao"] ?: "")) }
+    var ansiedadeNervosismo by remember { mutableStateOf(TextFieldValue(formData["ansiedade_nervosismo"] ?: "")) }
+    var estresse by remember { mutableStateOf(formData["estresse"] ?: "Não") }
+    var estresseDetalhes by remember { mutableStateOf(TextFieldValue(formData["estresse_detalhes"] ?: "")) }
+    var problemasSono by remember { mutableStateOf(formData["problemas_sono"] ?: "Não") }
+    var problemasSonoDetalhes by remember { mutableStateOf(TextFieldValue(formData["problemas_sono_detalhes"] ?: "")) }
+    var pesadelos by remember { mutableStateOf(formData["pesadelos"] ?: "Não") }
+    var pesadelosDetalhes by remember { mutableStateOf(TextFieldValue(formData["pesadelos_detalhes"] ?: "")) }
+    var irritadoFacilmente by remember { mutableStateOf(formData["irritado_facilmente"] ?: "Não") }
+    var irritadoFacilmenteDetalhes by remember { mutableStateOf(TextFieldValue(formData["irritado_facilmente_detalhes"] ?: "")) }
+    var euforia by remember { mutableStateOf(formData["euforia"] ?: "Não") }
+    var euforiaDetalhes by remember { mutableStateOf(TextFieldValue(formData["euforia_detalhes"] ?: "")) }
+    var muitoEmotivo by remember { mutableStateOf(formData["muito_emotivo"] ?: "Não") }
+    var muitoEmotivoDetalhes by remember { mutableStateOf(TextFieldValue(formData["muito_emotivo_detalhes"] ?: "")) }
+    var nadaImporta by remember { mutableStateOf(formData["nada_importa"] ?: "Não") }
+    var nadaImportaDetalhes by remember { mutableStateOf(TextFieldValue(formData["nada_importa_detalhes"] ?: "")) }
+    var facilmenteFrustrado by remember { mutableStateOf(formData["facilmente_frustrado"] ?: "Não") }
+    var facilmenteFrustradoDetalhes by remember { mutableStateOf(TextFieldValue(formData["facilmente_frustrado_detalhes"] ?: "")) }
+    var coisasAutomaticamente by remember { mutableStateOf(formData["coisas_automaticamente"] ?: "Não") }
+    var coisasAutomaticamenteDetalhes by remember { mutableStateOf(TextFieldValue(formData["coisas_automaticamente_detalhes"] ?: "")) }
+    var menosInibido by remember { mutableStateOf(formData["menos_inibido"] ?: "Não") }
+    var menosInibidoDetalhes by remember { mutableStateOf(TextFieldValue(formData["menos_inibido_detalhes"] ?: "")) }
+    var dificuldadeEspontaneo by remember { mutableStateOf(formData["dificuldade_espontaneo"] ?: "Não") }
+    var dificuldadeEspontaneoDetalhes by remember { mutableStateOf(TextFieldValue(formData["dificuldade_espontaneo_detalhes"] ?: "")) }
+    var mudancaEnergia by remember { mutableStateOf(formData["mudanca_energia"] ?: "Não") }
+    var mudancaEnergiaDetalhes by remember { mutableStateOf(TextFieldValue(formData["mudanca_energia_detalhes"] ?: "")) }
+    var mudancaApetite by remember { mutableStateOf(formData["mudanca_apetite"] ?: "Não") }
+    var mudancaApetiteDetalhes by remember { mutableStateOf(TextFieldValue(formData["mudanca_apetite_detalhes"] ?: "")) }
+    var mudancaPeso by remember { mutableStateOf(formData["mudanca_peso"] ?: "Não") }
+    var mudancaPesoDetalhes by remember { mutableStateOf(TextFieldValue(formData["mudanca_peso_detalhes"] ?: "")) }
+    var mudancaInteresseSexual by remember { mutableStateOf(formData["mudanca_interesse_sexual"] ?: "Não") }
+    var mudancaInteresseSexualDetalhes by remember { mutableStateOf(TextFieldValue(formData["mudanca_interesse_sexual_detalhes"] ?: "")) }
+    var faltaInteresseAtividades by remember { mutableStateOf(formData["falta_interesse_atividades"] ?: "Não") }
+    var faltaInteresseAtividadesDetalhes by remember { mutableStateOf(TextFieldValue(formData["falta_interesse_atividades_detalhes"] ?: "")) }
+    var aumentoIrritabilidade by remember { mutableStateOf(formData["aumento_irritabilidade"] ?: "Não") }
+    var aumentoIrritabilidadeDetalhes by remember { mutableStateOf(TextFieldValue(formData["aumento_irritabilidade_detalhes"] ?: "")) }
+    var outrasMudancasHumor by remember { mutableStateOf(formData["outras_mudancas_humor"] ?: "Não") }
+    var outrasMudancasHumorDetalhes by remember { mutableStateOf(TextFieldValue(formData["outras_mudancas_humor_detalhes"] ?: "")) }
+    var problemasMatrimoniais by remember { mutableStateOf(formData["problemas_matrimoniais"] ?: "Não") }
+    var problemasMatrimoniaisDetalhes by remember { mutableStateOf(TextFieldValue(formData["problemas_matrimoniais_detalhes"] ?: "")) }
+    var problemasFinanceiros by remember { mutableStateOf(formData["problemas_financeiros"] ?: "Não") }
+    var problemasFinanceirosDetalhes by remember { mutableStateOf(TextFieldValue(formData["problemas_financeiros_detalhes"] ?: "")) }
+    var problemasServicosDomesticos by remember { mutableStateOf(formData["problemas_servicos_domesticos"] ?: "Não") }
+    var problemasServicosDomesticosDetalhes by remember { mutableStateOf(TextFieldValue(formData["problemas_servicos_domesticos_detalhes"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Tristeza ou depressão
+        Text(
+            text = "Tristeza ou depressão?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = tristezaDepressao,
+            onValueChange = { 
+                tristezaDepressao = it
+                onFormDataChange(mapOf("tristeza_depressao" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        // Ansiedade ou nervosismo
+        Text(
+            text = "Ansiedade ou nervosismo?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = ansiedadeNervosismo,
+            onValueChange = { 
+                ansiedadeNervosismo = it
+                onFormDataChange(mapOf("ansiedade_nervosismo" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        // Estresse
+        Text(
+            text = "Estresse:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = estresse,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = estresseDetalhes,
+            onValueChange = { 
+                estresseDetalhes = it
+                onFormDataChange(mapOf("estresse_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Problemas no sono
+        Text(
+            text = "Problemas no sono? (cochilo ou durmindo muito):",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = problemasSono,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = problemasSonoDetalhes,
+            onValueChange = { 
+                problemasSonoDetalhes = it
+                onFormDataChange(mapOf("problemas_sono_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Pesadelos
+        Text(
+            text = "Tem pesadelos em uma base diária/semanal:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = pesadelos,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = pesadelosDetalhes,
+            onValueChange = { 
+                pesadelosDetalhes = it
+                onFormDataChange(mapOf("pesadelos_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Fica irritado facilmente
+        Text(
+            text = "Fica irritado facilmente?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = irritadoFacilmente,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = irritadoFacilmenteDetalhes,
+            onValueChange = { 
+                irritadoFacilmenteDetalhes = it
+                onFormDataChange(mapOf("irritado_facilmente_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Sente euforia
+        Text(
+            text = "Sente euforia (se sentindo no topo do mundo) ?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = euforia,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = euforiaDetalhes,
+            onValueChange = { 
+                euforiaDetalhes = it
+                onFormDataChange(mapOf("euforia_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Se sente muito emotivo
+        Text(
+            text = "Se sente muito emotivo (chorando facilmente)?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = muitoEmotivo,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = muitoEmotivoDetalhes,
+            onValueChange = { 
+                muitoEmotivoDetalhes = it
+                onFormDataChange(mapOf("muito_emotivo_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Se sente como se nada mais importasse
+        Text(
+            text = "Se sente como se nada mais importasse ?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = nadaImporta,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = nadaImportaDetalhes,
+            onValueChange = { 
+                nadaImportaDetalhes = it
+                onFormDataChange(mapOf("nada_importa_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Fica facilmente frustrado
+        Text(
+            text = "Fica facilmente frustrado?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = facilmenteFrustrado,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = facilmenteFrustradoDetalhes,
+            onValueChange = { 
+                facilmenteFrustradoDetalhes = it
+                onFormDataChange(mapOf("facilmente_frustrado_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Faz coisas automaticamente
+        Text(
+            text = "Faz coisas automaticamente (sem consciência)?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = coisasAutomaticamente,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = coisasAutomaticamenteDetalhes,
+            onValueChange = { 
+                coisasAutomaticamenteDetalhes = it
+                onFormDataChange(mapOf("coisas_automaticamente_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Se sente menos inibido
+        Text(
+            text = "Se sente menos inibido (fazendo coisas que não fazia antes) ?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = menosInibido,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = menosInibidoDetalhes,
+            onValueChange = { 
+                menosInibidoDetalhes = it
+                onFormDataChange(mapOf("menos_inibido_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Tem dificuldade em ser espontâneo
+        Text(
+            text = "Tem dificuldade em ser espontâneo?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = dificuldadeEspontaneo,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = dificuldadeEspontaneoDetalhes,
+            onValueChange = { 
+                dificuldadeEspontaneoDetalhes = it
+                onFormDataChange(mapOf("dificuldade_espontaneo_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Houve mudança na energia
+        Text(
+            text = "Houve mudança na energia? (perda ou aumento):",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = mudancaEnergia,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = mudancaEnergiaDetalhes,
+            onValueChange = { 
+                mudancaEnergiaDetalhes = it
+                onFormDataChange(mapOf("mudanca_energia_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Houve mudança no apetite
+        Text(
+            text = "Houve mudança no apetite? (perda ou aumento):",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = mudancaApetite,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = mudancaApetiteDetalhes,
+            onValueChange = { 
+                mudancaApetiteDetalhes = it
+                onFormDataChange(mapOf("mudanca_apetite_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Houve mudança no peso
+        Text(
+            text = "Houve mudança no peso? (perda ou aumento):",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = mudancaPeso,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = mudancaPesoDetalhes,
+            onValueChange = { 
+                mudancaPesoDetalhes = it
+                onFormDataChange(mapOf("mudanca_peso_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Houve mudança no interesse sexual
+        Text(
+            text = "Houve mudança no interesse sexual? (perda ou aumento):",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = mudancaInteresseSexual,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = mudancaInteresseSexualDetalhes,
+            onValueChange = { 
+                mudancaInteresseSexualDetalhes = it
+                onFormDataChange(mapOf("mudanca_interesse_sexual_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Houve falta de interesse em atividades prazerosas
+        Text(
+            text = "Houve falta de interesse em atividades prazerosas ?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = faltaInteresseAtividades,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = faltaInteresseAtividadesDetalhes,
+            onValueChange = { 
+                faltaInteresseAtividadesDetalhes = it
+                onFormDataChange(mapOf("falta_interesse_atividades_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Houve aumento de irritabilidade
+        Text(
+            text = "Houve aumento de irritabilidade?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = aumentoIrritabilidade,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = aumentoIrritabilidadeDetalhes,
+            onValueChange = { 
+                aumentoIrritabilidadeDetalhes = it
+                onFormDataChange(mapOf("aumento_irritabilidade_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Outras mudanças no humor
+        Text(
+            text = "Outras mudanças no humor, personalidade ou em como lida com as pessoas?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = outrasMudancasHumor,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = outrasMudancasHumorDetalhes,
+            onValueChange = { 
+                outrasMudancasHumorDetalhes = it
+                onFormDataChange(mapOf("outras_mudancas_humor_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Passando por algum problema matrimonial/familiar
+        Text(
+            text = "Passando por algum problema matrimonial/familiar?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = problemasMatrimoniais,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = problemasMatrimoniaisDetalhes,
+            onValueChange = { 
+                problemasMatrimoniaisDetalhes = it
+                onFormDataChange(mapOf("problemas_matrimoniais_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Passando por algum problema financeiro/jurídico
+        Text(
+            text = "Passando por algum problema financeiro/jurídico?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = problemasFinanceiros,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = problemasFinanceirosDetalhes,
+            onValueChange = { 
+                problemasFinanceirosDetalhes = it
+                onFormDataChange(mapOf("problemas_financeiros_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Passando por algum problema serviços domésticos
+        Text(
+            text = "Passando por algum problema serviços domésticos/ gerenciamento de dinheiro?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = problemasServicosDomesticos,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = problemasServicosDomesticosDetalhes,
+            onValueChange = { 
+                problemasServicosDomesticosDetalhes = it
+                onFormDataChange(mapOf("problemas_servicos_domesticos_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+fun HistoriaFamiliaIdosoContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var quantosIrmaos by remember { mutableStateOf(TextFieldValue(formData["quantos_irmaos"] ?: "")) }
+    var problemasComuns by remember { mutableStateOf(formData["problemas_comuns"] ?: "Não") }
+    var problemasComunsDetalhes by remember { mutableStateOf(TextFieldValue(formData["problemas_comuns_detalhes"] ?: "")) }
+    var relacaoFamilia by remember { mutableStateOf(TextFieldValue(formData["relacao_familia"] ?: "")) }
+    var estadoCivil by remember { mutableStateOf(TextFieldValue(formData["estado_civil"] ?: "")) }
+    var anosCasado by remember { mutableStateOf(TextFieldValue(formData["anos_casado"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Quantos irmãos
+        Text(
+            text = "Quantos irmãos o paciente tem?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = quantosIrmaos,
+            onValueChange = { 
+                quantosIrmaos = it
+                onFormDataChange(mapOf("quantos_irmaos" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Tem algum problema em comum
+        Text(
+            text = "Tem algum problema em comum (físico, acadêmico, psicológico) associado com algum dos seus irmãos?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = problemasComuns,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = problemasComunsDetalhes,
+            onValueChange = { 
+                problemasComunsDetalhes = it
+                onFormDataChange(mapOf("problemas_comuns_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Relação com a família
+        Text(
+            text = "Relação com a família:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = relacaoFamilia,
+            onValueChange = { 
+                relacaoFamilia = it
+                onFormDataChange(mapOf("relacao_familia" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        // Estado civil
+        Text(
+            text = "Estado civil:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = estadoCivil,
+            onValueChange = { 
+                estadoCivil = it
+                onFormDataChange(mapOf("estado_civil" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Quantos anos de casado
+        Text(
+            text = "Quantos anos de casado(a) tem?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = anosCasado,
+            onValueChange = { 
+                anosCasado = it
+                onFormDataChange(mapOf("anos_casado" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+fun HistoricoProfissionalIdosoContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var trabalhaAtualmente by remember { mutableStateOf(formData["trabalha_atualmente"] ?: "Não") }
+    var trabalhaAtualmenteDetalhes by remember { mutableStateOf(TextFieldValue(formData["trabalha_atualmente_detalhes"] ?: "")) }
+    var jaAposentou by remember { mutableStateOf(formData["ja_aposentou"] ?: "Não") }
+    var jaAposentouDetalhes by remember { mutableStateOf(TextFieldValue(formData["ja_aposentou_detalhes"] ?: "")) }
+    var cargoFuncao by remember { mutableStateOf(TextFieldValue(formData["cargo_funcao"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // O paciente trabalha atualmente
+        Text(
+            text = "O paciente trabalha atualmente?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = trabalhaAtualmente,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = trabalhaAtualmenteDetalhes,
+            onValueChange = { 
+                trabalhaAtualmenteDetalhes = it
+                onFormDataChange(mapOf("trabalha_atualmente_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // O paciente já se aposentou
+        Text(
+            text = "O paciente já se aposentou?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = jaAposentou,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = jaAposentouDetalhes,
+            onValueChange = { 
+                jaAposentouDetalhes = it
+                onFormDataChange(mapOf("ja_aposentou_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Cargo ou função no trabalho
+        Text(
+            text = "Cargo ou função no trabalho:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = cargoFuncao,
+            onValueChange = { 
+                cargoFuncao = it
+                onFormDataChange(mapOf("cargo_funcao" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+fun LazerIdosoContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var tiposLazer by remember { mutableStateOf(TextFieldValue(formData["tipos_lazer"] ?: "")) }
+    var aindaCapaz by remember { mutableStateOf(formData["ainda_capaz"] ?: "Não") }
+    var aindaCapazDetalhes by remember { mutableStateOf(TextFieldValue(formData["ainda_capaz_detalhes"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Resuma os tipos de lazer
+        Text(
+            text = "Resuma os tipos de lazer que o paciente gosta:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = tiposLazer,
+            onValueChange = { 
+                tiposLazer = it
+                onFormDataChange(mapOf("tipos_lazer" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        
+        // Ele ainda é capaz de realizar estas atividades
+        Text(
+            text = "Ele ainda é capaz de realizar estas atividades?",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = aindaCapaz,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                modifier = Modifier.menuAnchor()
+            )
+        }
+        
+        OutlinedTextField(
+            value = aindaCapazDetalhes,
+            onValueChange = { 
+                aindaCapazDetalhes = it
+                onFormDataChange(mapOf("ainda_capaz_detalhes" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+fun HipotesDiagnosticaIdosoContent(
+    formData: Map<String, String>,
+    onFormDataChange: (Map<String, String>) -> Unit
+) {
+    var descricao by remember { mutableStateOf(TextFieldValue(formData["descricao"] ?: "")) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Descrição:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+        
+        OutlinedTextField(
+            value = descricao,
+            onValueChange = { 
+                descricao = it
+                onFormDataChange(mapOf("descricao" to it.text))
+            },
+            placeholder = { Text("Digite aqui") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 5
+        )
+    }
+}
