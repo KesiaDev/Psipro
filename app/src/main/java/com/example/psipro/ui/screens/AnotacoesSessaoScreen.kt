@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 import android.util.Log
+import androidx.compose.material.icons.filled.Add
 
 // Dados auxiliares
 
@@ -137,14 +138,21 @@ fun AnotacoesSessaoScreen(
                 items(anotacoes) { anotacao ->
                     val context = LocalContext.current
                     val tipoSessao = tiposSessao.find { it.id == anotacao.tipoSessaoId }
-                    val status = statusPagamentos[anotacao.id]
-                    val (statusCor, statusTexto) = when (status) {
-                        com.example.psipro.data.entities.StatusPagamento.PAGO -> Pair(Color(0xFF2196F3), "Realizado") // Azul
-                        com.example.psipro.data.entities.StatusPagamento.A_RECEBER -> Pair(Color(0xFFFFC107), "Pendente") // Amarelo
-                        com.example.psipro.data.entities.StatusPagamento.VENCIDO -> Pair(Color(0xFFF44336), "Vencido") // Vermelho
-                        com.example.psipro.data.entities.StatusPagamento.CANCELADO -> Pair(Color(0xFF9E9E9E), "Cancelado") // Cinza
-                        null -> Pair(Color(0xFF9E9E9E), "Sem cobrança") // Forçar exibição se não houver cobrança
+                    val statusPagamento = statusPagamentos[anotacao.id] // Acesso direto ao Map
+                    
+                    // Determinar cor e texto do status
+                    val (statusCor, statusTexto) = when {
+                        anotacao.assuntos.isNotBlank() && statusPagamento != null -> {
+                            MaterialTheme.colorScheme.primary to "Registrada" // Verde para sessão registrada
+                        }
+                        anotacao.assuntos.isNotBlank() -> {
+                            MaterialTheme.colorScheme.secondary to "Preenchida" // Azul para preenchida
+                        }
+                        else -> {
+                            MaterialTheme.colorScheme.primary to "Pendente" // Laranja para pendente
+                        }
                     }
+                    
                     Card(
                         onClick = {
                             val intent = Intent(context, NovaSessaoActivity::class.java)
@@ -152,14 +160,70 @@ fun AnotacoesSessaoScreen(
                             intent.putExtra("ANOTACAO_ID", anotacao.id)
                             context.startActivity(intent)
                         },
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        shape = campoShape
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp)
+                            .height(120.dp), // Altura fixa para ficar mais retangular
+                        shape = campoShape,
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (anotacao.assuntos.isNotBlank() && statusPagamento != null) {
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                            } else {
+                                MaterialTheme.colorScheme.surface
+                            }
+                        )
                     ) {
-                        Column(Modifier.padding(8.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("Sessão ${anotacao.numeroSessao}", fontWeight = FontWeight.Bold)
+                        Column(
+                            Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                        ) {
+                            // Primeira linha: Número da sessão e status
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    "Sessão ${anotacao.numeroSessao}",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Spacer(Modifier.weight(1f))
+                                
+                                // Indicador verde de sessão registrada
+                                if (anotacao.assuntos.isNotBlank() && statusPagamento != null) {
+                                                                            Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                                .background(
+                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                                    RoundedCornerShape(16.dp)
+                                                )
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(8.dp)
+                                                    .background(MaterialTheme.colorScheme.primary, shape = CircleShape)
+                                            )
+                                            Spacer(Modifier.width(4.dp))
+                                            Text(
+                                                "Registrada",
+                                                color = MaterialTheme.colorScheme.primary,
+                                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
+                                            )
+                                        }
+                                }
+                            }
+                            
+                            Spacer(Modifier.height(8.dp))
+                            
+                            // Segunda linha: Tipo de sessão e valor
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
                                 tipoSessao?.let {
-                                    Spacer(Modifier.width(8.dp))
                                     Surface(
                                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                                         shape = RoundedCornerShape(12.dp)
@@ -168,44 +232,51 @@ fun AnotacoesSessaoScreen(
                                             it.nome,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                         )
                                     }
                                 }
+                                
                                 Spacer(Modifier.weight(1f))
+                                
                                 // Valor da sessão
                                 if (tipoSessao != null) {
                                     Text(
                                         "R$ %.2f".format(tipoSessao.valorPadrao),
                                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = MaterialTheme.colorScheme.secondary,
-                                        modifier = Modifier.padding(end = 8.dp)
+                                        color = MaterialTheme.colorScheme.secondary
                                     )
                                 }
-                                // Status colorido e texto
-                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 8.dp)) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(12.dp)
-                                            .background(statusCor, shape = CircleShape)
-                                    )
-                                    Spacer(Modifier.width(4.dp))
-                                    Text(statusTexto, color = statusCor, style = MaterialTheme.typography.bodySmall)
-                                }
+                            }
+                            
+                            Spacer(Modifier.height(8.dp))
+                            
+                            // Terceira linha: Data e botão de exclusão
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    "Data: ${dateFormatter.format(anotacao.dataHora)}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                
+                                Spacer(Modifier.weight(1f))
+                                
                                 // Botão de exclusão
                                 IconButton(
                                     onClick = { showDeleteDialog = anotacao.id },
-                                    modifier = Modifier.size(28.dp)
+                                    modifier = Modifier.size(32.dp)
                                 ) {
                                     Icon(
                                         Icons.Default.Delete,
                                         contentDescription = "Excluir sessão",
-                                        tint = MaterialTheme.colorScheme.error
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                             }
-                            Text("Data: ${dateFormatter.format(anotacao.dataHora)}")
-                            Text("Status: ${if (anotacao.assuntos.isNotBlank()) "Preenchida" else "Vazia"}")
                         }
                     }
                 }
@@ -219,12 +290,41 @@ fun AnotacoesSessaoScreen(
                             intent.putExtra("ANOTACAO_ID", anotacaoSelecionada?.id)
                             context.startActivity(intent)
                         },
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        shape = campoShape
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp)
+                            .height(120.dp), // Mesma altura dos outros cards
+                        shape = campoShape,
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        )
                     ) {
-                        Column(Modifier.padding(8.dp)) {
-                            Text("+ Nova Sessão", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                            Text("Sessão ${viewModel.getProximoNumeroSessao(patientId)}")
+                        Column(
+                            Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Nova sessão",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "Nova Sessão",
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                "Sessão ${viewModel.getProximoNumeroSessao(patientId)}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 }

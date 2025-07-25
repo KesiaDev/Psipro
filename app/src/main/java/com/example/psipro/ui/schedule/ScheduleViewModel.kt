@@ -26,13 +26,19 @@ class ScheduleViewModel @Inject constructor(
 
     private fun fetchPatients() {
         viewModelScope.launch {
-            patientDao.getAllPatients()
-                .catch { exception ->
-                    // Handle error
-                }
-                .collect { patientList ->
-                    _patients.value = patientList
-                }
+            try {
+                patientDao.getAllPatients()
+                    .catch { exception ->
+                        android.util.Log.e("ScheduleViewModel", "Erro ao buscar pacientes: ${exception.message}")
+                    }
+                    .collect { patientList ->
+                        _patients.value = patientList
+                        android.util.Log.d("ScheduleViewModel", "Pacientes carregados: ${patientList.size}")
+                    }
+            } catch (e: Exception) {
+                android.util.Log.e("ScheduleViewModel", "Erro crítico ao buscar pacientes: ${e.message}")
+                _patients.value = emptyList()
+            }
         }
     }
 } 

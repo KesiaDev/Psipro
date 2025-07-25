@@ -13,12 +13,11 @@ import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun AgendamentoTabsScreen() {
-    val bronzeGold = Color(0xFFB08D57)
-    val backgroundDark = Color(0xFF181818)
-    val selectedTabColor = bronzeGold
+    // Usar cores do tema Material3
+    val selectedTabColor = MaterialTheme.colorScheme.primary
     val unselectedTabColor = Color.Transparent
-    val selectedTextColor = backgroundDark
-    val unselectedTextColor = bronzeGold
+    val selectedTextColor = MaterialTheme.colorScheme.onPrimary
+    val unselectedTextColor = MaterialTheme.colorScheme.primary
 
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Sessão Única", "Sessões Recorrentes", "Compromisso Pessoal")
@@ -26,7 +25,7 @@ fun AgendamentoTabsScreen() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(backgroundDark)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
         // Botões horizontais
@@ -64,17 +63,17 @@ fun AgendamentoTabsScreen() {
 @Composable
 fun SessaoUnicaForm() {
     // Coloque aqui os campos do formulário de sessão única
-    Text("Formulário Sessão Única", color = Color.White)
+    Text("Formulário Sessão Única", color = MaterialTheme.colorScheme.onBackground)
 }
 
 @Composable
 fun SessoesRecorrentesForm() {
     // Coloque aqui os campos do formulário de sessões recorrentes
-    Text("Formulário Sessões Recorrentes", color = Color.White)
+    Text("Formulário Sessões Recorrentes", color = MaterialTheme.colorScheme.onBackground)
 }
 
 @Composable
 fun CompromissoPessoalForm() {
     // Coloque aqui os campos do formulário de compromisso pessoal
-    Text("Formulário Compromisso Pessoal", color = Color.White)
+    Text("Formulário Compromisso Pessoal", color = MaterialTheme.colorScheme.onBackground)
 } 

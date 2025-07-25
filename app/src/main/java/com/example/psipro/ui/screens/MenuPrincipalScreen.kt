@@ -35,38 +35,38 @@ fun MenuPrincipalScreen(
         MenuItem(
             titulo = "Pacientes",
             icone = Icons.Default.People,
-            cor = Color(0xFF2196F3),
+            cor = MaterialTheme.colorScheme.primary,
             onClick = onPacientesClick
         ),
         MenuItem(
             titulo = "Agendamentos",
             icone = Icons.Default.Schedule,
-            cor = Color(0xFF4CAF50),
+            cor = MaterialTheme.colorScheme.primary,
             onClick = onAgendamentosClick
         ),
         MenuItem(
             titulo = "Anamnese",
             icone = Icons.Default.Assignment,
-            cor = Color(0xFFFF9800),
+            cor = MaterialTheme.colorScheme.primary,
             onClick = onAnamneseClick
         ),
         MenuItem(
             titulo = "Financeiro",
             icone = Icons.Default.AccountBalanceWallet,
-            cor = Color(0xFF9C27B0),
+            cor = MaterialTheme.colorScheme.primary,
             onClick = onFinanceiroClick,
             badge = resumoFinanceiro.countPendentes + resumoFinanceiro.countVencidas
         ),
         MenuItem(
             titulo = "Relatórios",
             icone = Icons.Default.Assessment,
-            cor = Color(0xFF607D8B),
+            cor = MaterialTheme.colorScheme.primary,
             onClick = onRelatoriosClick
         ),
         MenuItem(
             titulo = "Configurações",
             icone = Icons.Default.Settings,
-            cor = Color(0xFF795548),
+            cor = MaterialTheme.colorScheme.primary,
             onClick = onConfiguracoesClick
         )
     )
@@ -108,17 +108,17 @@ fun MenuPrincipalScreen(
                         ResumoItem(
                             label = "A Receber",
                             value = "R$ ${String.format("%.2f", resumoFinanceiro.totalAReceber)}",
-                            color = Color(0xFFFF9800)
+                            color = MaterialTheme.colorScheme.primary
                         )
                         ResumoItem(
                             label = "Vencidas",
                             value = resumoFinanceiro.countVencidas.toString(),
-                            color = Color(0xFFF44336)
+                            color = MaterialTheme.colorScheme.error
                         )
                         ResumoItem(
                             label = "Pendentes",
                             value = resumoFinanceiro.countPendentes.toString(),
-                            color = Color(0xFF2196F3)
+                            color = MaterialTheme.colorScheme.secondary
                         )
                     }
                 }
@@ -171,7 +171,7 @@ fun MenuCard(item: MenuItem) {
                     item.badge?.let { badgeCount ->
                         if (badgeCount > 0) {
                             Surface(
-                                color = Color(0xFFF44336),
+                                color = MaterialTheme.colorScheme.error,
                                 shape = RoundedCornerShape(8.dp),
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)

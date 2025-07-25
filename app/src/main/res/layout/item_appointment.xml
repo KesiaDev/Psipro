@@ -66,10 +66,26 @@
             android:textAppearance="?attr/textAppearanceCaption"
             android:textColor="?attr/colorOnSurface"
             app:layout_constraintStart_toStartOf="@id/titleText"
-            app:layout_constraintEnd_toEndOf="@id/titleText"
+            app:layout_constraintEnd_toStartOf="@id/statusChip"
             app:layout_constraintTop_toBottomOf="@id/titleText"
             app:layout_constraintBottom_toBottomOf="parent"
             tools:text="Consulta" />
+
+        <!-- Chip de Status -->
+        <com.google.android.material.chip.Chip
+            android:id="@+id/statusChip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            app:chipCornerRadius="12dp"
+            app:chipMinHeight="24dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/endTimeText"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:text="Agendado"
+            tools:chipBackgroundColor="#2196F3" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

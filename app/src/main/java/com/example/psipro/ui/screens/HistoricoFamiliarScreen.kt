@@ -68,7 +68,7 @@ fun HistoricoFamiliarScreen(
     var vinculosAfetivos by remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollState = rememberScrollState()
-    val bronze = Color(0xFFB8860B)
+    val bronze = MaterialTheme.colorScheme.primary
     val campoShape = RoundedCornerShape(12.dp)
     var showSnackbar by remember { mutableStateOf(false) }
     

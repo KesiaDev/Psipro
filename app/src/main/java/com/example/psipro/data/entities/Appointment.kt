@@ -14,6 +14,26 @@ enum class AppointmentStatus {
     NO_SHOW
 }
 
+// Função de extensão para obter a cor do status
+fun AppointmentStatus.getStatusColor(): String {
+    return when (this) {
+        AppointmentStatus.SCHEDULED -> "#2196F3"    // Azul - Agendado
+        AppointmentStatus.COMPLETED -> "#4CAF50"    // Verde - Realizado
+        AppointmentStatus.CANCELLED -> "#F44336"    // Vermelho - Cancelado
+        AppointmentStatus.NO_SHOW -> "#FF9800"      // Laranja - Faltou
+    }
+}
+
+// Função de extensão para obter o texto do status
+fun AppointmentStatus.getStatusText(): String {
+    return when (this) {
+        AppointmentStatus.SCHEDULED -> "Agendado"
+        AppointmentStatus.COMPLETED -> "Realizado"
+        AppointmentStatus.CANCELLED -> "Cancelado"
+        AppointmentStatus.NO_SHOW -> "Faltou"
+    }
+}
+
 enum class RecurrenceType {
     NONE, DAILY, WEEKLY, BIWEEKLY, MONTHLY, CUSTOM
 }
@@ -68,7 +88,12 @@ data class Appointment(
     // Cor do agendamento
     val colorHex: String = "#FFF9C4", // Amarelo suave padrão
     val notes: String? = null,
-    val type: AppointmentType = AppointmentType.CONSULTA // NOVO CAMPO
+    val type: AppointmentType = AppointmentType.CONSULTA, // NOVO CAMPO
+    
+    // Campos para controle de cobrança
+    val valorCobranca: Double = 0.0, // Valor a ser cobrado
+    val cobrancaGerada: Boolean = false, // Se já foi gerada cobrança
+    val motivoCobranca: String? = null // Motivo da cobrança (cancelamento, falta, etc.)
 )
 
 fun generateRecurrenceDates(

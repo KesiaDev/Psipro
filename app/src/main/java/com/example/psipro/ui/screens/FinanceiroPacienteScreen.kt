@@ -238,14 +238,14 @@ fun FinanceiroPacienteScreen(
                                 .clickable {
                                     // Aqui você pode abrir o detalhe da cobrança
                                 },
-                            colors = CardDefaults.cardColors(
-                                containerColor = when (cobranca.status) {
-                                    StatusPagamento.PAGO -> Color(0xFFE8F5E8)
-                                    StatusPagamento.A_RECEBER -> Color(0xFFFFF3E0)
-                                    StatusPagamento.VENCIDO -> Color(0xFFFFEBEE)
-                                    StatusPagamento.CANCELADO -> Color(0xFFF5F5F5)
-                                }
-                            )
+                                                    colors = CardDefaults.cardColors(
+                            containerColor = when (cobranca.status) {
+                                StatusPagamento.PAGO -> Color(0xFFE8F5E8)
+                                StatusPagamento.A_RECEBER -> Color(0xFFFFF3E0)
+                                StatusPagamento.VENCIDO -> Color(0xFFFFEBEE)
+                                StatusPagamento.CANCELADO -> Color(0xFFF5F5F5)
+                            }
+                        )
                         ) {
                             Row(
                                 modifier = Modifier

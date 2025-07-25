@@ -79,11 +79,11 @@ fun AppointmentForm(
     var selectedPatient by remember { mutableStateOf<Patient?>(null) }
 
     val statusOptions = listOf(
-        StatusOption("Pendente", Color(0xFFD4AF37)),
-        StatusOption("Confirmado", Color(0xFF4CAF50)),
-        StatusOption("Cancelado", Color(0xFFF44336)),
-        StatusOption("Realizado", Color(0xFF2196F3)),
-        StatusOption("Faltou", Color(0xFF9E9E9E))
+        StatusOption("Pendente", MaterialTheme.colorScheme.primary),
+        StatusOption("Confirmado", MaterialTheme.colorScheme.primary),
+        StatusOption("Cancelado", MaterialTheme.colorScheme.error),
+        StatusOption("Realizado", MaterialTheme.colorScheme.secondary),
+        StatusOption("Faltou", MaterialTheme.colorScheme.onSurfaceVariant)
     )
 
     val statusEnumMap = mapOf(

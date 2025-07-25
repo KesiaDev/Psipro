@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.psipro.data.entities.Appointment
+import com.example.psipro.data.entities.AppointmentStatus
 import com.example.psipro.databinding.ItemAppointmentBinding
 import java.text.SimpleDateFormat
 import java.util.*
@@ -42,6 +43,10 @@ class AppointmentAdapter(
                 endTimeText.text = appointment.endTime
                 titleText.text = appointment.patientName ?: appointment.title
                 subtitleText.text = appointment.description ?: "Consulta"
+                
+                // Configurar status com cor
+                setupStatusChip(appointment.status)
+                
                 root.setOnClickListener {
                     onItemClick(appointment)
                 }
@@ -49,6 +54,40 @@ class AppointmentAdapter(
                     onItemLongClick(appointment)
                     true
                 }
+            }
+        }
+        
+        private fun setupStatusChip(status: AppointmentStatus) {
+            val (backgroundColor, textColor, text) = when (status) {
+                AppointmentStatus.SCHEDULED -> Triple(
+                    android.graphics.Color.parseColor("#2196F3"), // Azul
+                    android.graphics.Color.WHITE,
+                    "Agendado"
+                )
+                AppointmentStatus.COMPLETED -> Triple(
+                    android.graphics.Color.parseColor("#4CAF50"), // Verde
+                    android.graphics.Color.WHITE,
+                    "Realizado"
+                )
+                AppointmentStatus.CANCELLED -> Triple(
+                    android.graphics.Color.parseColor("#F44336"), // Vermelho
+                    android.graphics.Color.WHITE,
+                    "Cancelado"
+                )
+                AppointmentStatus.NO_SHOW -> Triple(
+                    android.graphics.Color.parseColor("#FF9800"), // Laranja
+                    android.graphics.Color.WHITE,
+                    "Faltou"
+                )
+            }
+            
+            // Configurar o chip de status se existir no layout
+            binding.statusChip?.let { chip ->
+                chip.text = text
+                chip.setChipBackgroundColorResource(android.R.color.transparent)
+                chip.chipBackgroundColor = android.content.res.ColorStateList.valueOf(backgroundColor)
+                chip.setTextColor(android.content.res.ColorStateList.valueOf(textColor))
+                chip.visibility = android.view.View.VISIBLE
             }
         }
     }

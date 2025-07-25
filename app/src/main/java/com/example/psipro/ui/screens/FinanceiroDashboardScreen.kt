@@ -13,11 +13,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.psipro.data.entities.StatusPagamento
 import com.example.psipro.ui.viewmodels.FinanceiroUnificadoViewModel
+import com.google.android.material.datepicker.MaterialDatePicker
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -49,8 +51,40 @@ fun FinanceiroDashboardScreen(
     val calendar = Calendar.getInstance()
     calendar.time = selectedDate
     
+    val context = LocalContext.current
+    
     LaunchedEffect(Unit) {
         viewModel.carregarDadosFinanceiros()
+    }
+    
+    // DatePicker
+    if (showDatePicker) {
+        val datePicker = MaterialDatePicker.Builder.datePicker()
+            .setTitleText("Selecionar mês/ano")
+            .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+            .build()
+        
+        datePicker.addOnPositiveButtonClickListener { selection ->
+            val calendar = Calendar.getInstance()
+            calendar.timeInMillis = selection
+            selectedDate = calendar.time
+            showDatePicker = false
+        }
+        
+        datePicker.addOnNegativeButtonClickListener {
+            showDatePicker = false
+        }
+        
+        datePicker.addOnCancelListener {
+            showDatePicker = false
+        }
+        
+        LaunchedEffect(Unit) {
+            val activity = context as? androidx.fragment.app.FragmentActivity
+            if (activity != null) {
+                datePicker.show(activity.supportFragmentManager, "datePicker")
+            }
+        }
     }
 
     Scaffold(
