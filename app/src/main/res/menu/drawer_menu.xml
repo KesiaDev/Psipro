@@ -4,6 +4,7 @@
     <item android:id="@+id/navigation_patients" android:title="Pacientes" android:icon="@drawable/ic_people" />
     <item android:id="@+id/nav_financeiro" android:title="Financeiro" android:icon="@drawable/ic_attach_money" android:titleTextAppearance="@style/DrawerMenuBold" />
     <item android:id="@+id/nav_notificacoes" android:title="Notificações" android:icon="@drawable/ic_notifications" />
+    <item android:id="@+id/nav_autoavaliacao" android:title="Autoavaliação" android:icon="@drawable/ic_psychology" android:titleTextAppearance="@style/DrawerMenuBold" />
     <item android:id="@+id/nav_aniversariantes" android:title="Aniversariantes" android:icon="@drawable/ic_cake" android:titleTextAppearance="@style/DrawerMenuBold" />
     <item android:id="@+id/nav_configuracoes" android:title="Configurações" android:icon="@drawable/ic_settings" android:titleTextAppearance="@style/DrawerMenuBold" />
     <item android:id="@+id/nav_suporte" android:title="Suporte" android:icon="@drawable/ic_support" android:titleTextAppearance="@style/DrawerMenuBold" />

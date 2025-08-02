@@ -288,17 +288,7 @@
                 android:layout_height="wrap_content"
                 android:inputType="textUri"/>
         </com.google.android.material.textfield.TextInputLayout>
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnExportCard"
-            style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Exportar Cartão de Visitas"
-            app:icon="@drawable/ic_share"
-            app:iconGravity="textStart"
-            app:iconPadding="8dp"
-            android:backgroundTint="?attr/colorPrimary"
-            android:textColor="?attr/colorOnPrimary"/>
+
 
         <!-- Botões -->
         <LinearLayout

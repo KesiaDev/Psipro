@@ -1,0 +1,32 @@
+package com.psipro.app.data.dao
+
+import androidx.room.*
+import com.psipro.app.data.entities.PatientNote
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface PatientNoteDao {
+    @Query("SELECT * FROM patient_notes WHERE patientId = :patientId ORDER BY createdAt DESC")
+    fun getNotesByPatient(patientId: Long): Flow<List<PatientNote>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertNote(note: PatientNote): Long
+
+    @Update
+    suspend fun updateNote(note: PatientNote)
+
+    @Delete
+    suspend fun deleteNote(note: PatientNote)
+
+    @Query("DELETE FROM patient_notes WHERE patientId = :patientId")
+    suspend fun deleteAllNotesForPatient(patientId: Long)
+
+    @Query("SELECT * FROM patient_notes")
+    fun getAllNotes(): kotlinx.coroutines.flow.Flow<List<PatientNote>>
+
+    @Query("SELECT * FROM patient_notes WHERE id = :noteId LIMIT 1")
+    suspend fun getNoteById(noteId: Long): PatientNote?
+} 
+
+
+

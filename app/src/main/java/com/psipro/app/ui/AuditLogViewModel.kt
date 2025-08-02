@@ -1,0 +1,36 @@
+package com.psipro.app.ui
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.psipro.app.data.entities.AuditLog
+import com.psipro.app.data.repository.AuditLogRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+data class AuditLog(
+    val id: Long = 0,
+    val userId: Long?,
+    val action: String,
+    val target: String,
+    val timestamp: Long
+)
+
+class AuditLogViewModel @Inject constructor(
+    private val repository: AuditLogRepository
+) : ViewModel() {
+    private val _logs = MutableStateFlow<List<AuditLog>>(emptyList())
+    val logs: StateFlow<List<AuditLog>> = _logs
+
+    fun loadLogs() {
+        viewModelScope.launch {
+            repository.getAllLogs().collect { logs ->
+                _logs.value = logs
+            }
+        }
+    }
+} 
+
+
+

@@ -14,6 +14,8 @@
     <color name="text_hint">#AAAAAA</color>
 
     <!-- Cores de Fundo e Superfície -->
+    <color name="background_light">#121212</color>
+    <color name="surface_white">#1E1E1E</color>
     <color name="background_black">#121212</color>
     <color name="surface_black">#1E1E1E</color>
     <color name="surface_bronze_dark">#1E1E1E</color>
@@ -23,6 +25,10 @@
     <color name="error_red">#CF6679</color>
     <color name="success_green">#81C784</color>
     <color name="transparent">#00000000</color>
+
+    <!-- Cores de Aviso -->
+    <color name="warning_orange">#FFB74D</color>
+    <color name="warning_orange_light">#3E2723</color>
 
     <!-- Cores Básicas (Evitar redefinir, usar @android:color se possível) -->
     <color name="white">#FFFFFFFF</color>

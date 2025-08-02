@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
@@ -30,6 +31,11 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="YOUR_API_KEY" />
 
+        <!-- Privacy Policy -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -47,6 +53,11 @@
 
         <receiver
             android:name=".notification.WhatsAppReminderReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
+        <receiver
+            android:name=".notification.AutoavaliacaoMotivacionalReceiver"
             android:enabled="true"
             android:exported="false" />
 
@@ -85,16 +96,26 @@
             android:exported="false"
             android:label="Relatórios" />
 
-        <activity android:name=".ui.screens.WhatsAppHistoryActivity" />
+
         
         <activity
             android:name=".DadosPessoaisActivity"
             android:exported="false"
             android:label="Dados Pessoais" />
         
-        <activity android:name=".CreateAccountActivity" />
+        <activity
+            android:name=".ui.screens.DocumentosActivity"
+            android:exported="false"
+            android:label="Documentos"
+            android:theme="@style/Theme.Psipro" />
         
-        <activity android:name=".ui.EditProfileActivity" />
+        <activity 
+            android:name=".CreateAccountActivity"
+            android:theme="@style/Theme.Psipro" />
+        
+        <activity 
+            android:name=".ui.EditProfileActivity"
+            android:theme="@style/Theme.Psipro" />
         
         <activity
             android:name=".ui.OnboardingActivity"
@@ -103,9 +124,12 @@
         <activity
             android:name=".ui.screens.FinanceiroDashboardActivity"
             android:exported="false"
-            android:label="Dashboard Financeiro" />
+            android:label="Dashboard Financeiro"
+            android:theme="@style/Theme.Psipro" />
         
-        <activity android:name=".ui.HelpActivity" />
+        <activity 
+            android:name=".ui.HelpActivity"
+            android:theme="@style/Theme.Psipro" />
         
         <activity
             android:name=".ui.SplashActivity"
@@ -117,9 +141,13 @@
             </intent-filter>
         </activity>
         
-        <activity android:name=".ui.PrivacyPolicyActivity" />
+        <activity 
+            android:name=".ui.PrivacyPolicyActivity"
+            android:theme="@style/Theme.Psipro" />
         
-        <activity android:name=".ui.PasswordRecoveryActivity" />
+        <activity 
+            android:name=".ui.PasswordRecoveryActivity"
+            android:theme="@style/Theme.Psipro" />
         
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
@@ -129,17 +157,20 @@
         <activity
             android:name=".ProntuarioListActivity"
             android:exported="false"
-            android:label="Prontuário" />
+            android:label="Prontuário"
+            android:theme="@style/Theme.Psipro" />
         
         <activity
             android:name=".NoteEditActivity"
             android:exported="false"
-            android:label="Editar Anotação" />
+            android:label="Editar Anotação"
+            android:theme="@style/Theme.Psipro" />
         
         <activity
             android:name=".AnamneseActivity"
             android:exported="false"
-            android:label="Anamnese" />
+            android:label="Anamnese"
+            android:theme="@style/Theme.Psipro" />
         
 
         
@@ -158,7 +189,8 @@
         <activity
             android:name=".FinanceiroPacienteActivity"
             android:exported="false"
-            android:label="Financeiro do Paciente" />
+            android:label="Financeiro do Paciente"
+            android:theme="@style/Theme.Psipro" />
         
         <activity
             android:name=".ui.screens.AnotacoesSessaoActivity"
@@ -170,6 +202,23 @@
             android:name=".ui.screens.NovaSessaoActivity"
             android:exported="false"
             android:label="Nova Sessão"
+            android:theme="@style/Theme.Psipro" />
+        
+        <activity
+            android:name=".ui.screens.ArquivosActivity"
+            android:exported="false"
+            android:label="Arquivos"
+            android:theme="@style/Theme.Psipro" />
+        <activity
+            android:name=".ui.screens.WhatsAppDialogActivity"
+            android:exported="false"
+            android:label="WhatsApp"
+            android:theme="@style/Theme.Psipro" />
+            
+        <activity
+            android:name=".ui.screens.WhatsAppHistoryActivity"
+            android:exported="false"
+            android:label="Histórico WhatsApp"
             android:theme="@style/Theme.Psipro" />
         
     </application>
