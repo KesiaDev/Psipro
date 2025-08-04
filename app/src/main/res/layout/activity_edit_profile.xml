@@ -215,11 +215,7 @@
                 style="@style/LoginInputEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text"
-                android:focusable="false"
-                android:clickable="true"
-                android:drawableEnd="@drawable/ic_location_on"
-                android:drawableTint="?attr/colorPrimary"/>
+                android:inputType="textPostalAddress"/>
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Seção: Contato -->

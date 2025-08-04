@@ -34,11 +34,7 @@ import android.graphics.Bitmap
 import java.io.File
 import androidx.core.content.ContextCompat
 import android.graphics.Color
-import com.google.android.libraries.places.api.Places
-import com.google.android.libraries.places.api.model.Place
-import com.google.android.libraries.places.widget.Autocomplete
-import com.google.android.libraries.places.widget.AutocompleteActivity
-import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
+
 import android.text.Editable
 import android.text.TextWatcher
 import android.app.TimePickerDialog
@@ -149,11 +145,6 @@ class EditProfileActivity : AppCompatActivity() {
     }
     
     private fun initializeActivity() {
-        // Inicializa o Places API
-        if (!Places.isInitialized()) {
-            Places.initialize(applicationContext, "YOUR_API_KEY") // Substitua YOUR_API_KEY pela sua chave da API do Google
-        }
-        
         // Garante barras escuras no modo dark
         val backgroundColor = ContextCompat.getColor(this, R.color.background_black)
         window.statusBarColor = backgroundColor
@@ -165,9 +156,11 @@ class EditProfileActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         val nome = prefs.getString("profile_name", null)
         val crp = prefs.getString("profile_crp", null)
+        val endereco = prefs.getString("profile_address", null)
         val fotoPath = prefs.getString("profile_photo_path", null)
         if (!nome.isNullOrEmpty()) binding.editTextName.setText(nome)
         if (!crp.isNullOrEmpty()) binding.editTextCRP.setText(crp)
+        if (!endereco.isNullOrEmpty()) binding.editTextAddress.setText(endereco)
         if (!fotoPath.isNullOrEmpty()) {
             val file = File(fotoPath)
             if (file.exists()) {
@@ -178,7 +171,6 @@ class EditProfileActivity : AppCompatActivity() {
 
         setupPhotoPicker()
         setupMultiSelectFields()
-        setupAddressField()
         setupWhatsAppField()
         setupCRPField()
         
@@ -288,24 +280,7 @@ class EditProfileActivity : AppCompatActivity() {
         binding.editTextSpecialties.setAdapter(null)
     }
 
-    private fun setupAddressField() {
-        binding.editTextAddress.setOnClickListener {
-            // Abre o Google Maps
-            val gmmIntentUri = Uri.parse("geo:0,0?q=")
-            val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
-            mapIntent.setPackage("com.google.android.apps.maps")
-            
-            if (mapIntent.resolveActivity(packageManager) != null) {
-                startActivity(mapIntent)
-                Toast.makeText(this, "Selecione o local no Maps e copie o endereço", Toast.LENGTH_LONG).show()
-            } else {
-                // Se o Google Maps não estiver instalado, abre no navegador
-                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/maps"))
-                startActivity(browserIntent)
-                Toast.makeText(this, "Selecione o local no Maps e copie o endereço", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
+
 
     private fun setupWhatsAppField() {
         binding.editTextWhatsapp.addTextChangedListener(object : TextWatcher {

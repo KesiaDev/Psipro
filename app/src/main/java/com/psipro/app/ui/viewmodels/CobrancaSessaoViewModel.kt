@@ -97,6 +97,21 @@ class CobrancaSessaoViewModel @Inject constructor(
         }
     }
 
+    fun desmarcarCobrancaComoPago(cobrancaId: Long) {
+        viewModelScope.launch {
+            try {
+                cobrancaRepository.desmarcarComoPago(cobrancaId)
+                // Recarregar dados
+                val currentCobrancas = _cobrancas.value
+                if (currentCobrancas.isNotEmpty()) {
+                    carregarCobrancasPorPaciente(currentCobrancas.first().patientId)
+                }
+            } catch (e: Exception) {
+                _error.value = "Erro ao desmarcar como pago: ${e.message}"
+            }
+        }
+    }
+
     fun criarCobrancaAutomatica(
         patientId: Long,
         anotacaoSessaoId: Long,
@@ -162,10 +177,7 @@ class CobrancaSessaoViewModel @Inject constructor(
     private fun calcularResumoFinanceiro() {
         viewModelScope.launch {
             try {
-                val totalRecebido = cobrancaRepository.getTotalRecebido(
-                    Calendar.getInstance().apply { set(Calendar.DAY_OF_MONTH, 1) }.time,
-                    Date()
-                )
+                val totalRecebido = cobrancaRepository.getTotalRecebidoGeral()
                 val totalAReceber = cobrancaRepository.getTotalAReceber()
                 val countPendentes = cobrancaRepository.getCountPendentes()
                 val countVencidas = cobrancaRepository.getCountByStatus(StatusPagamento.VENCIDO)

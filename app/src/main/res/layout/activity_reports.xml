@@ -65,7 +65,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="Gere relatórios de consultas por período, incluindo estatísticas e detalhes"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp" />
 
                     <com.google.android.material.button.MaterialButton
@@ -75,7 +75,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:text="Gerar Relatório"
-                        android:textColor="@color/black"
+                        android:textColor="?attr/colorOnPrimary"
                         android:backgroundTint="@color/bronze_gold"
                         android:textStyle="bold" />
 
@@ -109,7 +109,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="Gere um relatório completo com todas as informações do paciente"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp" />
 
                     <com.google.android.material.button.MaterialButton
@@ -119,7 +119,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:text="Gerar Relatório"
-                        android:textColor="@color/black"
+                        android:textColor="?attr/colorOnPrimary"
                         android:backgroundTint="@color/bronze_gold"
                         android:textStyle="bold" />
 
@@ -152,7 +152,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="Visualize o histórico completo de consultas do paciente"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp" />
 
                     <com.google.android.material.button.MaterialButton
@@ -162,7 +162,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:text="Gerar Histórico"
-                        android:textColor="@color/black"
+                        android:textColor="?attr/colorOnPrimary"
                         android:backgroundTint="@color/bronze_gold"
                         android:textStyle="bold" />
 

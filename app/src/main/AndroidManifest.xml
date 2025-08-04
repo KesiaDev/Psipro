@@ -84,6 +84,16 @@
 
         <activity
             android:name=".ui.AppointmentScheduleActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Psipro" />
+
+        <activity
+            android:name=".ui.NotificationsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Psipro" />
+
+        <receiver
+            android:name=".notification.AgendamentoNotificationReceiver"
             android:exported="false" />
 
         <activity

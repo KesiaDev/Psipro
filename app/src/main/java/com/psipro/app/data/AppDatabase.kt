@@ -18,6 +18,7 @@ import com.psipro.app.data.dao.AuditLogDao
 import com.psipro.app.data.dao.WhatsAppConversationDao
 import com.psipro.app.data.dao.DocumentoDao
 import com.psipro.app.data.dao.ArquivoDao
+import com.psipro.app.data.dao.NotificationDao
 import com.psipro.app.data.entities.Appointment
 import com.psipro.app.data.entities.Patient
 import com.psipro.app.data.entities.User
@@ -42,6 +43,7 @@ import com.psipro.app.data.entities.CobrancaAgendamento
 import com.psipro.app.data.entities.Autoavaliacao
 import com.psipro.app.data.entities.Documento
 import com.psipro.app.data.entities.Arquivo
+import com.psipro.app.data.entities.Notification
 import com.psipro.app.data.dao.AnamneseModelDao
 import com.psipro.app.data.dao.AnamneseCampoDao
 import com.psipro.app.data.dao.AnamnesePreenchidaDao
@@ -61,8 +63,8 @@ import kotlinx.coroutines.launch
 import androidx.room.migration.Migration
 
 @Database(
-    entities = [User::class, Patient::class, Appointment::class, PatientNote::class, PatientMessage::class, PatientReport::class, FinancialRecord::class, Prontuario::class, AuditLog::class, WhatsAppConversation::class, AnamneseModel::class, AnamneseCampo::class, AnamnesePreenchida::class, HistoricoFamiliar::class, HistoricoMedico::class, VidaEmocional::class, ObservacoesClinicas::class, AnotacaoSessao::class, CobrancaSessao::class, TipoSessao::class, CobrancaAgendamento::class, Autoavaliacao::class, Documento::class, Arquivo::class],
-    version = 23,
+    entities = [User::class, Patient::class, Appointment::class, PatientNote::class, PatientMessage::class, PatientReport::class, FinancialRecord::class, Prontuario::class, AuditLog::class, WhatsAppConversation::class, AnamneseModel::class, AnamneseCampo::class, AnamnesePreenchida::class, HistoricoFamiliar::class, HistoricoMedico::class, VidaEmocional::class, ObservacoesClinicas::class, AnotacaoSessao::class, CobrancaSessao::class, TipoSessao::class, CobrancaAgendamento::class, Autoavaliacao::class, Documento::class, Arquivo::class, Notification::class],
+    version = 24,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class, com.psipro.app.data.converters.AnamneseGroupConverter::class, com.psipro.app.data.converters.TipoDocumentoConverter::class, com.psipro.app.data.converters.CategoriaArquivoConverter::class, com.psipro.app.data.converters.TipoArquivoConverter::class)
@@ -91,6 +93,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun autoavaliacaoDao(): AutoavaliacaoDao
     abstract fun documentoDao(): DocumentoDao
     abstract fun arquivoDao(): ArquivoDao
+    abstract fun notificationDao(): NotificationDao
 
     companion object {
         @Volatile

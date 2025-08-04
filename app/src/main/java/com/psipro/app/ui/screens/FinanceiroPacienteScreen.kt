@@ -267,6 +267,25 @@ fun FinanceiroPacienteScreen(
                                         ) {
                                             Text("Marcar Pago", color = Color.White)
                                         }
+                                    } else if (cobranca.status == StatusPagamento.PAGO) {
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Button(
+                                                onClick = { viewModel.desmarcarCobrancaComoPago(cobranca.id) },
+                                                modifier = Modifier.padding(top = 4.dp),
+                                                colors = ButtonDefaults.buttonColors(containerColor = StatusColors.Warning)
+                                            ) {
+                                                Text("Desmarcar", color = Color.White)
+                                            }
+                                            Button(
+                                                onClick = { /* TODO: Abrir dialog de edição */ },
+                                                modifier = Modifier.padding(top = 4.dp),
+                                                colors = ButtonDefaults.buttonColors(containerColor = StatusColors.Info)
+                                            ) {
+                                                Text("Editar", color = Color.White)
+                                            }
+                                        }
                                     }
                                 }
                             }

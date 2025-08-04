@@ -31,6 +31,9 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import android.util.Log
+import android.content.Context
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
     private lateinit var binding: ActivityMainBinding
@@ -81,7 +84,7 @@ class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
             try {
                 // Configuração do Google Sign-In
                 val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken("231873451192-fm53eeeogu68ktn6rroh25v8l45h196r.apps.googleusercontent.com")
+                    .requestIdToken("231873451192-ai0rpmu8iumkk4lo9sbcbg0b4tvbtald.apps.googleusercontent.com")
                     .requestEmail()
                     .build()
                 googleSignInClient = GoogleSignIn.getClient(this@MainActivity, gso)
@@ -166,9 +169,35 @@ class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
         }
 
         googleButton.setOnClickListener {
-            googleSignInClient.signOut().addOnCompleteListener {
-                val signInIntent = googleSignInClient.signInIntent
-                startActivityForResult(signInIntent, RC_SIGN_IN)
+            try {
+                Log.d("GoogleSignIn", "Iniciando processo de login Google")
+                
+                // Verificar conectividade
+                val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+                val networkInfo = connectivityManager.activeNetworkInfo
+                if (networkInfo == null || !networkInfo.isConnected) {
+                    Toast.makeText(this, "Sem conexão com a internet", Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
+                
+                // Limpar cache do Google Sign-In
+                googleSignInClient.signOut().addOnCompleteListener {
+                    Log.d("GoogleSignIn", "Sign out completado")
+                    
+                    // Tentar login direto
+                    val signInIntent = googleSignInClient.signInIntent
+                    Log.d("GoogleSignIn", "Intent criado: ${signInIntent.action}")
+                    
+                    try {
+                        startActivityForResult(signInIntent, RC_SIGN_IN)
+                    } catch (e: Exception) {
+                        Log.e("GoogleSignIn", "Erro ao iniciar activity", e)
+                        Toast.makeText(this, "Erro ao abrir login Google: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("GoogleSignIn", "Erro ao iniciar login Google", e)
+                Toast.makeText(this, "Erro ao iniciar login: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
 
@@ -195,13 +224,18 @@ class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
 
     private fun handleSignInResult(completedTask: Task<GoogleSignInAccount>) {
         try {
+            Log.d("GoogleSignIn", "Iniciando handleSignInResult")
             val account = completedTask.getResult(ApiException::class.java)
+            Log.d("GoogleSignIn", "Conta obtida: ${account.email}")
             
             // Autenticar com Firebase usando o token do Google
             val credential = com.google.firebase.auth.GoogleAuthProvider.getCredential(account.idToken, null)
+            Log.d("GoogleSignIn", "Credential criada, autenticando com Firebase")
+            
             FirebaseAuth.getInstance().signInWithCredential(credential)
                 .addOnCompleteListener(this) { task ->
                     if (task.isSuccessful) {
+                        Log.d("GoogleSignIn", "Login Firebase bem-sucedido")
                         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
                         val hasName = prefs.contains("profile_name")
                         val hasPhoto = prefs.contains("profile_photo_path")
@@ -215,12 +249,48 @@ class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
                         Toast.makeText(this, "Bem-vindo(a), ${account.displayName}", Toast.LENGTH_SHORT).show()
                         startDashboard()
                     } else {
+                        Log.e("GoogleSignIn", "Erro no Firebase: ${task.exception?.message}")
                         Toast.makeText(this, "Erro na autenticação: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
         } catch (e: ApiException) {
-            Toast.makeText(this, "Erro ao fazer login com Google: ${e.statusCode}", Toast.LENGTH_SHORT).show()
+            Log.e("GoogleSignIn", "Erro ApiException: ${e.statusCode} - ${e.message}")
+            when (e.statusCode) {
+                10 -> {
+                    Log.e("GoogleSignIn", "Erro 10 detectado - Problema de configuração")
+                    // Tentar solução alternativa
+                    showError10Solution()
+                }
+                12501 -> Toast.makeText(this, "Login cancelado pelo usuário", Toast.LENGTH_SHORT).show()
+                else -> Toast.makeText(this, "Erro ao fazer login com Google: ${e.statusCode} - ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        } catch (e: Exception) {
+            Log.e("GoogleSignIn", "Erro geral: ${e.message}")
+            Toast.makeText(this, "Erro inesperado: ${e.message}", Toast.LENGTH_LONG).show()
         }
+    }
+    
+    private fun showError10Solution() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Erro de Configuração Google")
+            .setMessage("O erro 10 indica um problema de configuração. Tente:\n\n" +
+                    "1. Limpar cache do Google Play Services\n" +
+                    "2. Verificar conexão com internet\n" +
+                    "3. Tentar em outro dispositivo\n\n" +
+                    "Deseja tentar login com e-mail/senha?")
+            .setPositiveButton("Sim, usar e-mail") { _, _ ->
+                // Focar no campo de e-mail
+                binding.emailEditText.requestFocus()
+            }
+            .setNegativeButton("Tentar novamente") { _, _ ->
+                // Tentar login Google novamente
+                googleSignInClient.signOut().addOnCompleteListener {
+                    val signInIntent = googleSignInClient.signInIntent
+                    startActivityForResult(signInIntent, RC_SIGN_IN)
+                }
+            }
+            .setNeutralButton("Cancelar", null)
+            .show()
     }
 
     private fun startDashboard() {

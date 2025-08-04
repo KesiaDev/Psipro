@@ -4,6 +4,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.platform.LocalContext
+import android.content.res.Configuration
 import android.util.Log
 
 // Cores de status que funcionam bem em ambos os temas
@@ -54,13 +56,24 @@ fun PsiproTheme(
     useDarkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    // Log detalhado para debug
-    Log.d("PsiproTheme", "=== TEMA DEBUG ===")
-    Log.d("PsiproTheme", "useDarkTheme parameter: $useDarkTheme")
-    Log.d("PsiproTheme", "isSystemInDarkTheme(): ${isSystemInDarkTheme()}")
-    Log.d("PsiproTheme", "Selected theme: ${if (useDarkTheme) "DARK" else "LIGHT"}")
+    // Detectar modo escuro do sistema
+    val isDarkTheme = isSystemInDarkTheme()
+    val context = LocalContext.current
+    val configuration = context.resources.configuration
+    val uiMode = configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+    val isNightMode = uiMode == Configuration.UI_MODE_NIGHT_YES
     
-    val selectedColors = if (useDarkTheme) DarkColors else LightColors
+    // Usar o modo do sistema ou o parâmetro fornecido
+    val finalDarkMode = isDarkTheme || isNightMode || useDarkTheme
+    
+    Log.d("PsiproTheme", "=== TEMA DEBUG ===")
+    Log.d("PsiproTheme", "isSystemInDarkTheme: $isDarkTheme")
+    Log.d("PsiproTheme", "isNightMode: $isNightMode")
+    Log.d("PsiproTheme", "useDarkTheme: $useDarkTheme")
+    Log.d("PsiproTheme", "finalDarkMode: $finalDarkMode")
+    Log.d("PsiproTheme", "Selected theme: ${if (finalDarkMode) "DARK" else "LIGHT"}")
+    
+    val selectedColors = if (finalDarkMode) DarkColors else LightColors
     
     // Log detalhado das cores selecionadas
     Log.d("PsiproTheme", "=== CORES SELECIONADAS ===")

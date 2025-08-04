@@ -26,8 +26,8 @@ interface CobrancaSessaoDao {
     @Query("SELECT COUNT(*) FROM cobrancas_sessao WHERE status = :status")
     suspend fun getCountByStatus(status: StatusPagamento): Int
 
-    @Query("SELECT SUM(valor) FROM cobrancas_sessao WHERE status = 'PAGO' AND dataPagamento BETWEEN :dataInicio AND :dataFim")
-    suspend fun getTotalRecebido(dataInicio: Date, dataFim: Date): Double?
+    @Query("SELECT SUM(valor) FROM cobrancas_sessao WHERE status = 'PAGO'")
+    suspend fun getTotalRecebidoGeral(): Double?
 
     @Query("SELECT SUM(valor) FROM cobrancas_sessao WHERE status IN ('A_RECEBER', 'VENCIDO')")
     suspend fun getTotalAReceber(): Double?
@@ -46,6 +46,12 @@ interface CobrancaSessaoDao {
 
     @Query("UPDATE cobrancas_sessao SET status = :status, dataPagamento = :dataPagamento WHERE id = :cobrancaId")
     suspend fun marcarComoPago(cobrancaId: Long, status: StatusPagamento, dataPagamento: Date?)
+
+    @Query("UPDATE cobrancas_sessao SET status = :status, dataPagamento = null WHERE id = :cobrancaId")
+    suspend fun desmarcarComoPago(cobrancaId: Long, status: StatusPagamento)
+
+    @Query("UPDATE cobrancas_sessao SET valor = :valor, observacoes = :observacoes WHERE id = :cobrancaId")
+    suspend fun editarCobranca(cobrancaId: Long, valor: Double, observacoes: String)
 
     @Query("DELETE FROM cobrancas_sessao WHERE anotacaoSessaoId = :anotacaoSessaoId")
     suspend fun deleteByAnotacaoSessaoId(anotacaoSessaoId: Long)

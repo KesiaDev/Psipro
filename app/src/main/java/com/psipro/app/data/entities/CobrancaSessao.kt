@@ -44,6 +44,16 @@ data class CobrancaSessao(
     val tipoSessaoId: Long? = null,
     val createdAt: Date = Date(),
     val updatedAt: Date = Date()
+)
+
+// Classe para relatórios com nome do paciente
+data class PagamentoComPaciente(
+    val id: Long,
+    val patientId: Long,
+    val valor: Double,
+    val dataPagamento: Date?,
+    val status: StatusPagamento,
+    val patientName: String
 ) 
 
 

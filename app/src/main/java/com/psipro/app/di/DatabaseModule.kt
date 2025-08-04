@@ -16,6 +16,7 @@ import com.psipro.app.data.dao.FinancialRecordDao
 import com.psipro.app.data.dao.CobrancaAgendamentoDao
 import com.psipro.app.data.dao.DocumentoDao
 import com.psipro.app.data.dao.ArquivoDao
+import com.psipro.app.data.dao.NotificationDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -131,6 +132,10 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideArquivoDao(db: AppDatabase): ArquivoDao = db.arquivoDao()
+    
+    @Provides
+    @Singleton
+    fun provideNotificationDao(db: AppDatabase): NotificationDao = db.notificationDao()
 } 
 
 

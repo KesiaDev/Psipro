@@ -37,7 +37,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Total recebido: R$ 0,00\nA receber: R$ 0,00\nSessões: 0"
-            android:textColor="@color/white"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="16sp"
             android:gravity="center"
             android:layout_marginBottom="16dp"/>
@@ -49,7 +49,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Exportar resultados"
-            android:textColor="@color/black"
+            android:textColor="?attr/colorOnPrimary"
             android:backgroundTint="@color/bronze_gold"
             android:textStyle="bold"
             android:layout_marginBottom="8dp"/>
@@ -60,7 +60,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Relatório para IR"
-            android:textColor="@color/black"
+            android:textColor="?attr/colorOnPrimary"
             android:backgroundTint="@color/bronze_gold"
             android:textStyle="bold"
             android:layout_marginBottom="8dp"/>
@@ -71,7 +71,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Relatório de Sessões"
-            android:textColor="@color/black"
+            android:textColor="?attr/colorOnPrimary"
             android:backgroundTint="@color/bronze_gold"
             android:textStyle="bold"
             android:layout_marginBottom="16dp"/>

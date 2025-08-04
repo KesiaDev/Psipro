@@ -214,17 +214,34 @@ fun WeeklyAgendaScreen(
             }
         }
 
-        Box(
+        // Estrutura com cabeçalho fixo e conteúdo rolável
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .verticalScroll(rememberScrollState())
         ) {
-            when (viewMode) {
-                "Mês" -> MonthView(appointments, currentMonth, onAppointmentClicked)
-                "Semana" -> WeekView(weekStart, hours, appointments, today, onTimeSlotClicked, onAppointmentClicked)
-                "4 dias" -> FourDayView(focusedDate, hours, appointments, today, onTimeSlotClicked, onAppointmentClicked)
-                "Dia" -> DayView(focusedDate, hours, appointments, today, onTimeSlotClicked, onAppointmentClicked)
+            // Cabeçalho fixo dos dias da semana (apenas para visualizações de múltiplos dias)
+            if (viewMode in listOf("Semana", "4 dias")) {
+                WeekHeader(startDate = when (viewMode) {
+                    "Semana" -> weekStart
+                    "4 dias" -> focusedDate
+                    else -> focusedDate
+                })
+            }
+            
+            // Conteúdo rolável
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                when (viewMode) {
+                    "Mês" -> MonthView(appointments, currentMonth, onAppointmentClicked)
+                    "Semana" -> WeekViewContent(weekStart, hours, appointments, today, onTimeSlotClicked, onAppointmentClicked)
+                    "4 dias" -> FourDayViewContent(focusedDate, hours, appointments, today, onTimeSlotClicked, onAppointmentClicked)
+                    "Dia" -> DayView(focusedDate, hours, appointments, today, onTimeSlotClicked, onAppointmentClicked)
+                }
             }
         }
 
@@ -330,7 +347,7 @@ fun FourDayView(
     onTimeSlotClick: (LocalDate, Int) -> Unit,
     onAppointmentClick: (Appointment) -> Unit
 ) {
-    AgendaView(
+    AgendaViewContent(
         numDays = 4,
         startDate = startDate,
         hours = hours,
@@ -342,7 +359,52 @@ fun FourDayView(
 }
 
 @Composable
-fun WeekView(
+fun WeekHeader(startDate: LocalDate) {
+    val days = remember(startDate) { 
+        (0 until 7).map { startDate.plusDays(it.toLong()) } 
+    }
+    
+    // Detectar se está no modo escuro
+    val isDarkTheme = isSystemInDarkTheme()
+    
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp)
+            .background(
+                if (isDarkTheme) Color.Transparent else MaterialTheme.colorScheme.surface
+            )
+            .zIndex(1f)
+    ) {
+        // Espaço para alinhar com a coluna das horas
+        Spacer(modifier = Modifier.width(48.dp))
+        
+        // Cabeçalhos dos dias
+        days.forEach { date ->
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = daysOfWeek[date.dayOfWeek.value - 1],
+                    fontSize = dayFontSize,
+                    color = if (date == LocalDate.now()) MaterialTheme.colorScheme.primary else agendaColor,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 2.dp)
+                )
+                Text(
+                    text = date.dayOfMonth.toString(),
+                    fontSize = 10.sp,
+                    color = if (date == LocalDate.now()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun WeekViewContent(
     startDate: LocalDate,
     hours: List<Int>,
     appointments: List<Appointment>,
@@ -350,8 +412,28 @@ fun WeekView(
     onTimeSlotClick: (LocalDate, Int) -> Unit,
     onAppointmentClick: (Appointment) -> Unit
 ) {
-    AgendaView(
+    AgendaViewContent(
         numDays = 7,
+        startDate = startDate,
+        hours = hours,
+        appointments = appointments,
+        today = today,
+        onTimeSlotClick = onTimeSlotClick,
+        onAppointmentClick = onAppointmentClick
+    )
+}
+
+@Composable
+fun FourDayViewContent(
+    startDate: LocalDate,
+    hours: List<Int>,
+    appointments: List<Appointment>,
+    today: LocalDate,
+    onTimeSlotClick: (LocalDate, Int) -> Unit,
+    onAppointmentClick: (Appointment) -> Unit
+) {
+    AgendaViewContent(
+        numDays = 4,
         startDate = startDate,
         hours = hours,
         appointments = appointments,
@@ -449,7 +531,7 @@ private fun parseTime(time: String): LocalTime {
 }
 
 @Composable
-private fun AgendaView(
+private fun AgendaViewContent(
     numDays: Int,
     startDate: LocalDate,
     hours: List<Int>,
@@ -473,119 +555,46 @@ private fun AgendaView(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        // Cabeçalho fixo dos dias da semana
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp)
-                .background(MaterialTheme.colorScheme.surface)
-                .zIndex(1f)
-        ) {
-            // Espaço para alinhar com a coluna das horas
-            Spacer(modifier = Modifier.width(48.dp))
-            
-            // Cabeçalhos dos dias
-            days.forEach { date ->
-                Column(
-                    modifier = Modifier.weight(1f),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = daysOfWeek[date.dayOfWeek.value - 1],
-                        fontSize = dayFontSize,
-                        color = if (date == today) MaterialTheme.colorScheme.primary else agendaColor,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 8.dp, bottom = 2.dp)
-                    )
-                    Text(
-                        text = date.dayOfMonth.toString(),
-                        fontSize = 10.sp,
-                        color = if (date == today) MaterialTheme.colorScheme.primary else agendaColor,
-                        fontWeight = FontWeight.Normal,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
-            }
-        }
-
-        // Conteúdo rolável da agenda
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp)
-        ) {
-            // Coluna das Horas
-            Column {
-                // Espaço para alinhar com o cabeçalho dos dias
-                Spacer(modifier = Modifier.height(60.dp))
-                hours.forEach { hour ->
-                    Text(
-                        "%02d:00".format(hour),
-                        color = agendaColor,
-                        fontSize = 10.sp,
-                        modifier = Modifier
-                            .height(hourBoxHeight)
-                            .width(48.dp)
-                            .padding(end = 4.dp),
-                        textAlign = TextAlign.End
-                    )
-                }
-            }
-
-            // Colunas dos dias
-            days.forEach { date ->
-                Column(
-                    modifier = Modifier.weight(1f),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Corpo do Dia
+        // Conteúdo da agenda sem o cabeçalho dos dias
+        hours.forEach { hour ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(hourBoxHeight)
+                    .border(thinLine, thinLineColor),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Coluna das horas
+                Text(
+                    "%02d:00".format(hour),
+                    color = agendaColor,
+                    fontSize = 10.sp,
+                    modifier = Modifier
+                        .width(48.dp)
+                        .padding(end = 2.dp),
+                    textAlign = TextAlign.End
+                )
+                
+                // Colunas dos dias
+                days.forEach { date ->
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height((hours.size * hourBoxHeight.value).dp)
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clickable { onTimeSlotClick(date, hour) }
                     ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            hours.forEachIndexed { index, hour ->
-                                Column {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(hourBoxHeight)
-                                            .clickable { onTimeSlotClick(date, hour) }
-                                    )
-                                    
-                                    // Adicionar linha divisória horizontal após cada horário (exceto o último)
-                                    if (index < hours.size - 1) {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(1.dp)
-                                                .background(thinLineColor.copy(alpha = 0.5f))
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        // Otimizar: usar appointments pré-calculados
-                        val appointmentsOnThisDay = remember(date, appointmentsByDate) {
-                            appointmentsByDate[date]?.sortedBy { parseTime(it.startTime) } ?: emptyList()
-                        }
-
-                        val appointmentLayouts = remember(appointmentsOnThisDay) {
-                            if (appointmentsOnThisDay.isEmpty()) emptyList() else calculateAppointmentLayout(appointmentsOnThisDay)
-                        }
-
-                        appointmentLayouts.forEach { layoutInfo ->
-                            Box(modifier = Modifier.fillMaxWidth(layoutInfo.width).offset(x = (100 * layoutInfo.xOffset).dp * layoutInfo.width)) {
-                                AppointmentCard(
-                                    appointment = layoutInfo.appointment,
-                                    firstHour = firstHour,
-                                    modifier = Modifier.clickable { onAppointmentClick(layoutInfo.appointment) }
-                                )
-                            }
+                        // Mostrar appointments para este horário e dia
+                        appointmentsByDate[date]?.filter { appointment ->
+                            val appointmentHour = parseTime(appointment.startTime).hour
+                            appointmentHour == hour
+                        }?.forEach { appointment ->
+                            AppointmentCard(
+                                appointment = appointment,
+                                firstHour = firstHour,
+                                modifier = Modifier.zIndex(1f),
+                                widthFraction = 1f / numDays,
+                                horizontalOffset = days.indexOf(date).toFloat()
+                            )
                         }
                     }
                 }

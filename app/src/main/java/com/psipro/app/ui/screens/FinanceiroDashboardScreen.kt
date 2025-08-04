@@ -197,6 +197,16 @@ fun FinanceiroDashboardScreen(
         viewModel.carregarDadosFinanceiros()
     }
     
+    // Recarregar dados quando a tela voltar ao foco
+    LaunchedEffect(key1 = Unit) {
+        viewModel.carregarDadosFinanceiros()
+    }
+    
+    // Adicionar um botão de refresh para atualizar manualmente
+    val onRefresh = {
+        viewModel.forcarRecarregamento()
+    }
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -236,7 +246,18 @@ fun FinanceiroDashboardScreen(
                     color = Color.White
                 )
                 
-                Spacer(modifier = Modifier.width(48.dp))
+                IconButton(
+                    onClick = onRefresh,
+                    modifier = Modifier
+                        .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                        .size(40.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Refresh,
+                        contentDescription = "Atualizar",
+                        tint = Color.White
+                    )
+                }
             }
         }
         

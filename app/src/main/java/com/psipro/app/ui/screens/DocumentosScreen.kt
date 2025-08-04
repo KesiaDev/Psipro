@@ -58,11 +58,11 @@ fun DocumentosScreen(
     
     // Cores dinâmicas baseadas no tema
     val isDarkTheme = MaterialTheme.colorScheme.surface == Color(0xFF1E1E1E)
-    val primaryColor = if (isDarkTheme) Color(0xFF9E742C) else Color(0xFFCD7F32)
-    val surfaceColor = if (isDarkTheme) Color(0xFF1E1E1E) else Color(0xFFFFFFFF)
-    val surfaceVariantColor = if (isDarkTheme) Color(0xFF2D2D2D) else Color(0xFFF5F5F5)
-    val onSurfaceColor = if (isDarkTheme) Color.White else Color(0xFF212121)
-    val onSurfaceVariantColor = if (isDarkTheme) Color.White.copy(alpha = 0.7f) else Color(0xFF6C757D)
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val surfaceVariantColor = MaterialTheme.colorScheme.surfaceVariant
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+    val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
 
     val context = LocalContext.current
 
@@ -334,7 +334,7 @@ fun DocumentosScreen(
                             documentoParaExcluir = null
                         }
                     ) {
-                        Text("Excluir", color = Color(0xFFD32F2F))
+                        Text("Excluir", color = MaterialTheme.colorScheme.error)
                     }
                 },
                 dismissButton = {
@@ -361,7 +361,7 @@ fun DocumentosScreen(
                         Text("OK", color = primaryColor)
                     }
                 },
-                containerColor = if (isDarkTheme) Color(0xFF2D2D2D) else Color(0xFFF5F5F5)
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
             ) {
                 Text(errorMessage, color = onSurfaceColor)
             }
@@ -490,7 +490,7 @@ fun DocumentoCard(
                         Icon(
                             Icons.Default.Delete, 
                             contentDescription = "Excluir",
-                            tint = Color(0xFFD32F2F)
+                            tint = MaterialTheme.colorScheme.error
                         )
                     }
                 }
@@ -504,7 +504,7 @@ fun DocumentoCard(
                 Icon(
                     if (documento.assinaturaPaciente.isNotEmpty()) Icons.Default.CheckCircle else Icons.Default.Schedule,
                     contentDescription = null,
-                    tint = if (documento.assinaturaPaciente.isNotEmpty()) Color(0xFF388E3C) else Color.Gray,
+                    tint = if (documento.assinaturaPaciente.isNotEmpty()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
@@ -519,7 +519,7 @@ fun DocumentoCard(
                 Icon(
                     if (documento.assinaturaProfissional.isNotEmpty()) Icons.Default.CheckCircle else Icons.Default.Schedule,
                     contentDescription = null,
-                    tint = if (documento.assinaturaProfissional.isNotEmpty()) Color(0xFF388E3C) else Color.Gray,
+                    tint = if (documento.assinaturaProfissional.isNotEmpty()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))

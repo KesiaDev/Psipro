@@ -213,7 +213,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:text="@string/enable_reminder" />
+            android:text="@string/enable_reminder"
+            android:visibility="gone" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/reminderMinutesLayout"
@@ -221,7 +222,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:hint="@string/reminder_minutes">
+            android:hint="@string/reminder_minutes"
+            android:visibility="gone">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/reminderMinutesInput"
@@ -235,11 +237,67 @@
             android:id="@+id/statusPresencaText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Status: Não respondido"
+            android:text="Status: Confirmado"
             android:textColor="@color/bronze_gold"
             android:textStyle="bold"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="4dp"/>
+
+        <!-- Opções de Notificação - VISÍVEL ABAIXO DO STATUS -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⏰ Aviso de Notificação"
+            android:textColor="@color/bronze_gold"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@drawable/rounded_background"
+            android:padding="12dp">
+
+            <CheckBox
+                android:id="@+id/notification15min"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="15 min"
+                android:textColor="?attr/colorOnSurface"
+                android:checked="true"/>
+
+            <CheckBox
+                android:id="@+id/notification30min"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="30 min"
+                android:textColor="?attr/colorOnSurface"
+                android:checked="true"/>
+
+            <CheckBox
+                android:id="@+id/notification45min"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="45 min"
+                android:textColor="?attr/colorOnSurface"
+                android:checked="false"/>
+
+        </LinearLayout>
+
+        <!-- Botão de Teste de Notificação -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/testNotificationButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🧪 Testar Notificação"
+            android:layout_marginTop="8dp"
+            app:backgroundTint="@color/bronze_gold"
+            android:textColor="?attr/colorOnPrimary"/>
 
         <!-- Card para seleção de cor -->
         <androidx.cardview.widget.CardView
@@ -279,7 +337,7 @@
             android:id="@+id/dataConfirmacaoText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="12sp"
             android:layout_marginBottom="8dp"/>
 
@@ -296,7 +354,7 @@
                 android:layout_weight="1"
                 android:text="Confirmar presença"
                 app:backgroundTint="@color/bronze_gold"
-                android:textColor="@color/white"
+                android:textColor="?attr/colorOnPrimary"
                 android:layout_marginEnd="8dp"/>
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/faltouButton"
@@ -305,7 +363,7 @@
                 android:layout_weight="1"
                 android:text="Faltou"
                 app:backgroundTint="@android:color/holo_red_dark"
-                android:textColor="@color/white"/>
+                android:textColor="?attr/colorOnPrimary"/>
         </LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -328,7 +386,7 @@
             android:layout_height="wrap_content"
             android:text="Salvar motivo"
             app:backgroundTint="@color/bronze_gold"
-            android:textColor="@color/white"
+            android:textColor="?attr/colorOnPrimary"
             android:visibility="gone"
             android:layout_marginTop="4dp"/>
 
@@ -338,7 +396,7 @@
             android:layout_height="wrap_content"
             android:text="Confirmar via WhatsApp"
             app:backgroundTint="@color/bronze_gold"
-            android:textColor="@color/white"
+            android:textColor="?attr/colorOnPrimary"
             android:layout_marginTop="8dp"
             android:visibility="gone"/>
 
@@ -348,7 +406,7 @@
             android:layout_height="wrap_content"
             android:text="Finalizar sessão"
             app:backgroundTint="@color/bronze_gold"
-            android:textColor="@color/white"
+            android:textColor="?attr/colorOnPrimary"
             android:layout_marginTop="8dp"
             android:visibility="gone"/>
 
@@ -358,7 +416,7 @@
             android:layout_height="wrap_content"
             android:text="Salvar"
             app:backgroundTint="@color/bronze_gold"
-            android:textColor="@color/white"
+            android:textColor="?attr/colorOnPrimary"
             android:layout_marginTop="12dp"/>
 
     </LinearLayout>

@@ -6,6 +6,7 @@ import com.psipro.app.data.entities.StatusPagamento
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
 import javax.inject.Inject
+import com.psipro.app.data.entities.PagamentoComPaciente
 
 class CobrancaSessaoRepository @Inject constructor(
     private val dao: CobrancaSessaoDao
@@ -22,7 +23,7 @@ class CobrancaSessaoRepository @Inject constructor(
     
     suspend fun getCountByStatus(status: StatusPagamento): Int = dao.getCountByStatus(status)
     
-    suspend fun getTotalRecebido(dataInicio: Date, dataFim: Date): Double = dao.getTotalRecebido(dataInicio, dataFim) ?: 0.0
+    suspend fun getTotalRecebidoGeral(): Double = dao.getTotalRecebidoGeral() ?: 0.0
     
     suspend fun getTotalAReceber(): Double = dao.getTotalAReceber() ?: 0.0
     
@@ -36,6 +37,12 @@ class CobrancaSessaoRepository @Inject constructor(
     
     suspend fun marcarComoPago(cobrancaId: Long, dataPagamento: Date = Date()) = 
         dao.marcarComoPago(cobrancaId, StatusPagamento.PAGO, dataPagamento)
+    
+    suspend fun desmarcarComoPago(cobrancaId: Long) = 
+        dao.desmarcarComoPago(cobrancaId, StatusPagamento.A_RECEBER)
+    
+    suspend fun editarCobranca(cobrancaId: Long, valor: Double, observacoes: String) = 
+        dao.editarCobranca(cobrancaId, valor, observacoes)
     
     suspend fun marcarComoVencido(cobrancaId: Long) = 
         dao.marcarComoPago(cobrancaId, StatusPagamento.VENCIDO, null)

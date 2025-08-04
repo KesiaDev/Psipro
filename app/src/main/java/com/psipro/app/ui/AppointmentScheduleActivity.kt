@@ -45,6 +45,9 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.psipro.app.utils.MessageTemplateManager
 import com.psipro.app.data.repository.FinancialRecordRepository
 import com.psipro.app.data.entities.FinancialRecord
+import com.psipro.app.notification.AgendamentoAlarmManager
+import com.psipro.app.notification.AgendamentoNotificationService
+import com.psipro.app.ui.viewmodels.NotificationViewModel
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -58,11 +61,18 @@ class AppointmentScheduleActivity : SecureActivity() {
     private var selectedDate = Calendar.getInstance()
     private var selectedPatient: Patient? = null
     @Inject lateinit var financialRecordRepository: FinancialRecordRepository
+    @Inject lateinit var agendamentoAlarmManager: AgendamentoAlarmManager
+    @Inject lateinit var agendamentoNotificationService: AgendamentoNotificationService
+    private lateinit var notificationViewModel: NotificationViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAppointmentScheduleBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        
+        // Inicializar o NotificationViewModel usando ViewModelProvider
+        notificationViewModel = ViewModelProvider(this)[NotificationViewModel::class.java]
+        
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
@@ -298,6 +308,11 @@ class AppointmentScheduleActivity : SecureActivity() {
             }
         }
 
+        // Botão de teste de notificação
+        dialogBinding.testNotificationButton.setOnClickListener {
+            testarNotificacao()
+        }
+
         MaterialAlertDialogBuilder(this)
             .setTitle(if (isEdit) R.string.edit_appointment else R.string.new_appointment)
             .setView(dialogBinding.root)
@@ -309,6 +324,14 @@ class AppointmentScheduleActivity : SecureActivity() {
                 val endTime = dialogBinding.endTimeInput.text.toString()
                 val reminderEnabled = dialogBinding.reminderSwitch.isChecked
                 val reminderMinutes = dialogBinding.reminderMinutesInput.text.toString().toIntOrNull() ?: 30
+
+                // Opções de notificação - NOVAS OPÇÕES VISÍVEIS
+                val notification15min = dialogBinding.notification15min.isChecked
+                val notification30min = dialogBinding.notification30min.isChecked
+                val notification45min = dialogBinding.notification45min.isChecked
+                
+                // Habilitar notificação se pelo menos uma opção estiver marcada
+                val hasNotifications = notification15min || notification30min || notification45min
 
                 // Recorrência
                 val recurrenceType = recurrenceTypeValues[dialogBinding.recurrenceTypeSpinner.selectedItemPosition]
@@ -417,6 +440,12 @@ class AppointmentScheduleActivity : SecureActivity() {
                         },
                         onSuccess = { id ->
                             Toast.makeText(this, R.string.appointment_created, Toast.LENGTH_SHORT).show()
+                            
+                            // Agendar notificações se habilitado
+                            if (hasNotifications) {
+                                agendarNotificacoes(newAppointment, notification15min, notification30min, notification45min)
+                            }
+                            
                             // --- INTEGRAR FINANCEIRO ---
                             lifecycleScope.launch {
                                 val valorSessao = selectedPatient?.sessionValue ?: 0.0
@@ -699,6 +728,121 @@ class AppointmentScheduleActivity : SecureActivity() {
         val sharedPrefs = getSharedPreferences("pending_messages", Context.MODE_PRIVATE)
         val key = "message_${appointment.id}_${System.currentTimeMillis()}"
         sharedPrefs.edit().putString(key, message).apply()
+    }
+
+    private fun agendarNotificacoes(appointment: Appointment, notification15min: Boolean, notification30min: Boolean, notification45min: Boolean) {
+        val alarmManager = agendamentoAlarmManager
+        val notificationService = agendamentoNotificationService
+
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = appointment.date.time
+        calendar.set(Calendar.HOUR_OF_DAY, appointment.startTime.substring(0, 2).toInt())
+        calendar.set(Calendar.MINUTE, appointment.startTime.substring(3, 5).toInt())
+        calendar.set(Calendar.SECOND, 0)
+
+        val appointmentTime = calendar.timeInMillis
+        var notificationsAgendadas = 0
+
+        // Agendar notificação de 15 minutos
+        if (notification15min) {
+            val reminderTime15 = appointmentTime - (15 * 60 * 1000)
+            if (reminderTime15 > System.currentTimeMillis()) {
+                agendamentoAlarmManager.agendarLembrete(
+                    titulo = appointment.title,
+                    paciente = appointment.patientName ?: "Paciente",
+                    dataHora = appointment.date,
+                    tipoEvento = "Consulta",
+                    minutosAntes = 15
+                )
+                
+                // Criar notificação no banco
+                notificationViewModel.createAppointmentReminder(
+                    title = "Lembrete de Consulta - 15 min",
+                    message = "Consulta com ${appointment.patientName ?: "Paciente"} em 15 minutos",
+                    appointmentId = appointment.id,
+                    patientId = appointment.patientId,
+                    scheduledFor = Date(reminderTime15)
+                )
+                
+                notificationsAgendadas++
+            }
+        }
+
+        // Agendar notificação de 30 minutos
+        if (notification30min) {
+            val reminderTime30 = appointmentTime - (30 * 60 * 1000)
+            if (reminderTime30 > System.currentTimeMillis()) {
+                agendamentoAlarmManager.agendarLembrete(
+                    titulo = appointment.title,
+                    paciente = appointment.patientName ?: "Paciente",
+                    dataHora = appointment.date,
+                    tipoEvento = "Consulta",
+                    minutosAntes = 30
+                )
+                
+                // Criar notificação no banco
+                notificationViewModel.createAppointmentReminder(
+                    title = "Lembrete de Consulta - 30 min",
+                    message = "Consulta com ${appointment.patientName ?: "Paciente"} em 30 minutos",
+                    appointmentId = appointment.id,
+                    patientId = appointment.patientId,
+                    scheduledFor = Date(reminderTime30)
+                )
+                
+                notificationsAgendadas++
+            }
+        }
+
+        // Agendar notificação de 45 minutos
+        if (notification45min) {
+            val reminderTime45 = appointmentTime - (45 * 60 * 1000)
+            if (reminderTime45 > System.currentTimeMillis()) {
+                agendamentoAlarmManager.agendarLembrete(
+                    titulo = appointment.title,
+                    paciente = appointment.patientName ?: "Paciente",
+                    dataHora = appointment.date,
+                    tipoEvento = "Consulta",
+                    minutosAntes = 45
+                )
+                
+                // Criar notificação no banco
+                notificationViewModel.createAppointmentReminder(
+                    title = "Lembrete de Consulta - 45 min",
+                    message = "Consulta com ${appointment.patientName ?: "Paciente"} em 45 minutos",
+                    appointmentId = appointment.id,
+                    patientId = appointment.patientId,
+                    scheduledFor = Date(reminderTime45)
+                )
+                
+                notificationsAgendadas++
+            }
+        }
+
+        if (notificationsAgendadas > 0) {
+            Toast.makeText(this, "$notificationsAgendadas notificação(ões) agendada(s) para ${dateFormat.format(appointment.date)} às ${appointment.startTime}", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Não foi possível agendar notificações para este horário", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun testarNotificacao() {
+        // Mostrar notificação imediata para teste
+        agendamentoNotificationService.mostrarNotificacaoAgendamento(
+            titulo = "Consulta de Teste",
+            paciente = selectedPatient?.name ?: "Paciente de Teste",
+            dataHora = Date(),
+            tipoEvento = "Consulta",
+            minutosAntes = 15
+        )
+        
+        // Criar notificação de teste no banco
+        notificationViewModel.createAppointmentReminder(
+            title = "Notificação de Teste",
+            message = "Esta é uma notificação de teste para verificar o sistema",
+            patientId = selectedPatient?.id
+        )
+
+        Toast.makeText(this, "Notificação de teste enviada! Verifique o painel de notificações.", Toast.LENGTH_LONG).show()
     }
 } 
 
