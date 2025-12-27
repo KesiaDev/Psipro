@@ -1,0 +1,233 @@
+@import "tailwindcss";
+
+/* ============================================
+   PsiPro Design System - Cores Oficiais
+   Extraídas do app Android
+   ============================================ */
+
+/* Modo Claro (Light Mode) */
+:root {
+  /* Cores Primárias - Bronze Gold (cor principal do app) */
+  --psipro-primary: #B08D57;
+  --psipro-primary-dark: #8C6B3F;
+  --psipro-primary-light: #E5D1B8;
+  
+  /* Cores Secundárias - Gold (também usado no app) */
+  --psipro-gold: #D4AF37;
+  --psipro-gold-dark: #B8860B;
+  --psipro-gold-light: #E6D7A3;
+  
+  /* Background e Surface - Modo Claro */
+  --psipro-background: #FFFFFF;
+  --psipro-surface: #F5F5F5;
+  --psipro-surface-elevated: #FFFFFF;
+  
+  /* Textos - Modo Claro */
+  --psipro-text-primary: #121212;
+  --psipro-text-secondary: #666666;
+  --psipro-text-muted: #999999;
+  
+  /* Cores de Estado */
+  --psipro-success: #4CAF50;
+  --psipro-error: #F44336;
+  --psipro-warning: #FF9800;
+  
+  /* Bordas e Divisores */
+  --psipro-border: #E0E0E0;
+  --psipro-divider: #E5E5E5;
+  
+  /* Sobreposições */
+  --psipro-overlay: rgba(0, 0, 0, 0.5);
+}
+
+/* Modo Escuro (Dark Mode) - Padrão do app Android */
+.dark {
+  /* Cores Primárias - Bronze Gold */
+  --psipro-primary: #B08D57;
+  --psipro-primary-dark: #8C6B3F;
+  --psipro-primary-light: #E5D1B8;
+  
+  /* Cores Secundárias - Gold */
+  --psipro-gold: #D4AF37;
+  --psipro-gold-dark: #B8860B;
+  --psipro-gold-light: #E6D7A3;
+  
+  /* Background e Surface - Modo Escuro (cores do Android) */
+  --psipro-background: #121212;
+  --psipro-surface: #1E1E1E;
+  --psipro-surface-elevated: #232323;
+  
+  /* Textos - Modo Escuro (cores do Android) */
+  --psipro-text-primary: #FFFFFF;
+  --psipro-text-secondary: rgba(255, 255, 255, 0.7); /* #B3FFFFFF equivalente */
+  --psipro-text-muted: rgba(255, 255, 255, 0.5);
+  
+  /* Cores de Estado */
+  --psipro-success: #4CAF50;
+  --psipro-error: #F44336;
+  --psipro-warning: #FF9800;
+  
+  /* Bordas e Divisores */
+  --psipro-border: #2E2E2E;
+  --psipro-divider: #333333;
+  
+  /* Sobreposições */
+  --psipro-overlay: rgba(0, 0, 0, 0.7);
+}
+
+/* Configuração do Tailwind Theme */
+@theme inline {
+  /* Cores Primárias */
+  --color-psipro-primary: var(--psipro-primary);
+  --color-psipro-primary-dark: var(--psipro-primary-dark);
+  --color-psipro-primary-light: var(--psipro-primary-light);
+  
+  /* Cores Secundárias */
+  --color-psipro-gold: var(--psipro-gold);
+  --color-psipro-gold-dark: var(--psipro-gold-dark);
+  --color-psipro-gold-light: var(--psipro-gold-light);
+  
+  /* Background e Surface */
+  --color-psipro-background: var(--psipro-background);
+  --color-psipro-surface: var(--psipro-surface);
+  --color-psipro-surface-elevated: var(--psipro-surface-elevated);
+  
+  /* Textos */
+  --color-psipro-text: var(--psipro-text-primary);
+  --color-psipro-text-secondary: var(--psipro-text-secondary);
+  --color-psipro-text-muted: var(--psipro-text-muted);
+  
+  /* Estados */
+  --color-psipro-success: var(--psipro-success);
+  --color-psipro-error: var(--psipro-error);
+  --color-psipro-warning: var(--psipro-warning);
+  
+  /* Bordas */
+  --color-psipro-border: var(--psipro-border);
+  --color-psipro-divider: var(--psipro-divider);
+  
+  /* Fontes */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Estilos Globais */
+html {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+body {
+  background-color: var(--psipro-background);
+  color: var(--psipro-text-primary);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Transições suaves para elementos que mudam com o tema */
+.bg-psipro-background,
+.bg-psipro-surface,
+.bg-psipro-surface-elevated,
+.text-psipro-text,
+.text-psipro-text-secondary,
+.text-psipro-text-muted,
+.border-psipro-border,
+.border-psipro-divider {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* ============================================
+   Animações Modernas
+   ============================================ */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Scroll reveal animations */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Animação de fade-in com delay */
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out;
+}
+
+.animate-fade-in-delay {
+  animation: fade-in 0.8s ease-out 0.2s both;
+}
+
+.animate-fade-in-delay-2 {
+  animation: fade-in 0.8s ease-out 0.4s both;
+}
+
+/* Hover effects melhorados */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}

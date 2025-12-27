@@ -1,0 +1,232 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Seed configuration
+// Run: npm run prisma:seed
+
+// Usuário profissional (psicólogo)
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String   // Hash bcrypt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relações
+  patients      Patient[]
+  appointments  Appointment[]
+  sessions      Session[]
+  payments      Payment[]
+  financialRecords FinancialRecord[]
+  documents     Document[]
+
+  @@map("users")
+}
+
+// Paciente
+model Patient {
+  id          String   @id @default(uuid())
+  userId      String   // Profissional dono
+  name        String
+  cpf         String?
+  phone       String?
+  email       String?
+  birthDate   DateTime?
+  address     String?
+  emergencyContact String?
+  observations String?
+  status      String   @default("Ativo") // Ativo | Inativo
+  type        String?  // Adulto | Infantil | Casal
+  
+  // Sincronização
+  source      String   @default("app") // app | web
+  syncHash    String?  // Hash para detectar mudanças
+  lastSyncedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relações
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+  sessions    Session[]
+  payments    Payment[]
+  documents   Document[]
+
+  @@index([userId])
+  @@index([syncHash])
+  @@map("patients")
+}
+
+// Agendamento / Consulta
+model Appointment {
+  id          String   @id @default(uuid())
+  userId      String
+  patientId   String
+  scheduledAt DateTime
+  duration    Int      @default(60) // minutos
+  type        String?  // Consulta regular | Retorno | etc
+  notes       String?
+  status      String   @default("agendada") // agendada | confirmada | cancelada | realizada
+  
+  // Sincronização
+  source      String   @default("app")
+  syncHash    String?
+  lastSyncedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relações
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  session     Session?
+
+  @@index([userId])
+  @@index([patientId])
+  @@index([scheduledAt])
+  @@index([syncHash])
+  @@map("appointments")
+}
+
+// Sessão realizada
+model Session {
+  id            String   @id @default(uuid())
+  userId        String
+  patientId     String
+  appointmentId String?  @unique
+  date          DateTime
+  duration      Int      @default(60)
+  status        String   @default("realizada") // realizada | falta | cancelada
+  notes         String?  // Anotações da sessão
+  
+  // Sincronização
+  source        String   @default("app")
+  syncHash      String?
+  lastSyncedAt  DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relações
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  payment       Payment?
+
+  @@index([userId])
+  @@index([patientId])
+  @@index([date])
+  @@index([syncHash])
+  @@map("sessions")
+}
+
+// Pagamento
+model Payment {
+  id          String   @id @default(uuid())
+  userId      String
+  patientId   String
+  sessionId   String?  @unique
+  amount      Decimal  @db.Decimal(10, 2)
+  date        DateTime
+  method      String?  // Dinheiro | PIX | Cartão | etc
+  status      String   @default("pago") // pago | pendente | cancelado
+  notes       String?
+  
+  // Sincronização
+  source      String   @default("app")
+  syncHash    String?
+  lastSyncedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relações
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  session     Session? @relation(fields: [sessionId], references: [id])
+
+  @@index([userId])
+  @@index([patientId])
+  @@index([date])
+  @@index([status])
+  @@index([syncHash])
+  @@map("payments")
+}
+
+// Registro financeiro consolidado
+model FinancialRecord {
+  id          String   @id @default(uuid())
+  userId      String
+  date        DateTime
+  type        String   // receita | despesa
+  amount      Decimal  @db.Decimal(10, 2)
+  description String?
+  category    String?
+  
+  // Sincronização
+  source      String   @default("app")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relações
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+  @@map("financial_records")
+}
+
+// Documento / Arquivo
+model Document {
+  id          String   @id @default(uuid())
+  userId      String
+  patientId   String?
+  name        String
+  type        String   // Termo | Relatório | Receita | etc
+  fileUrl     String?  // URL do arquivo (S3, local, etc)
+  fileSize    Int?
+  mimeType    String?
+  status      String   @default("Ativo")
+  
+  // Sincronização
+  source      String   @default("app")
+  syncHash    String?
+  lastSyncedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relações
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patient     Patient? @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([patientId])
+  @@index([syncHash])
+  @@map("documents")
+}
+
+// Insight gerado (futuro - IA)
+model Insight {
+  id          String   @id @default(uuid())
+  userId      String
+  type        String   // clinico | financeiro | agenda
+  message     String
+  context     Json?    // Dados contextuais
+  priority    String   @default("info") // info | warning | success
+  dismissed   Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([dismissed])
+  @@map("insights")
+}
+
