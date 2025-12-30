@@ -198,3 +198,4 @@ O sistema de insights está pronto e funcionando. Ele gera observações intelig
 **Próximo passo natural**: Integrar com dados reais da API quando disponível.
 
 
+

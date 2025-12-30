@@ -35,3 +35,4 @@ export default function InsightCard({ message, type = "info" }: InsightCardProps
 }
 
 
+

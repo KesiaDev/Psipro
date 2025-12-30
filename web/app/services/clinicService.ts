@@ -176,3 +176,4 @@ class ClinicService {
 export const clinicService = new ClinicService();
 
 
+

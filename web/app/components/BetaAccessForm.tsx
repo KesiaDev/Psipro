@@ -247,3 +247,4 @@ export default function BetaAccessForm({ isOpen, onClose, onSuccess }: BetaAcces
   );
 }
 
+

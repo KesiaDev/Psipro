@@ -62,3 +62,4 @@ O Next.js cria um arquivo de lock quando inicia para evitar múltiplas instânci
 **Solução**: Sempre finalizar processos pelo Gerenciador de Tarefas quando houver problemas.
 
 
+

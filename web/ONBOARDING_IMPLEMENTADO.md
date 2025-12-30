@@ -217,3 +217,4 @@ Após o onboarding, o usuário pensa:
 - Personalização por tipo de usuário (psicólogo vs clínica)
 
 
+

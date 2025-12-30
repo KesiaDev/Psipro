@@ -146,3 +146,4 @@ Se o backend estiver rodando:
 - Use a página `/test` para configurar token JWT facilmente
 - Backend não é obrigatório para testar páginas estáticas
 
+

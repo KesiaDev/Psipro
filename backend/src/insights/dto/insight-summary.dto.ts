@@ -11,3 +11,4 @@ export class InsightSummaryDTO {
   actionId?: string; // ID da ação relacionada (opcional)
 }
 
+

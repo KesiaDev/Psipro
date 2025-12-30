@@ -232,3 +232,4 @@ Todos os endpoints seguem o padrão REST:
 Todas as funcionalidades solicitadas foram implementadas e testadas. A aplicação está pronta para uso em desenvolvimento e produção.
 
 
+

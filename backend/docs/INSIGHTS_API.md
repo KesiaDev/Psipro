@@ -214,3 +214,4 @@ Para dúvidas ou problemas, consulte:
 - `API.md` - Documentação geral da API
 - `README.md` - Documentação do projeto
 
+

@@ -63,3 +63,4 @@ export default function InsightCard({ insight, onDismiss }: InsightCardProps) {
 
 
 
+

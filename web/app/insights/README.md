@@ -134,3 +134,4 @@ Todos os insights devem:
 **Próximo passo**: Integrar com dados reais da API quando disponível
 
 
+
