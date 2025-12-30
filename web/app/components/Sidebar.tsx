@@ -8,6 +8,8 @@ const navigation = [
   { name: "Pacientes", href: "/pacientes", icon: "👥" },
   { name: "Agenda", href: "/agenda", icon: "📅" },
   { name: "Financeiro", href: "/financeiro", icon: "💰" },
+  { name: "Clínicas", href: "/clinica", icon: "🏥" },
+  { name: "🧪 Teste", href: "/test", icon: "🧪" },
 ];
 
 export default function Sidebar() {

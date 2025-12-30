@@ -13,17 +13,75 @@ datasource db {
 // Seed configuration
 // Run: npm run prisma:seed
 
+// Clínica / Organização
+model Clinic {
+  id          String   @id @default(uuid())
+  name        String
+  cnpj        String?  @unique
+  address     String?
+  phone       String?
+  email       String?
+  plan        String   @default("basic") // basic | professional | enterprise
+  status      String   @default("active") // active | suspended | cancelled
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relações
+  users       ClinicUser[]
+  patients    Patient[]
+  appointments Appointment[]
+
+  @@map("clinics")
+}
+
+// Relação User ↔ Clinic (Many-to-Many com role)
+model ClinicUser {
+  id          String   @id @default(uuid())
+  clinicId    String
+  userId      String
+  role        String   @default("psychologist") // owner | admin | psychologist | assistant
+  status      String   @default("active") // active | inactive | invited
+  
+  // Permissões específicas
+  canViewAllPatients Boolean @default(false)
+  canEditAllPatients Boolean @default(false)
+  canViewFinancial  Boolean @default(false)
+  canManageUsers    Boolean @default(false)
+  
+  joinedAt    DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relações
+  clinic      Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([clinicId, userId])
+  @@index([clinicId])
+  @@index([userId])
+  @@map("clinic_users")
+}
+
 // Usuário profissional (psicólogo)
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
   name      String
   password  String   // Hash bcrypt
+  phone     String?
+  cpf       String?  @unique
+  license   String?  // CRP, etc
+  
+  // Se for psicólogo autônomo (sem clínica)
+  isIndependent Boolean @default(true)
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relações
-  patients      Patient[]
+  clinics        ClinicUser[]  // Clínicas que o usuário pertence
+  patients       Patient[]     // Pacientes próprios (se independente)
   appointments  Appointment[]
   sessions      Session[]
   payments      Payment[]
@@ -36,7 +94,14 @@ model User {
 // Paciente
 model Patient {
   id          String   @id @default(uuid())
-  userId      String   // Profissional dono
+  
+  // Se paciente de clínica
+  clinicId    String?  // Clínica dona do paciente
+  clinicOwnerId String? // Psicólogo que cadastrou na clínica
+  
+  // Se paciente de psicólogo independente
+  userId      String?  // Psicólogo dono (se independente)
+  
   name        String
   cpf         String?
   phone       String?
@@ -48,6 +113,9 @@ model Patient {
   status      String   @default("Ativo") // Ativo | Inativo
   type        String?  // Adulto | Infantil | Casal
   
+  // Compartilhamento (IDs dos psicólogos que podem ver/atender)
+  sharedWith  String[] @default([])
+  
   // Sincronização
   source      String   @default("app") // app | web
   syncHash    String?  // Hash para detectar mudanças
@@ -56,12 +124,14 @@ model Patient {
   updatedAt   DateTime @updatedAt
 
   // Relações
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinic      Clinic?  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   appointments Appointment[]
   sessions    Session[]
   payments    Payment[]
   documents   Document[]
 
+  @@index([clinicId])
   @@index([userId])
   @@index([syncHash])
   @@map("patients")
@@ -70,6 +140,11 @@ model Patient {
 // Agendamento / Consulta
 model Appointment {
   id          String   @id @default(uuid())
+  
+  // Se de clínica
+  clinicId    String?
+  
+  // Psicólogo que vai atender
   userId      String
   patientId   String
   scheduledAt DateTime
@@ -86,10 +161,12 @@ model Appointment {
   updatedAt   DateTime @updatedAt
 
   // Relações
+  clinic      Clinic?  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
   session     Session?
 
+  @@index([clinicId])
   @@index([userId])
   @@index([patientId])
   @@index([scheduledAt])

@@ -127,3 +127,5 @@ A API:
 5. ⏳ Integração com web
 6. ⏳ Geração de insights (IA)
 
+
+

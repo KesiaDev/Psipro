@@ -121,3 +121,5 @@ export default function FinanceiroPacienteTab({ patientId }: { patientId: string
   );
 }
 
+
+

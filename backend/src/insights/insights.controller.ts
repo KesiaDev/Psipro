@@ -13,9 +13,20 @@ export class InsightsController {
     return this.insightsService.findAll(user.sub);
   }
 
+  /**
+   * GET /insights/summary
+   * Retorna no máximo 3 insights priorizados para consumo pelo App Android
+   */
+  @Get('summary')
+  getSummary(@CurrentUser() user: any) {
+    return this.insightsService.getSummary(user.sub);
+  }
+
   @Patch(':id/dismiss')
   dismiss(@Param('id') id: string, @CurrentUser() user: any) {
     return this.insightsService.dismiss(id, user.sub);
   }
 }
+
+
 

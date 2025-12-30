@@ -5,6 +5,7 @@ import {
   Body,
   Patch,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { PatientsService } from './patients.service';
@@ -24,8 +25,8 @@ export class PatientsController {
   }
 
   @Get()
-  findAll(@CurrentUser() user: any) {
-    return this.patientsService.findAll(user.sub);
+  findAll(@CurrentUser() user: any, @Query('clinicId') clinicId?: string) {
+    return this.patientsService.findAll(user.sub, clinicId);
   }
 
   @Get(':id')

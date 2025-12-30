@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { ClinicProvider } from "./contexts/ClinicContext";
+import { ToastProvider } from "./contexts/ToastContext";
+import { OnboardingProvider } from "./contexts/OnboardingContext";
 import LandingLayout from "./components/LandingLayout";
 
 const geistSans = Geist({
@@ -66,7 +69,13 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-psipro-background text-psipro-text transition-colors duration-200`}
       >
         <ThemeProvider>
-          <LandingLayout>{children}</LandingLayout>
+          <ToastProvider>
+            <OnboardingProvider>
+              <ClinicProvider>
+                <LandingLayout>{children}</LandingLayout>
+              </ClinicProvider>
+            </OnboardingProvider>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

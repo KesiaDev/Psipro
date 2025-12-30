@@ -6,43 +6,133 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Criar usuário de exemplo
   const hashedPassword = await bcrypt.hash('senha123', 10);
 
-  const user = await prisma.user.upsert({
+  // Criar usuário owner (dono da clínica)
+  const owner = await prisma.user.upsert({
+    where: { email: 'owner@psiclinic.com' },
+    update: {},
+    create: {
+      email: 'owner@psiclinic.com',
+      name: 'Dr. Carlos Mendes',
+      password: hashedPassword,
+      isIndependent: false,
+      license: 'CRP 06/123456',
+    },
+  });
+
+  // Criar psicólogo independente
+  const independent = await prisma.user.upsert({
     where: { email: 'psicologo@psipro.com' },
     update: {},
     create: {
       email: 'psicologo@psipro.com',
       name: 'Psicólogo Exemplo',
       password: hashedPassword,
+      isIndependent: true,
     },
   });
 
-  console.log('✅ Usuário criado:', user.email);
+  // Criar outro psicólogo para a clínica
+  const psychologist = await prisma.user.upsert({
+    where: { email: 'psicologo2@psiclinic.com' },
+    update: {},
+    create: {
+      email: 'psicologo2@psiclinic.com',
+      name: 'Dra. Ana Paula Silva',
+      password: hashedPassword,
+      isIndependent: false,
+      license: 'CRP 06/789012',
+    },
+  });
 
-  // Criar alguns pacientes de exemplo
-  const patients = await Promise.all([
+  console.log('✅ Usuários criados');
+
+  // Criar clínica
+  const clinic = await prisma.clinic.upsert({
+    where: { id: 'clinic-1' },
+    update: {},
+    create: {
+      id: 'clinic-1',
+      name: 'PsiClinic - Centro de Psicologia',
+      cnpj: '12.345.678/0001-90',
+      email: 'contato@psiclinic.com',
+      phone: '(11) 3456-7890',
+      address: 'Rua Exemplo, 123 - São Paulo, SP',
+      plan: 'professional',
+      status: 'active',
+    },
+  });
+
+  // Adicionar owner à clínica
+  await prisma.clinicUser.upsert({
+    where: {
+      clinicId_userId: {
+        clinicId: clinic.id,
+        userId: owner.id,
+      },
+    },
+    update: {},
+    create: {
+      clinicId: clinic.id,
+      userId: owner.id,
+      role: 'owner',
+      status: 'active',
+      canViewAllPatients: true,
+      canEditAllPatients: true,
+      canViewFinancial: true,
+      canManageUsers: true,
+    },
+  });
+
+  // Adicionar psicólogo à clínica
+  await prisma.clinicUser.upsert({
+    where: {
+      clinicId_userId: {
+        clinicId: clinic.id,
+        userId: psychologist.id,
+      },
+    },
+    update: {},
+    create: {
+      clinicId: clinic.id,
+      userId: psychologist.id,
+      role: 'psychologist',
+      status: 'active',
+      canViewAllPatients: false,
+      canEditAllPatients: false,
+      canViewFinancial: false,
+      canManageUsers: false,
+    },
+  });
+
+  console.log('✅ Clínica criada:', clinic.name);
+
+  // Criar pacientes da clínica
+  const clinicPatients = await Promise.all([
     prisma.patient.upsert({
-      where: { id: 'patient-1' },
+      where: { id: 'clinic-patient-1' },
       update: {},
       create: {
-        id: 'patient-1',
-        userId: user.id,
+        id: 'clinic-patient-1',
+        clinicId: clinic.id,
+        clinicOwnerId: owner.id,
         name: 'Maria Silva Santos',
         phone: '(11) 98765-4321',
         email: 'maria.silva@email.com',
         status: 'Ativo',
         type: 'Adulto',
         source: 'web',
+        sharedWith: [psychologist.id], // Compartilhado com psicólogo
       },
     }),
     prisma.patient.upsert({
-      where: { id: 'patient-2' },
+      where: { id: 'clinic-patient-2' },
       update: {},
       create: {
-        id: 'patient-2',
-        userId: user.id,
+        id: 'clinic-patient-2',
+        clinicId: clinic.id,
+        clinicOwnerId: owner.id,
         name: 'João Pedro Oliveira',
         phone: '(11) 97654-3210',
         email: 'joao.oliveira@email.com',
@@ -53,9 +143,31 @@ async function main() {
     }),
   ]);
 
-  console.log('✅ Pacientes criados:', patients.length);
+  // Criar pacientes do psicólogo independente
+  const independentPatients = await Promise.all([
+    prisma.patient.upsert({
+      where: { id: 'patient-1' },
+      update: {},
+      create: {
+        id: 'patient-1',
+        userId: independent.id,
+        name: 'Roberto Alves',
+        phone: '(11) 91234-5678',
+        email: 'roberto@email.com',
+        status: 'Ativo',
+        type: 'Adulto',
+        source: 'web',
+      },
+    }),
+  ]);
+
+  console.log('✅ Pacientes criados:', clinicPatients.length + independentPatients.length);
 
   console.log('🎉 Seed concluído!');
+  console.log('\n📋 Credenciais:');
+  console.log('  Owner da Clínica: owner@psiclinic.com / senha123');
+  console.log('  Psicólogo Clínica: psicologo2@psiclinic.com / senha123');
+  console.log('  Psicólogo Independente: psicologo@psipro.com / senha123');
 }
 
 main()

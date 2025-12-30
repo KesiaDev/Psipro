@@ -174,3 +174,5 @@ export default function HistoricoClinicoTab({ patientId }: { patientId: string }
   );
 }
 
+
+

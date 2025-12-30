@@ -9,3 +9,5 @@ import { InsightsService } from './insights.service';
 })
 export class InsightsModule {}
 
+
+

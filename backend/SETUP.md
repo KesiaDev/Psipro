@@ -124,3 +124,5 @@ backend/
 - Todos os dados são isolados por usuário (userId)
 - Sincronização é bidirecional e resolve conflitos por timestamp
 
+
+

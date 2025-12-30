@@ -21,3 +21,5 @@ Depois, configure o `.env`:
 DATABASE_URL="postgresql://psipro:psipro123@localhost:5432/psipro?schema=public"
 ```
 
+
+

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useTheme } from "@/app/contexts/ThemeContext";
+import ClinicSelector from "./ClinicSelector";
 
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
@@ -23,6 +24,7 @@ export default function Header() {
         </Link>
       </div>
       <div className="ml-auto flex items-center gap-4">
+        <ClinicSelector />
         {/* Toggle de tema */}
         <button
           onClick={toggleTheme}

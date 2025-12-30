@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsDateString, IsIn } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsIn, IsArray } from 'class-validator';
 
 export class CreatePatientDto {
   @IsString()
@@ -44,5 +44,15 @@ export class CreatePatientDto {
   @IsString()
   @IsIn(['app', 'web'])
   source?: string;
+
+  // Campos para clínica
+  @IsOptional()
+  @IsString()
+  clinicId?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  sharedWith?: string[];
 }
 

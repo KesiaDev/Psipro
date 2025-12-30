@@ -6,9 +6,28 @@ import { CreateSessionDto } from './dto/create-session.dto';
 export class SessionsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(userId: string) {
+  async findAll(userId: string, clinicId?: string) {
+    const where: any = { userId };
+
+    if (clinicId) {
+      const clinicUser = await this.prisma.clinicUser.findUnique({
+        where: {
+          clinicId_userId: {
+            clinicId: clinicId,
+            userId: userId,
+          },
+        },
+      });
+
+      if (clinicUser && clinicUser.status === 'active') {
+        if (clinicUser.canViewAllPatients || ['owner', 'admin'].includes(clinicUser.role)) {
+          where.patient = { clinicId: clinicId };
+        }
+      }
+    }
+
     return this.prisma.session.findMany({
-      where: { userId },
+      where,
       include: {
         patient: {
           select: {
@@ -22,22 +41,44 @@ export class SessionsService {
   }
 
   async findByPatient(patientId: string, userId: string) {
-    // Verificar se o paciente pertence ao usuário
+    // Verificar acesso ao paciente (próprio, clínica ou compartilhado)
     const patient = await this.prisma.patient.findUnique({
       where: { id: patientId },
     });
 
-    if (!patient || patient.userId !== userId) {
+    if (!patient) {
+      throw new NotFoundException('Paciente não encontrado');
+    }
+
+    // Verificar se tem acesso
+    const hasAccess =
+      patient.userId === userId ||
+      (patient.clinicId &&
+        (await this.hasClinicAccess(patient.clinicId, userId))) ||
+      (patient.sharedWith && patient.sharedWith.includes(userId));
+
+    if (!hasAccess) {
       throw new ForbiddenException('Acesso negado');
     }
 
     return this.prisma.session.findMany({
       where: {
         patientId,
-        userId,
       },
       orderBy: { date: 'desc' },
     });
+  }
+
+  private async hasClinicAccess(clinicId: string, userId: string): Promise<boolean> {
+    const clinicUser = await this.prisma.clinicUser.findUnique({
+      where: {
+        clinicId_userId: {
+          clinicId: clinicId,
+          userId: userId,
+        },
+      },
+    });
+    return clinicUser?.status === 'active' && clinicUser.canViewAllPatients;
   }
 
   async create(userId: string, createSessionDto: CreateSessionDto) {
