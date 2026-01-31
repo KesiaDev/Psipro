@@ -3,6 +3,13 @@ import { api, ApiError } from './api';
 export interface Patient {
   id: string;
   name: string;
+  /**
+   * Campos auxiliares que podem vir pré-calculados da API
+   * (o Web também pode exibir quando presentes).
+   */
+  age?: number;
+  nextSession?: string;
+  sessionsCount?: number;
   cpf?: string;
   phone?: string;
   email?: string;

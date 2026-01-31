@@ -1,11 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import InsightSection from "@/app/components/InsightSection";
 import { Insight } from "@/app/components/InsightCard";
+import { dashboardService } from "@/app/services/dashboardService";
+import { useClinic } from "@/app/contexts/ClinicContext";
+import { useToast } from "@/app/contexts/ToastContext";
+import Skeleton from "@/app/components/Skeleton";
 
 export default function FinanceiroPage() {
+  const { currentClinic } = useClinic();
+  const { showError } = useToast();
   const [periodFilter, setPeriodFilter] = useState<"month" | "quarter" | "year">("month");
+  const [financial, setFinancial] = useState({
+    monthlyRevenue: 0,
+    averagePerSession: 0,
+    unpaidSessions: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  // Carregar dados financeiros
+  useEffect(() => {
+    loadFinancialData();
+  }, [currentClinic?.id, periodFilter]);
+
+  const loadFinancialData = async () => {
+    setLoading(true);
+    try {
+      const clinicId = currentClinic?.id;
+      const data = await dashboardService.getFinanceSummary(clinicId);
+      setFinancial(data);
+    } catch (error) {
+      showError("Erro ao carregar dados financeiros");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Dados mockados - Cards principais
   const financialCards = [

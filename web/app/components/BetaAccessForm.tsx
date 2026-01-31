@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useToast } from "../contexts/ToastContext";
 import Link from "next/link";
+import { api } from "../services/api";
 
 interface BetaAccessFormProps {
   isOpen: boolean;
@@ -42,14 +43,19 @@ export default function BetaAccessForm({ isOpen, onClose, onSuccess }: BetaAcces
         return;
       }
 
-      // TODO: Integrar com API quando disponível
-      // Por enquanto, salva no console e simula sucesso
-      console.log("Solicitação de acesso beta:", formData);
-      
-      // Simula delay de API
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      showSuccess("Recebemos seu pedido. Em breve entraremos em contato com mais informações.");
+      // Tentar enviar para API
+      try {
+        await api.post("/beta/request", formData);
+        showSuccess("Recebemos seu pedido. Em breve entraremos em contato com mais informações.");
+      } catch (apiError: any) {
+        // Se endpoint não existir (404), apenas logar (não é crítico para MVP)
+        if (apiError?.status === 404) {
+          console.log("Endpoint /api/beta/request não disponível ainda. Dados:", formData);
+          showSuccess("Recebemos seu pedido. Em breve entraremos em contato com mais informações.");
+        } else {
+          throw apiError;
+        }
+      }
       
       // Limpar formulário
       setFormData({

@@ -26,7 +26,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
-    return { sub: user.id, email: user.email };
+    /**
+     * Backend é a fonte única de verdade de identidade.
+     * Por compatibilidade entre módulos/clients, expomos `id` e `sub` com o mesmo valor.
+     */
+    return { id: user.id, sub: user.id, email: user.email };
   }
 }
 

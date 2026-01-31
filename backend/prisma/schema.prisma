@@ -10,6 +10,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/**
+ * PsiPro Backend (single source of truth)
+ *
+ * IDs globais:
+ * - User, Clinic, Patient, Appointment, FinancialRecord usam `String @default(uuid())`
+ * - IDs são gerados no backend (clientes Android/Web nunca devem gerar IDs finais)
+ *
+ * Nota: não há migração de dados legados/incrementais neste momento.
+ * Se algum serviço externo ainda usar IDs incrementais, isso deve ser documentado no nível da API/integração.
+ */
+
 // Seed configuration
 // Run: npm run prisma:seed
 

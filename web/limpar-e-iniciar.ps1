@@ -44,10 +44,14 @@ if (Test-Path "node_modules\.cache") {
     Write-Host "  Cache removido" -ForegroundColor Green
 }
 
-# Passo 5: Remover lock files
-Write-Host "[5/5] Removendo arquivos lock..." -ForegroundColor Yellow
-Get-ChildItem -Path . -Filter "*lock*" -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
-Write-Host "  Arquivos lock removidos" -ForegroundColor Green
+# Passo 5: Remover lock file do Next.js (apenas .next/dev/lock)
+Write-Host "[5/5] Removendo lock file do Next.js..." -ForegroundColor Yellow
+if (Test-Path ".next\dev\lock") {
+    Remove-Item -Force ".next\dev\lock" -ErrorAction SilentlyContinue
+    Write-Host "  Lock file removido" -ForegroundColor Green
+} else {
+    Write-Host "  Lock file nao encontrado" -ForegroundColor Green
+}
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan

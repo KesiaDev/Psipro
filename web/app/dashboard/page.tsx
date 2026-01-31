@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useClinic } from "../contexts/ClinicContext";
 import { useOnboarding } from "../contexts/OnboardingContext";
 import { isFirstAccess } from "../utils/onboarding";
@@ -12,52 +12,61 @@ import InsightCard from "../components/dashboard/InsightCard";
 import ActionCard from "../components/dashboard/ActionCard";
 import RoleBadge from "../components/RoleBadge";
 import OnboardingModal from "../components/onboarding/OnboardingModal";
-
-// Dados mockados estruturados (preparados para API futura)
-const MOCK_METRICS = {
-  activePatients: 0,
-  sessionsThisMonth: 0,
-  sessionsThisWeek: 0,
-  monthlyRevenue: 0,
-  pendingRevenue: 0,
-};
-
-const MOCK_AGENDA = {
-  totalSessionsThisWeek: 0,
-  busiestDays: [] as string[],
-  emptiestDays: [] as string[],
-  isEmpty: true,
-};
-
-const MOCK_FINANCIAL = {
-  monthlyRevenue: 0,
-  averagePerSession: 0,
-  unpaidSessions: 0,
-  isEmpty: true,
-};
-
-// Dados mockados para o motor de insights
-const MOCK_INSIGHT_DATA: InsightInput = {
-  sessionsThisMonth: 0,
-  sessionsLastMonth: 0,
-  sessionsThisWeek: 0,
-  scheduledSessionsNextWeek: 0,
-  missedSessions: 0,
-  cancelledSessions: 0,
-  monthlyRevenue: 0,
-  lastMonthRevenue: 0,
-  averageRevenuePerSession: 0,
-  unpaidSessions: 0,
-  totalPendingRevenue: 0,
-  activePatients: 0,
-  newPatientsThisMonth: 0,
-  patientsWithoutSessions: 0,
-  patientsWithManySessions: 0,
-};
+import { dashboardService } from "../services/dashboardService";
+import Skeleton from "../components/Skeleton";
+import { useToast } from "../contexts/ToastContext";
 
 export default function DashboardPage() {
   const { currentClinic, isIndependent } = useClinic();
   const { openOnboarding } = useOnboarding();
+  const { showError } = useToast();
+  
+  const [loading, setLoading] = useState(true);
+  const [metrics, setMetrics] = useState({
+    activePatients: 0,
+    sessionsThisMonth: 0,
+    sessionsThisWeek: 0,
+    monthlyRevenue: 0,
+    pendingRevenue: 0,
+  });
+  const [agenda, setAgenda] = useState({
+    totalSessionsThisWeek: 0,
+    busiestDays: [] as string[],
+    emptiestDays: [] as string[],
+    isEmpty: true,
+  });
+  const [financial, setFinancial] = useState({
+    monthlyRevenue: 0,
+    averagePerSession: 0,
+    unpaidSessions: 0,
+    isEmpty: true,
+  });
+
+  // Carregar dados do dashboard
+  useEffect(() => {
+    loadDashboardData();
+  }, [currentClinic?.id]);
+
+  const loadDashboardData = async () => {
+    setLoading(true);
+    try {
+      const clinicId = currentClinic?.id;
+      const [metricsData, agendaData, financialData] = await Promise.all([
+        dashboardService.getMetrics(clinicId),
+        dashboardService.getAgendaSummary(clinicId),
+        dashboardService.getFinanceSummary(clinicId),
+      ]);
+      
+      setMetrics(metricsData);
+      setAgenda(agendaData);
+      setFinancial(financialData);
+    } catch (error) {
+      showError("Erro ao carregar dados do dashboard");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Verificar primeiro acesso e abrir onboarding
   useEffect(() => {
@@ -70,10 +79,28 @@ export default function DashboardPage() {
     }
   }, [openOnboarding]);
 
-  // Gerar insights a partir dos dados mockados
+  // Gerar insights a partir dos dados reais
   const insights = useMemo(() => {
-    // TODO: Substituir MOCK_INSIGHT_DATA por dados reais da API
-    const generatedInsights = generateInsights(MOCK_INSIGHT_DATA);
+    // Usar dados reais do dashboard para gerar insights
+    const insightData: InsightInput = {
+      sessionsThisMonth: metrics.sessionsThisMonth,
+      sessionsLastMonth: 0, // TODO: Calcular se necessário
+      sessionsThisWeek: metrics.sessionsThisWeek,
+      scheduledSessionsNextWeek: 0, // TODO: Calcular se necessário
+      missedSessions: 0, // TODO: Calcular se necessário
+      cancelledSessions: 0, // TODO: Calcular se necessário
+      monthlyRevenue: metrics.monthlyRevenue,
+      lastMonthRevenue: 0, // TODO: Calcular se necessário
+      averageRevenuePerSession: financial.averagePerSession,
+      unpaidSessions: financial.unpaidSessions,
+      totalPendingRevenue: metrics.pendingRevenue,
+      activePatients: metrics.activePatients,
+      newPatientsThisMonth: 0, // TODO: Calcular se necessário
+      patientsWithoutSessions: 0, // TODO: Calcular se necessário
+      patientsWithManySessions: 0, // TODO: Calcular se necessário
+    };
+    
+    const generatedInsights = generateInsights(insightData);
     
     // Priorizar: warning → tip → success → info
     // Limitar a 3 insights para não sobrecarregar
@@ -104,7 +131,7 @@ export default function DashboardPage() {
     }
 
     return prioritized;
-  }, []);
+  }, [metrics, financial]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -145,136 +172,156 @@ export default function DashboardPage() {
       </div>
 
       {/* Cards de Métricas (KPIs) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
-        <MetricCard
-          title="Pacientes ativos"
-          value={MOCK_METRICS.activePatients}
-          icon="👥"
-        />
-        <MetricCard
-          title="Sessões realizadas"
-          value={MOCK_METRICS.sessionsThisMonth}
-          icon="📅"
-          subtitle="Este mês"
-        />
-        <MetricCard
-          title="Sessões agendadas"
-          value={MOCK_METRICS.sessionsThisWeek}
-          icon="📋"
-          subtitle="Esta semana"
-        />
-        <MetricCard
-          title="Receita do mês"
-          value={formatCurrency(MOCK_METRICS.monthlyRevenue)}
-          icon="💰"
-        />
-        <MetricCard
-          title="Valores a receber"
-          value={formatCurrency(MOCK_METRICS.pendingRevenue)}
-          icon="⏳"
-        />
-      </div>
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
+          <MetricCard
+            title="Pacientes ativos"
+            value={metrics.activePatients}
+            icon="👥"
+          />
+          <MetricCard
+            title="Sessões realizadas"
+            value={metrics.sessionsThisMonth}
+            icon="📅"
+            subtitle="Este mês"
+          />
+          <MetricCard
+            title="Sessões agendadas"
+            value={metrics.sessionsThisWeek}
+            icon="📋"
+            subtitle="Esta semana"
+          />
+          <MetricCard
+            title="Receita do mês"
+            value={formatCurrency(metrics.monthlyRevenue)}
+            icon="💰"
+          />
+          <MetricCard
+            title="Valores a receber"
+            value={formatCurrency(metrics.pendingRevenue)}
+            icon="⏳"
+          />
+        </div>
+      )}
 
       {/* Grid de Conteúdo Principal */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Bloco - Agenda (Visão Estratégica) */}
-        <SectionCard
-          title="Agenda da clínica"
-          isEmpty={MOCK_AGENDA.isEmpty}
-          emptyState={{
-            icon: "📅",
-            title: "Nenhuma sessão agendada ainda",
-            description:
-              "Quando você começar a usar a agenda no app, a visão geral aparecerá aqui automaticamente.",
-            hint: "A criação e confirmação de sessões é feita no app PsiPro.",
-          }}
-        >
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-psipro-text-secondary mb-2">
-                Resumo da semana
-              </p>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-3 bg-psipro-surface rounded-lg">
-                  <span className="text-sm text-psipro-text-secondary">
-                    Total de sessões
-                  </span>
-                  <span className="text-base font-semibold text-psipro-text">
-                    {MOCK_AGENDA.totalSessionsThisWeek}
-                  </span>
+        {loading ? (
+          <SectionCard title="Agenda da clínica" isEmpty={false}>
+            <Skeleton className="h-48" />
+          </SectionCard>
+        ) : (
+          <SectionCard
+            title="Agenda da clínica"
+            isEmpty={agenda.isEmpty}
+            emptyState={{
+              icon: "📅",
+              title: "Nenhuma sessão agendada ainda",
+              description:
+                "Quando você começar a usar a agenda no app, a visão geral aparecerá aqui automaticamente.",
+              hint: "A criação e confirmação de sessões é feita no app PsiPro.",
+            }}
+          >
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-psipro-text-secondary mb-2">
+                  Resumo da semana
+                </p>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-3 bg-psipro-surface rounded-lg">
+                    <span className="text-sm text-psipro-text-secondary">
+                      Total de sessões
+                    </span>
+                    <span className="text-base font-semibold text-psipro-text">
+                      {agenda.totalSessionsThisWeek}
+                    </span>
+                  </div>
+                  {agenda.busiestDays.length > 0 && (
+                    <div className="p-3 bg-psipro-surface rounded-lg">
+                      <p className="text-xs text-psipro-text-secondary mb-1">
+                        Dias mais cheios
+                      </p>
+                      <p className="text-sm text-psipro-text">
+                        {agenda.busiestDays.join(", ")}
+                      </p>
+                    </div>
+                  )}
+                  {agenda.emptiestDays.length > 0 && (
+                    <div className="p-3 bg-psipro-surface rounded-lg">
+                      <p className="text-xs text-psipro-text-secondary mb-1">
+                        Dias mais vazios
+                      </p>
+                      <p className="text-sm text-psipro-text">
+                        {agenda.emptiestDays.join(", ")}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                {MOCK_AGENDA.busiestDays.length > 0 && (
-                  <div className="p-3 bg-psipro-surface rounded-lg">
-                    <p className="text-xs text-psipro-text-secondary mb-1">
-                      Dias mais cheios
-                    </p>
-                    <p className="text-sm text-psipro-text">
-                      {MOCK_AGENDA.busiestDays.join(", ")}
-                    </p>
-                  </div>
-                )}
-                {MOCK_AGENDA.emptiestDays.length > 0 && (
-                  <div className="p-3 bg-psipro-surface rounded-lg">
-                    <p className="text-xs text-psipro-text-secondary mb-1">
-                      Dias mais vazios
-                    </p>
-                    <p className="text-sm text-psipro-text">
-                      {MOCK_AGENDA.emptiestDays.join(", ")}
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
-          </div>
-        </SectionCard>
+          </SectionCard>
+        )}
 
         {/* Bloco - Financeiro (Visão Executiva) */}
-        <SectionCard
-          title="Resumo financeiro"
-          isEmpty={MOCK_FINANCIAL.isEmpty}
-          emptyState={{
-            icon: "💰",
-            title: "Aguardando dados financeiros",
-            description:
-              "Os dados financeiros são gerados a partir das sessões realizadas no app.",
-            hint: "A web é usada para acompanhar e analisar.",
-          }}
-        >
-          <div className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-4 bg-psipro-surface rounded-lg border border-psipro-border">
-                <div>
-                  <p className="text-sm text-psipro-text-secondary mb-1">
-                    Receita total do mês
-                  </p>
-                  <p className="text-2xl font-bold text-psipro-text">
-                    {formatCurrency(MOCK_FINANCIAL.monthlyRevenue)}
-                  </p>
+        {loading ? (
+          <SectionCard title="Resumo financeiro" isEmpty={false}>
+            <Skeleton className="h-48" />
+          </SectionCard>
+        ) : (
+          <SectionCard
+            title="Resumo financeiro"
+            isEmpty={financial.isEmpty}
+            emptyState={{
+              icon: "💰",
+              title: "Aguardando dados financeiros",
+              description:
+                "Os dados financeiros são gerados a partir das sessões realizadas no app.",
+              hint: "A web é usada para acompanhar e analisar.",
+            }}
+          >
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-4 bg-psipro-surface rounded-lg border border-psipro-border">
+                  <div>
+                    <p className="text-sm text-psipro-text-secondary mb-1">
+                      Receita total do mês
+                    </p>
+                    <p className="text-2xl font-bold text-psipro-text">
+                      {formatCurrency(financial.monthlyRevenue)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-psipro-surface rounded-lg border border-psipro-border">
-                <div>
-                  <p className="text-sm text-psipro-text-secondary mb-1">
-                    Receita média por sessão
-                  </p>
-                  <p className="text-xl font-semibold text-psipro-text">
-                    {formatCurrency(MOCK_FINANCIAL.averagePerSession)}
-                  </p>
+                <div className="flex items-center justify-between p-4 bg-psipro-surface rounded-lg border border-psipro-border">
+                  <div>
+                    <p className="text-sm text-psipro-text-secondary mb-1">
+                      Receita média por sessão
+                    </p>
+                    <p className="text-xl font-semibold text-psipro-text">
+                      {formatCurrency(financial.averagePerSession)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-psipro-surface rounded-lg border border-psipro-border">
-                <div>
-                  <p className="text-sm text-psipro-text-secondary mb-1">
-                    Sessões não pagas
-                  </p>
-                  <p className="text-xl font-semibold text-psipro-text">
-                    {MOCK_FINANCIAL.unpaidSessions}
-                  </p>
+                <div className="flex items-center justify-between p-4 bg-psipro-surface rounded-lg border border-psipro-border">
+                  <div>
+                    <p className="text-sm text-psipro-text-secondary mb-1">
+                      Sessões não pagas
+                    </p>
+                    <p className="text-xl font-semibold text-psipro-text">
+                      {financial.unpaidSessions}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </SectionCard>
+          </SectionCard>
+        )}
       </div>
 
       {/* Bloco - Alertas e Insights */}

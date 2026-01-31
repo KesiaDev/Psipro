@@ -1,17 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ImportPatientsModal from "@/app/components/ImportPatientsModal";
+import { patientService, type Patient } from "@/app/services/patientService";
+import { useClinic } from "@/app/contexts/ClinicContext";
+import { useToast } from "@/app/contexts/ToastContext";
+import Skeleton from "@/app/components/Skeleton";
 
 export default function PacientesPage() {
   const router = useRouter();
+  const { currentClinic } = useClinic();
+  const { showError } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Dados mockados - serão substituídos por dados reais depois
-  const [patients, setPatients] = useState<any[]>([]);
+  // Carregar pacientes
+  useEffect(() => {
+    loadPatients();
+  }, [currentClinic?.id]);
+
+  const loadPatients = async () => {
+    setLoading(true);
+    try {
+      const clinicId = currentClinic?.id;
+      const data = await patientService.getPatients(clinicId);
+      setPatients(data);
+    } catch (error) {
+      showError("Erro ao carregar pacientes");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleImportPatients = (importedPatients: any[]) => {
     // Adicionar pacientes importados à lista
@@ -88,7 +112,11 @@ export default function PacientesPage() {
 
 
       {/* Estado vazio ou Lista de Pacientes */}
-      {!hasPatients ? (
+      {loading ? (
+        <div className="bg-psipro-surface-elevated rounded-lg border border-psipro-border shadow-sm p-16">
+          <Skeleton className="h-64" />
+        </div>
+      ) : !hasPatients ? (
         <div className="bg-psipro-surface-elevated rounded-lg border border-psipro-border shadow-sm p-16 text-center">
           <div className="max-w-md mx-auto">
             <div className="text-6xl mb-6 opacity-60">👥</div>

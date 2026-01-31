@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import { ClinicProvider } from "./contexts/ClinicContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
 import LandingLayout from "./components/LandingLayout";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -68,15 +70,19 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-psipro-background text-psipro-text transition-colors duration-200`}
       >
-        <ThemeProvider>
-          <ToastProvider>
-            <OnboardingProvider>
-              <ClinicProvider>
-                <LandingLayout>{children}</LandingLayout>
-              </ClinicProvider>
-            </OnboardingProvider>
-          </ToastProvider>
-        </ThemeProvider>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <AuthProvider>
+              <ToastProvider>
+                <OnboardingProvider>
+                  <ClinicProvider>
+                    <LandingLayout>{children}</LandingLayout>
+                  </ClinicProvider>
+                </OnboardingProvider>
+              </ToastProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

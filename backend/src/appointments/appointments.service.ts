@@ -31,7 +31,7 @@ export class AppointmentsService {
       }
     }
 
-    return this.prisma.appointment.findMany({
+    const appointments = await this.prisma.appointment.findMany({
       where,
       include: {
         patient: {
@@ -46,8 +46,38 @@ export class AppointmentsService {
             name: true,
           },
         },
+        session: {
+          include: {
+            payment: {
+              select: {
+                status: true,
+                date: true,
+              },
+            },
+          },
+        },
       },
       orderBy: { scheduledAt: 'asc' },
+    });
+
+    /**
+     * Contrato mínimo (compatível) para Android/Web:
+     * - startsAt/endsAt derivados de scheduledAt/duration
+     * - paymentStatus derivado do pagamento (quando existir)
+     *
+     * Importante: não removemos campos existentes para não quebrar clientes antigos.
+     */
+    return appointments.map((a) => {
+      const startsAt = a.scheduledAt;
+      const endsAt = new Date(a.scheduledAt.getTime() + (a.duration ?? 60) * 60 * 1000);
+      const paymentStatus = a.session?.payment?.status ?? 'pendente';
+
+      return {
+        ...a,
+        startsAt,
+        endsAt,
+        paymentStatus,
+      };
     });
   }
 }

@@ -16,7 +16,7 @@ export class PaymentsService {
       throw new Error('Paciente não encontrado ou acesso negado');
     }
 
-    return this.prisma.payment.create({
+    const payment = await this.prisma.payment.create({
       data: {
         ...createPaymentDto,
         userId,
@@ -24,17 +24,45 @@ export class PaymentsService {
         amount: createPaymentDto.amount,
         source: createPaymentDto.source || 'app',
       },
+      include: {
+        session: {
+          select: {
+            appointmentId: true,
+          },
+        },
+      },
     });
+
+    // Contrato mínimo (compatível) para consumo por Android/Web.
+    // Não removemos campos existentes; apenas acrescentamos aliases estáveis.
+    return {
+      ...payment,
+      appointmentId: payment.session?.appointmentId ?? null,
+      paidAt: payment.status === 'pago' ? payment.date : null,
+    };
   }
 
   async findByPatient(patientId: string, userId: string) {
-    return this.prisma.payment.findMany({
+    const payments = await this.prisma.payment.findMany({
       where: {
         patientId,
         userId,
       },
+      include: {
+        session: {
+          select: {
+            appointmentId: true,
+          },
+        },
+      },
       orderBy: { date: 'desc' },
     });
+
+    return payments.map((p) => ({
+      ...p,
+      appointmentId: p.session?.appointmentId ?? null,
+      paidAt: p.status === 'pago' ? p.date : null,
+    }));
   }
 }
 
