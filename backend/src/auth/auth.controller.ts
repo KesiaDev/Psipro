@@ -2,6 +2,7 @@ import { Controller, Post, Body, UseGuards, Get, Headers, UnauthorizedException 
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { HandoffDto } from './dto/handoff.dto';
+import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
@@ -12,6 +13,11 @@ export class AuthController {
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
+  }
+
+  @Post('register')
+  async register(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto);
   }
 
   /**
