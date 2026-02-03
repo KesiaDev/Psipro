@@ -35,10 +35,18 @@ class ApiClient {
     const token = this.getToken();
     const url = `${this.baseURL}${endpoint}`;
 
+    const isFormData =
+      typeof FormData !== 'undefined' && options.body instanceof FormData;
+
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string> || {}),
+      ...((options.headers as Record<string, string>) || {}),
     };
+
+    // Só define Content-Type JSON quando NÃO é multipart/form-data.
+    // (Para FormData, o browser injeta boundary automaticamente)
+    if (!isFormData && !('Content-Type' in headers)) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -76,8 +84,10 @@ class ApiClient {
       }
 
       // Retornar dados
-      const data = await response.json();
-      return data;
+      // Algumas respostas podem ser 204 ou sem corpo.
+      const text = await response.text();
+      if (!text) return undefined as unknown as T;
+      return JSON.parse(text) as T;
     } catch (error) {
       // Re-throw erros da API
       if (error && typeof error === 'object' && 'status' in error) {
@@ -103,6 +113,13 @@ class ApiClient {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async postFormData<T>(endpoint: string, formData: FormData): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body: formData,
     });
   }
 
