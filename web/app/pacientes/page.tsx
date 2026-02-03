@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ImportPatientsModal from "@/app/components/ImportPatientsModal";
+import CreatePatientModal, {
+  type CreatePatientFormValues,
+} from "@/app/components/CreatePatientModal";
 import { patientService, type Patient } from "@/app/services/patientService";
 import { useClinic } from "@/app/contexts/ClinicContext";
 import { useToast } from "@/app/contexts/ToastContext";
@@ -11,12 +14,16 @@ import Skeleton from "@/app/components/Skeleton";
 export default function PacientesPage() {
   const router = useRouter();
   const { currentClinic } = useClinic();
-  const { showError } = useToast();
+  const { showError, showSuccess } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+
+  const isImportEnabled = true;
 
   // Carregar pacientes
   useEffect(() => {
@@ -37,9 +44,43 @@ export default function PacientesPage() {
     }
   };
 
-  const handleImportPatients = (importedPatients: any[]) => {
-    // Adicionar pacientes importados à lista
-    setPatients((prev) => [...importedPatients, ...prev]);
+  const handleCreatePatient = async (values: CreatePatientFormValues) => {
+    setCreating(true);
+    try {
+      const payload = {
+        name: values.name.trim(),
+        phone: values.phone.trim() || undefined,
+        email: values.email.trim() || undefined,
+        cpf: values.cpf.trim() || undefined,
+        birthDate: values.birthDate || undefined,
+        clinicId: currentClinic?.id,
+        status: "Ativo",
+        source: "web", // compat: createPatient usa sync (origin WEB) quando clinicId existe
+      };
+
+      await patientService.createPatient(payload);
+      showSuccess("Paciente cadastrado com sucesso");
+      setIsCreateModalOpen(false);
+      await loadPatients();
+      router.push("/pacientes");
+    } catch (error) {
+      showError("Erro ao cadastrar paciente");
+      console.error(error);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleImportPatients = async (file: File, mapping: Record<string, string>) => {
+    try {
+      await patientService.importPatients(file, mapping, currentClinic?.id);
+      showSuccess("Pacientes importados com sucesso");
+      await loadPatients();
+    } catch (error) {
+      showError("Erro ao importar pacientes");
+      console.error(error);
+      throw error;
+    }
   };
 
   const filteredPatients = patients.filter((patient) => {
@@ -59,25 +100,34 @@ export default function PacientesPage() {
   const hasFilteredResults = filteredPatients.length > 0;
 
   return (
-    <div>
+    <div className="min-w-0">
       {/* Header */}
-      <div className="mb-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-psipro-text mb-2 tracking-tight">Pacientes</h1>
-          <p className="text-psipro-text-secondary text-lg">
+      <div className="mb-6 sm:mb-8">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-psipro-text mb-2 tracking-tight">Pacientes</h1>
+          <p className="text-psipro-text-secondary text-base sm:text-lg">
             Gestão centralizada de pacientes e prontuários
           </p>
         </div>
 
         {/* Barra superior de ações */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
           <button
             onClick={() => setIsImportModalOpen(true)}
-            className="px-5 py-2.5 text-sm font-medium text-psipro-text bg-psipro-primary rounded-lg hover:bg-psipro-primary-dark transition-all shadow-sm"
+            disabled={!isImportEnabled}
+            className={`px-5 py-2.5 text-sm font-medium rounded-lg transition-all shadow-sm ${
+              isImportEnabled
+                ? "text-psipro-text bg-psipro-primary hover:bg-psipro-primary-dark"
+                : "text-psipro-text-secondary bg-psipro-surface border border-psipro-border opacity-70 cursor-not-allowed"
+            }`}
           >
             Importar pacientes (Excel)
           </button>
-          <button className="px-5 py-2.5 text-sm font-medium text-psipro-text-secondary bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated hover:border-psipro-primary/30 transition-all shadow-sm">
+          <button
+            type="button"
+            onClick={() => setIsCreateModalOpen(true)}
+            className="px-5 py-2.5 text-sm font-medium text-psipro-text-secondary bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated hover:border-psipro-primary/30 transition-all shadow-sm cursor-pointer"
+          >
             Novo paciente
           </button>
         </div>
@@ -100,6 +150,7 @@ export default function PacientesPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
+              aria-label="Filtrar por status"
               className="px-4 py-3 border border-psipro-border rounded-lg bg-psipro-surface-elevated text-psipro-text focus:ring-2 focus:ring-psipro-primary focus:border-psipro-primary outline-none text-sm"
             >
               <option value="all">Todos os status</option>
@@ -117,7 +168,7 @@ export default function PacientesPage() {
           <Skeleton className="h-64" />
         </div>
       ) : !hasPatients ? (
-        <div className="bg-psipro-surface-elevated rounded-lg border border-psipro-border shadow-sm p-16 text-center">
+        <div className="bg-psipro-surface-elevated rounded-lg border border-psipro-border shadow-sm p-6 sm:p-12 md:p-16 text-center">
           <div className="max-w-md mx-auto">
             <div className="text-6xl mb-6 opacity-60">👥</div>
             <h2 className="text-2xl font-semibold text-psipro-text mb-3">
@@ -130,11 +181,20 @@ export default function PacientesPage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={() => setIsImportModalOpen(true)}
-                className="px-6 py-3 text-sm font-medium text-psipro-text bg-psipro-primary rounded-lg hover:bg-psipro-primary-dark transition-all shadow-sm"
+                disabled={!isImportEnabled}
+                className={`px-6 py-3 text-sm font-medium rounded-lg transition-all shadow-sm ${
+                  isImportEnabled
+                    ? "text-psipro-text bg-psipro-primary hover:bg-psipro-primary-dark"
+                    : "text-psipro-text-secondary bg-psipro-surface border border-psipro-border opacity-70 cursor-not-allowed"
+                }`}
               >
                 Importar pacientes
               </button>
-              <button className="px-6 py-3 text-sm font-medium text-psipro-text-secondary bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated transition-all shadow-sm">
+              <button
+                type="button"
+                onClick={() => setIsCreateModalOpen(true)}
+                className="px-6 py-3 text-sm font-medium text-psipro-text-secondary bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated transition-all shadow-sm cursor-pointer"
+              >
                 Cadastrar manualmente
               </button>
             </div>
@@ -172,7 +232,7 @@ export default function PacientesPage() {
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-psipro-primary border-2 border-psipro-primary-dark flex items-center justify-center flex-shrink-0">
+                            <div className="h-10 w-10 rounded-full bg-psipro-primary border-2 border-psipro-primary-dark flex items-center justify-center shrink-0">
                               <span className="text-psipro-text text-sm font-semibold">
                                 {patient.name?.charAt(0) || "?"}
                               </span>
@@ -254,6 +314,14 @@ export default function PacientesPage() {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         onImport={handleImportPatients}
+      />
+
+      {/* Modal de Cadastro Manual */}
+      <CreatePatientModal
+        isOpen={isCreateModalOpen}
+        isSubmitting={creating}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreatePatient}
       />
     </div>
   );

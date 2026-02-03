@@ -6,7 +6,7 @@ import * as XLSX from "xlsx";
 interface ImportPatientsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onImport: (patients: any[]) => void;
+  onImport: (file: File, mapping: ColumnMapping) => Promise<void>;
 }
 
 type Step = "upload" | "preview" | "mapping" | "validation" | "confirmation";
@@ -30,6 +30,7 @@ export default function ImportPatientsModal({
   onImport,
 }: ImportPatientsModalProps) {
   const [step, setStep] = useState<Step>("upload");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [excelData, setExcelData] = useState<ExcelRow[]>([]); // Todos os dados
   const [excelDataPreview, setExcelDataPreview] = useState<ExcelRow[]>([]); // Apenas preview
   const [headers, setHeaders] = useState<string[]>([]);
@@ -42,6 +43,7 @@ export default function ImportPatientsModal({
   });
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [importedCount, setImportedCount] = useState(0);
+  const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const requiredFields = ["nome", "telefone"];
@@ -58,6 +60,7 @@ export default function ImportPatientsModal({
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
+        setSelectedFile(file);
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: "array" });
         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -185,41 +188,33 @@ export default function ImportPatientsModal({
   };
 
   const handleConfirmImport = () => {
-    // Converter dados do Excel para formato de pacientes
-    const patients = excelData.map((row, index) => {
-      const calculateAge = (birthDate: any) => {
-        if (!birthDate) return null;
-        const date = new Date(birthDate);
-        if (isNaN(date.getTime())) return null;
-        const today = new Date();
-        let age = today.getFullYear() - date.getFullYear();
-        const monthDiff = today.getMonth() - date.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())) {
-          age--;
-        }
-        return age;
-      };
+    if (!selectedFile) {
+      setValidationErrors(["Arquivo não encontrado. Selecione o Excel novamente."]);
+      setStep("upload");
+      return;
+    }
 
-      return {
-        id: `imported-${Date.now()}-${index}`,
-        name: row[mapping.nome]?.toString().trim() || "",
-        cpf: row[mapping.cpf]?.toString().trim() || "",
-        phone: row[mapping.telefone]?.toString().trim() || "",
-        email: row[mapping.email]?.toString().trim() || "",
-        age: calculateAge(row[mapping.dataNascimento]) || null,
-        status: "Ativo",
-        nextSession: "-",
-        sessionsCount: 0,
-      };
-    });
+    setImporting(true);
+    setValidationErrors([]);
 
-    setImportedCount(patients.length);
-    onImport(patients);
-    handleClose();
+    const run = async () => {
+      try {
+        await onImport(selectedFile, mapping);
+        setImportedCount(excelData.length);
+        handleClose();
+      } catch (err: any) {
+        setValidationErrors([err?.message || "Erro ao importar pacientes"]);
+      } finally {
+        setImporting(false);
+      }
+    };
+
+    void run();
   };
 
   const handleClose = () => {
     setStep("upload");
+    setSelectedFile(null);
     setExcelData([]);
     setExcelDataPreview([]);
     setHeaders([]);
@@ -232,6 +227,7 @@ export default function ImportPatientsModal({
     });
     setValidationErrors([]);
     setImportedCount(0);
+    setImporting(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -411,6 +407,7 @@ export default function ImportPatientsModal({
                     <select
                       value={mapping[field]}
                       onChange={(e) => handleMappingChange(field, e.target.value)}
+                      aria-label={`Mapear coluna para ${field}`}
                       className="flex-1 px-3 py-2 border border-psipro-border rounded-lg bg-psipro-background text-psipro-text focus:ring-2 focus:ring-psipro-primary focus:border-psipro-primary outline-none text-sm"
                     >
                       <option value="">Selecione a coluna...</option>
@@ -548,8 +545,9 @@ export default function ImportPatientsModal({
                 <button
                   onClick={handleConfirmImport}
                   className="px-4 py-2 text-sm font-medium text-psipro-text bg-psipro-primary rounded-lg hover:bg-psipro-primary-dark transition-all"
+                  disabled={importing}
                 >
-                  Confirmar Importação
+                  {importing ? "Importando..." : "Confirmar Importação"}
                 </button>
               </div>
             </div>

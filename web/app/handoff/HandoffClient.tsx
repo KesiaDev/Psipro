@@ -2,7 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { api } from "../services/api";
+
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api").replace(/\/+$/, "");
 
 type HandoffResponse = {
   token?: string;
@@ -15,6 +16,13 @@ type HandoffResponse = {
   };
 };
 
+function clearAuthStorage() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("psipro_token");
+  localStorage.removeItem("psipro_user");
+  localStorage.removeItem("psipro_current_clinic_id");
+}
+
 export default function HandoffClient() {
   const searchParams = useSearchParams();
   const didRun = useRef(false);
@@ -25,24 +33,51 @@ export default function HandoffClient() {
 
     const run = async () => {
       const token = searchParams.get("token");
+      const returnUrl = searchParams.get("returnUrl");
 
-      if (!token) {
+      // DEBUG: token recebido
+      console.log("[handoff] token recebido:", token ? `${token.substring(0, 20)}...` : "null");
+      console.log("[handoff] returnUrl:", returnUrl ?? "null");
+
+      if (!token || typeof token !== "string" || token.trim().length === 0) {
+        console.log("[handoff] token inválido ou vazio, redirecionando para /login");
+        clearAuthStorage();
         window.location.replace("/login");
         return;
       }
 
       try {
-        const result = await api.post<HandoffResponse>("/auth/handoff", { token });
+        const url = `${API_BASE_URL}/auth/handoff`;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: token.trim() }),
+        });
 
-        const finalToken = result?.token || token;
+        // DEBUG: status da resposta
+        console.log("[handoff] POST /auth/handoff status:", response.status);
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          console.log("[handoff] erro da API:", response.status, errData);
+          clearAuthStorage();
+          window.location.replace("/login");
+          return;
+        }
+
+        const result = (await response.json()) as HandoffResponse;
+
+        const finalToken = result?.token || token.trim();
         localStorage.setItem("psipro_token", finalToken);
+
+        // DEBUG: confirmação de token salvo
+        console.log("[handoff] token salvo no localStorage, clinicId:", result?.user?.clinicId ?? "não definido");
 
         const clinicId = result?.user?.clinicId;
         if (clinicId) {
-          localStorage.setItem("psipro_current_clinic_id", clinicId);
+          localStorage.setItem("psipro_current_clinic_id", String(clinicId));
         }
 
-        // Cache do usuário (opcional, mas ajuda a UI a iniciar mais rápido)
         if (result?.user?.id && result?.user?.email) {
           const fullName = result.user.fullName || result.user.name || result.user.email;
           localStorage.setItem(
@@ -55,9 +90,19 @@ export default function HandoffClient() {
           );
         }
 
-        // Recarrega o app para o AuthProvider inicializar a sessão corretamente
-        window.location.replace("/dashboard");
-      } catch {
+        const safePath =
+          returnUrl &&
+          typeof returnUrl === "string" &&
+          returnUrl.startsWith("/") &&
+          !returnUrl.startsWith("//")
+            ? returnUrl
+            : "/dashboard";
+
+        console.log("[handoff] sucesso, redirecionando para:", safePath);
+        window.location.replace(safePath);
+      } catch (err) {
+        console.log("[handoff] exceção:", err);
+        clearAuthStorage();
         window.location.replace("/login");
       }
     };
