@@ -93,14 +93,13 @@ fun AnamneseSection(
             selecionandoModelo = true
         } else if (camposModelo.isNotEmpty()) {
             AnamneseFormScreen(
-                modelo = modeloSelecionado!!,
                 campos = camposModelo,
                 onSalvar = {
                     onSalvar(it)
                     preenchendoNova = false
                     modeloSelecionado = null
                 },
-                onCancel = {
+                onCancelar = {
                     preenchendoNova = false
                     modeloSelecionado = null
                 }

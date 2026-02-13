@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.bumptech.glide.Glide
 import com.canhub.cropper.CropImage
 import com.canhub.cropper.CropImageView
 import com.canhub.cropper.CropImageContract
@@ -386,9 +385,10 @@ class EditProfileActivity : AppCompatActivity() {
             chip.isChecked = profile.modalidades.contains(chip.text.toString())
         }
         fotoUrlAtual = profile.fotoUrl
-        if (profile.fotoUrl.isNotEmpty()) {
-            Glide.with(this).load(profile.fotoUrl).into(binding.profileImageView)
-        }
+        // Sem Glide por enquanto - fallback seguro
+        // if (profile.fotoUrl.isNotEmpty()) {
+        //     Glide.with(this).load(profile.fotoUrl).into(binding.profileImageView)
+        // }
 
         // Salvar dados nas SharedPreferences para uso no cartão de visitas
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)

@@ -49,7 +49,9 @@ public class FinancialRecordDialogFragment extends DialogFragment {
                                 description,
                                 amount,
                                 "RECEITA", // ou "DESPESA" conforme o caso
-                                new Date()
+                                "", // categoria (pode ser preenchida depois)
+                                new Date(),
+                                "" // observacao (pode ser preenchida depois)
                             );
                             FinancialRecordDao dao = AppDatabase.getInstance(requireContext()).financialRecordDao();
                             FinancialRecordRepository repo = new FinancialRecordRepository(dao);

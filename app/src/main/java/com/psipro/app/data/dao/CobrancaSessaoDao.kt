@@ -21,13 +21,19 @@ interface CobrancaSessaoDao {
     fun getVencidas(dataAtual: Date): Flow<List<CobrancaSessao>>
 
     @Query("SELECT * FROM cobrancas_sessao WHERE anotacaoSessaoId = :anotacaoSessaoId LIMIT 1")
-    suspend fun getByAnotacaoSessao(anotacaoSessaoId: Long): CobrancaSessao?
+    suspend fun getByAnotacaoSessao(anotacaoSessaoId: Long?): CobrancaSessao?
+    
+    @Query("SELECT * FROM cobrancas_sessao WHERE appointmentId = :appointmentId LIMIT 1")
+    suspend fun getByAppointmentId(appointmentId: Long?): CobrancaSessao?
 
     @Query("SELECT COUNT(*) FROM cobrancas_sessao WHERE status = :status")
     suspend fun getCountByStatus(status: StatusPagamento): Int
 
     @Query("SELECT SUM(valor) FROM cobrancas_sessao WHERE status = 'PAGO'")
     suspend fun getTotalRecebidoGeral(): Double?
+    
+    @Query("SELECT SUM(valor) FROM cobrancas_sessao WHERE status = 'PAGO' AND dataPagamento >= :startOfDay AND dataPagamento <= :endOfDay")
+    suspend fun getTotalRecebidoHoje(startOfDay: Date, endOfDay: Date): Double?
 
     @Query("SELECT SUM(valor) FROM cobrancas_sessao WHERE status IN ('A_RECEBER', 'VENCIDO')")
     suspend fun getTotalAReceber(): Double?

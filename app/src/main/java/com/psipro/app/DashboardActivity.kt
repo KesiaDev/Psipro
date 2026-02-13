@@ -24,12 +24,15 @@ import com.psipro.app.auth.AuthManager
 import com.psipro.app.databinding.ActivityDashboardBinding
 import com.psipro.app.ui.NotificationsActivity
 import com.psipro.app.ui.viewmodels.NotificationViewModel
+import com.psipro.app.utils.WebNavigator
+import com.psipro.app.sync.work.PatientsSyncScheduler
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+
 
 @AndroidEntryPoint
 class DashboardActivity : AppCompatActivity() {
@@ -117,9 +120,30 @@ class DashboardActivity : AppCompatActivity() {
                 }
                 R.id.nav_autoavaliacao -> navController.navigate(R.id.nav_autoavaliacao)
                 R.id.nav_aniversariantes -> navController.navigate(R.id.nav_aniversariantes)
+                R.id.nav_plataforma_web -> {
+                    WebNavigator.openDashboard(this)
+                }
+                R.id.nav_sync_patients -> {
+                    PatientsSyncScheduler.enqueue(this, "manual")
+                    android.widget.Toast.makeText(this, "Sincronização iniciada", android.widget.Toast.LENGTH_SHORT).show()
+                }
                 R.id.nav_configuracoes -> navController.navigate(R.id.nav_configuracoes)
                 R.id.nav_suporte -> navController.navigate(R.id.nav_suporte)
                 R.id.nav_sair -> {
+                    // Limpar dados do perfil ao fazer logout
+                    val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+                    prefs.edit().apply {
+                        remove("current_user_email")
+                        remove("profile_name")
+                        remove("profile_email")
+                        // Manter CRP e outros dados que não são específicos do usuário
+                        apply()
+                    }
+                    
+                    // Fazer logout do Firebase
+                    com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                    
+                    // Fazer logout do AuthManager
                     AuthManager.getInstance().logout()
                     val intent = Intent(this, MainActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -172,6 +196,8 @@ class DashboardActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updateDrawerHeader()
+        // Sync leve ao voltar ao foreground (não bloqueia offline)
+        PatientsSyncScheduler.enqueue(this, "foreground")
     }
 
     fun updateDrawerHeader() {
@@ -181,21 +207,51 @@ class DashboardActivity : AppCompatActivity() {
         val photoImageView = headerView.findViewById<ImageView>(R.id.nav_header_photo)
 
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
-        nameTextView.text = prefs.getString("profile_name", "Seu Nome aqui")
+        
+        // Priorizar dados do Firebase Auth, depois SharedPreferences
+        val firebaseAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
+        val currentUser = firebaseAuth.currentUser
+        
+        // Nome: Firebase displayName > SharedPreferences > Email > Padrão
+        val displayName = currentUser?.displayName 
+            ?: prefs.getString("profile_name", null)
+            ?: currentUser?.email?.substringBefore("@")
+            ?: "Seu Nome aqui"
+        nameTextView.text = displayName
+        
+        // CRP: Apenas das SharedPreferences (não vem do Firebase)
         crpTextView.text = prefs.getString("profile_crp", "CRP não informado")
-        // Se tiver foto salva, carregue, senão use ic_account_circle
+        
+        // Foto: Priorizar foto local, depois URL do Google, depois padrão
         val photoPath = prefs.getString("profile_photo_path", null)
-        if (photoPath != null) {
-            val file = File(photoPath)
-            if (file.exists()) {
-                val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-                photoImageView.setImageBitmap(bitmap)
-            } else {
+        val photoUrl = prefs.getString("profile_photo_url", null)
+        
+        when {
+            photoPath != null -> {
+                val file = File(photoPath)
+                if (file.exists()) {
+                    val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                    photoImageView.setImageBitmap(bitmap)
+                } else {
+                    // Se arquivo não existe, tentar URL do Google
+                    loadPhotoFromUrl(photoImageView, photoUrl, currentUser?.photoUrl?.toString())
+                }
+            }
+            photoUrl != null || currentUser?.photoUrl != null -> {
+                loadPhotoFromUrl(photoImageView, photoUrl, currentUser?.photoUrl?.toString())
+            }
+            else -> {
                 photoImageView.setImageResource(R.drawable.ic_account_circle)
             }
-        } else {
-            photoImageView.setImageResource(R.drawable.ic_account_circle)
         }
+        
+        android.util.Log.d("DashboardActivity", "Header atualizado - Nome: $displayName, Email: ${currentUser?.email}")
+    }
+    
+    private fun loadPhotoFromUrl(imageView: ImageView, photoUrl: String?, firebasePhotoUrl: String?) {
+        // Sem Glide por enquanto
+        // Fallback seguro para não quebrar o build
+        imageView.setImageResource(R.drawable.ic_account_circle)
     }
 
     override fun onSupportNavigateUp(): Boolean {

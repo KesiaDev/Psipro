@@ -17,6 +17,8 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.asStateFlow
 import com.psipro.app.data.dao.AnamneseCampoDao
 import com.psipro.app.data.entities.AnamneseCampo
+import java.util.Date
+import java.util.UUID
 
 @HiltViewModel
 class PatientViewModel @Inject constructor(
@@ -110,15 +112,29 @@ class PatientViewModel @Inject constructor(
                 return@launch
             }
 
-            val encryptedPatient = encryptPatientData(patient)
-            if (patient.id == 0L) {
+            // Garantir metadados de sync (offline-first):
+            // - uuid se ausente
+            // - origin ANDROID
+            // - dirty true
+            // - updatedAt sempre "agora"
+            val now = Date()
+            val patientWithSync = patient.copy(
+                uuid = patient.uuid ?: UUID.randomUUID().toString(),
+                origin = "ANDROID",
+                dirty = true,
+                createdAt = if (patient.id == 0L) now else patient.createdAt,
+                updatedAt = now
+            )
+
+            val encryptedPatient = encryptPatientData(patientWithSync)
+            if (patientWithSync.id == 0L) {
                 repository.insertPatient(encryptedPatient)
             } else {
                 repository.updatePatient(encryptedPatient)
             }
             // Otimização: só atualiza o paciente atual se for o mesmo
-            if (_currentPatient.value?.id == patient.id) {
-                _currentPatient.value = patient
+            if (_currentPatient.value?.id == patientWithSync.id) {
+                _currentPatient.value = patientWithSync
             }
         }
     }

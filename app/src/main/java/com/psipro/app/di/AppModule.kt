@@ -83,6 +83,12 @@ object AppModule {
     @Provides
     @Singleton
     fun provideContext(@ApplicationContext context: Context): Context = context
+    
+    @Provides
+    @Singleton
+    fun provideInsightProvider(): com.psipro.app.ui.screens.home.InsightProvider {
+        return com.psipro.app.ui.screens.home.LocalInsightProvider()
+    }
 } 
 
 

@@ -68,12 +68,27 @@ fun FinanceiroPacienteScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Financeiro - $patientName") },
+                title = { 
+                    Column {
+                        Text(
+                            text = "Financeiro do Paciente",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = patientName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         }
     ) { innerPadding ->

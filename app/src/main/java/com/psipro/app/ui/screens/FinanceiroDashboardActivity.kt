@@ -3,6 +3,7 @@ package com.psipro.app.ui.screens
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.BackHandler
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -24,14 +25,23 @@ class FinanceiroDashboardActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    // Usar BackHandler ao invés de onBackPressed
+                    BackHandler {
+                        try {
+                            viewModel.limparEstado()
+                            finish()
+                        } catch (e: Exception) {
+                            finish()
+                        }
+                    }
+                    
                     FinanceiroDashboardScreen(
                         onBack = { 
                             try {
                                 viewModel.limparEstado()
                                 finish() 
                             } catch (e: Exception) {
-                                // Fallback se houver erro
-                                onBackPressed()
+                                finish()
                             }
                         },
                         onCobrancaClick = { cobrancaId ->

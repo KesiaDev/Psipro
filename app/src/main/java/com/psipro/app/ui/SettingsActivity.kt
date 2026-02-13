@@ -4,7 +4,6 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.psipro.app.databinding.ActivitySettingsBinding
-import android.preference.PreferenceManager
 
 class SettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsBinding
@@ -17,7 +16,8 @@ class SettingsActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Configurações"
 
-        prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        // Usar getSharedPreferences ao invés de PreferenceManager
+        prefs = getSharedPreferences("settings", MODE_PRIVATE)
 
         // Carregar texto padrão salvo
         val textoPadrao = prefs.getString("whatsapp_reminder_text", "Olá, lembramos que você tem uma consulta agendada para o dia {data} às {hora}.")

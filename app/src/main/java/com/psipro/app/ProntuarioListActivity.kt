@@ -7,7 +7,10 @@ import androidx.lifecycle.LiveData
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.coroutines.launch
 import com.psipro.app.adapters.AnotacoesAdapter
 import com.psipro.app.databinding.ActivityProntuarioListBinding
 import com.psipro.app.ui.viewmodels.PatientNoteViewModel
@@ -50,25 +53,27 @@ class ProntuarioListActivity : AppCompatActivity() {
 
         // Buscar e exibir dados do paciente
         patientViewModel.loadPatient(patientId)
-        lifecycleScope.launchWhenStarted {
-            patientViewModel.currentPatient.collect { patient ->
-                if (patient != null) {
-                    binding.tvNomePaciente.text = patient.name
-                    val dados = listOfNotNull(
-                        calcularIdade(patient.birthDate)?.let { "$it anos" },
-                        patient.phone.takeIf { it.isNotBlank() },
-                        patient.email.takeIf { it.isNotBlank() },
-                        patient.cpf.takeIf { it.isNotBlank() }
-                    ).joinToString(" • ")
-                    binding.tvDadosBasicos.text = dados
-                    if (patient.clinicalHistory.isNullOrBlank()) {
-                        binding.tvHistoricoClinico.text = "Não informado"
-                        binding.tvHistoricoClinico.setTextColor(ContextCompat.getColor(this@ProntuarioListActivity, R.color.text_gray))
-                    } else {
-                        binding.tvHistoricoClinico.text = patient.clinicalHistory
-                        val typedValue = TypedValue()
-                        theme.resolveAttribute(com.google.android.material.R.attr.colorOnSurface, typedValue, true)
-                        binding.tvHistoricoClinico.setTextColor(typedValue.data)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                patientViewModel.currentPatient.collect { patient ->
+                    if (patient != null) {
+                        binding.tvNomePaciente.text = patient.name
+                        val dados = listOfNotNull(
+                            calcularIdade(patient.birthDate)?.let { "$it anos" },
+                            patient.phone.takeIf { it.isNotBlank() },
+                            patient.email.takeIf { it.isNotBlank() },
+                            patient.cpf.takeIf { it.isNotBlank() }
+                        ).joinToString(" • ")
+                        binding.tvDadosBasicos.text = dados
+                        if (patient.clinicalHistory.isNullOrBlank()) {
+                            binding.tvHistoricoClinico.text = "Não informado"
+                            binding.tvHistoricoClinico.setTextColor(ContextCompat.getColor(this@ProntuarioListActivity, R.color.text_gray))
+                        } else {
+                            binding.tvHistoricoClinico.text = patient.clinicalHistory
+                            val typedValue = TypedValue()
+                            theme.resolveAttribute(com.google.android.material.R.attr.colorOnSurface, typedValue, true)
+                            binding.tvHistoricoClinico.setTextColor(typedValue.data)
+                        }
                     }
                 }
             }

@@ -6,7 +6,10 @@ import android.view.MenuItem
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.coroutines.launch
 import com.psipro.app.ui.AppointmentReportAdapter
 import com.psipro.app.databinding.ActivityAppointmentReportListBinding
 import com.psipro.app.ui.AppointmentReportListViewModel
@@ -31,10 +34,12 @@ class AppointmentReportListActivity : AppCompatActivity() {
         val adapter = AppointmentReportAdapter()
         recyclerView.adapter = adapter
 
-        // Set up the ViewModel
-        lifecycleScope.launchWhenStarted {
-            viewModel.appointmentReports.collect { reports ->
-                adapter.submitList(reports)
+        // Set up the ViewModel usando repeatOnLifecycle
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.appointmentReports.collect { reports ->
+                    adapter.submitList(reports)
+                }
             }
         }
     }

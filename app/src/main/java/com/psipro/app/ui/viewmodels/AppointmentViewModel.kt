@@ -7,10 +7,12 @@ import androidx.lifecycle.viewModelScope
 import com.psipro.app.data.entities.Appointment
 import com.psipro.app.data.entities.AppointmentStatus
 import com.psipro.app.data.entities.CobrancaAgendamento
+import com.psipro.app.data.entities.CobrancaSessao
 import com.psipro.app.data.entities.StatusPagamento
 import com.psipro.app.data.models.AppointmentSummary
 import com.psipro.app.data.repository.AppointmentRepository
 import com.psipro.app.data.repository.CobrancaAgendamentoRepository
+import com.psipro.app.data.repository.CobrancaSessaoRepository
 import com.psipro.app.data.repository.PatientRepository
 import com.psipro.app.utils.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +25,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AppointmentViewModel @Inject constructor(
     private val repository: AppointmentRepository,
-    private val cobrancaRepository: CobrancaAgendamentoRepository,
+    private val cobrancaAgendamentoRepository: CobrancaAgendamentoRepository,
+    private val cobrancaSessaoRepository: CobrancaSessaoRepository,
     private val patientRepository: PatientRepository
 ) : ViewModel() {
 
@@ -54,6 +57,13 @@ class AppointmentViewModel @Inject constructor(
 
     private val _billingMessage = MutableStateFlow("")
     val billingMessage: StateFlow<String> = _billingMessage.asStateFlow()
+    
+    // Estado para perguntar se sessão foi paga
+    private val _showPaymentDialog = MutableStateFlow(false)
+    val showPaymentDialog: StateFlow<Boolean> = _showPaymentDialog.asStateFlow()
+    
+    private val _sessionValue = MutableStateFlow(0.0)
+    val sessionValue: StateFlow<Double> = _sessionValue.asStateFlow()
 
     val appointmentsByDate = repository.getAllAppointments()
 
@@ -219,7 +229,12 @@ class AppointmentViewModel @Inject constructor(
         }
     }
 
-    fun updateAppointmentStatus(appointmentId: Long, status: AppointmentStatus) {
+    fun updateAppointmentStatus(
+        appointmentId: Long, 
+        status: AppointmentStatus,
+        onSuccess: () -> Unit = {},
+        onError: (Exception) -> Unit = {}
+    ) {
         viewModelScope.launch {
             try {
                 _loading.value = true
@@ -232,8 +247,10 @@ class AppointmentViewModel @Inject constructor(
                 }
                 
                 loadAppointments(_selectedDate.value)
+                onSuccess()
             } catch (e: Exception) {
                 _error.value = Event("Erro ao atualizar status da consulta: ${e.message}")
+                onError(e)
             } finally {
                 _loading.value = false
             }
@@ -261,30 +278,10 @@ class AppointmentViewModel @Inject constructor(
     private fun handleConfirmedAppointment(appointment: Appointment) {
         viewModelScope.launch {
             try {
-                val patient = appointment.patientId?.let { patientRepository.getPatientById(it) }
-                val valorSessao = patient?.sessionValue ?: appointment.sessionValue
-                
-                if (valorSessao > 0) {
-                    // Criar cobrança automática para CONFIRMADO
-                    val dataVencimento = Calendar.getInstance().apply {
-                        time = appointment.date
-                        add(Calendar.DAY_OF_MONTH, 7) // Vencimento em 7 dias
-                    }.time
-                    
-                    val cobranca = CobrancaAgendamento(
-                        patientId = appointment.patientId ?: 0L,
-                        appointmentId = appointment.id,
-                        valor = valorSessao,
-                        dataAgendamento = appointment.date,
-                        dataVencimento = dataVencimento,
-                        motivo = "AGENDAMENTO",
-                        observacoes = "Consulta/Reconsulta confirmada - ${appointment.title}"
-                    )
-                    
-                    cobrancaRepository.insertCobranca(cobranca)
-                    
-                    _billingMessage.value = "✅ Consulta/Reconsulta confirmada!\n💰 Valor a receber: R$ ${String.format("%.2f", valorSessao)}"
-                }
+                // CONCEITO: Agendamento NÃO é cobrança
+                // Apenas confirma o agendamento, sem criar cobrança financeira
+                // A cobrança será criada apenas quando a sessão for marcada como REALIZADA
+                _billingMessage.value = "✅ Consulta confirmada!\n📅 Agendamento registrado com sucesso."
             } catch (e: Exception) {
                 _error.value = Event("Erro ao processar confirmação: ${e.message}")
             }
@@ -295,33 +292,80 @@ class AppointmentViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val patient = appointment.patientId?.let { patientRepository.getPatientById(it) }
-                val valorSessao = patient?.sessionValue ?: appointment.sessionValue
+                val valorSessao = patient?.sessionValue ?: appointment.sessionValue ?: 0.0
                 
                 if (valorSessao > 0) {
-                    // Gerar cobrança automática para REALIZADO
-                    val dataVencimento = Calendar.getInstance().apply {
-                        time = appointment.date
-                        add(Calendar.DAY_OF_MONTH, 7) // Vencimento em 7 dias
-                    }.time
-                    
-                    val cobranca = CobrancaAgendamento(
-                        patientId = appointment.patientId ?: 0L,
-                        appointmentId = appointment.id,
-                        valor = valorSessao,
-                        dataAgendamento = appointment.date,
-                        dataVencimento = dataVencimento,
-                        motivo = "REALIZADO",
-                        observacoes = "Consulta realizada - ${appointment.title}"
-                    )
-                    
-                    cobrancaRepository.insertCobranca(cobranca)
-                    
-                    _billingMessage.value = "✅ Consulta realizada!\n💰 Cobrança gerada automaticamente: R$ ${String.format("%.2f", valorSessao)}"
+                    // CONCEITO: Sessão confirmada É cobrança
+                    // Perguntar se foi paga no momento antes de criar
+                    _billingAppointment.value = appointment
+                    _sessionValue.value = valorSessao
+                    _billingMessage.value = "✅ Sessão realizada!\n💰 Valor: R$ ${String.format("%.2f", valorSessao)}\n\nFoi paga agora?"
+                    _showPaymentDialog.value = true
+                } else {
+                    // Sessão sem valor - apenas confirmar
+                    _billingMessage.value = "✅ Sessão realizada com sucesso!"
+                    _showBillingDialog.value = true
                 }
             } catch (e: Exception) {
                 _error.value = Event("Erro ao processar realização: ${e.message}")
             }
         }
+    }
+    
+    /**
+     * Confirma o pagamento da sessão realizada.
+     * Se foiPago = true, marca como PAGA. Caso contrário, cria como PENDENTE.
+     */
+    fun confirmSessionPayment(wasPaid: Boolean, metodoPagamento: String = "") {
+        viewModelScope.launch {
+            try {
+                val appointment = _billingAppointment.value ?: return@launch
+                val patientId = appointment.patientId ?: return@launch
+                val patient = patientRepository.getPatientById(patientId) ?: return@launch
+                val valorSessao = _sessionValue.value
+                
+                if (valorSessao <= 0) return@launch
+                
+                // Calcular número da sessão
+                val cobrancasExistentes = cobrancaSessaoRepository.getByPatientId(patientId).first()
+                val numeroSessao = (cobrancasExistentes.maxOfOrNull { it.numeroSessao } ?: 0) + 1
+                
+                val dataVencimento = Calendar.getInstance().apply {
+                    time = appointment.date
+                    add(Calendar.DAY_OF_MONTH, 7) // Vencimento em 7 dias
+                }.time
+                
+                val cobrancaSessao = CobrancaSessao(
+                    patientId = patientId,
+                    anotacaoSessaoId = null, // Será preenchido quando anotação for criada
+                    appointmentId = appointment.id,
+                    numeroSessao = numeroSessao,
+                    valor = valorSessao,
+                    dataSessao = appointment.date,
+                    dataVencimento = dataVencimento,
+                    status = if (wasPaid) StatusPagamento.PAGO else StatusPagamento.A_RECEBER,
+                    dataPagamento = if (wasPaid) Date() else null,
+                    metodoPagamento = metodoPagamento,
+                    observacoes = "Sessão realizada - ${appointment.title}",
+                    createdAt = Date(),
+                    updatedAt = Date()
+                )
+                
+                cobrancaSessaoRepository.insert(cobrancaSessao)
+                
+                val statusText = if (wasPaid) "paga" else "registrada (pendente)"
+                _billingMessage.value = "✅ Sessão $statusText!\n💰 R$ ${String.format("%.2f", valorSessao)}"
+                _showPaymentDialog.value = false
+                _showBillingDialog.value = true
+            } catch (e: Exception) {
+                _error.value = Event("Erro ao processar pagamento: ${e.message}")
+            }
+        }
+    }
+    
+    fun dismissPaymentDialog() {
+        _showPaymentDialog.value = false
+        _billingAppointment.value = null
     }
     
     private fun handleNoShowAppointment(appointment: Appointment) {
@@ -389,12 +433,13 @@ class AppointmentViewModel @Inject constructor(
                         appointmentId = appointment.id,
                         valor = valorSessao,
                         dataAgendamento = appointment.date,
+                        dataEvento = appointment.date, // Data do evento (falta/cancelamento)
                         dataVencimento = dataVencimento,
                         motivo = motivo,
                         observacoes = observacoes
                     )
                     
-                    cobrancaRepository.insertCobranca(cobranca)
+                    cobrancaAgendamentoRepository.insertCobranca(cobranca)
                     
                     _billingMessage.value = "✅ Cobrança gerada com sucesso!\n💰 Valor: R$ ${String.format("%.2f", valorSessao)}"
                 }

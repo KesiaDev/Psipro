@@ -61,6 +61,7 @@ class CobrancaAgendamentoViewModel @Inject constructor(
         appointmentId: Long,
         valor: Double,
         dataAgendamento: Date,
+        dataEvento: Date, // Data do evento que gerou a cobrança
         dataVencimento: Date,
         motivo: String,
         observacoes: String = ""
@@ -72,6 +73,7 @@ class CobrancaAgendamentoViewModel @Inject constructor(
                     appointmentId = appointmentId,
                     valor = valor,
                     dataAgendamento = dataAgendamento,
+                    dataEvento = dataEvento,
                     dataVencimento = dataVencimento,
                     motivo = motivo,
                     observacoes = observacoes

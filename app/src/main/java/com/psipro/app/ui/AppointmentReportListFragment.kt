@@ -11,7 +11,10 @@ import com.psipro.app.ui.AppointmentReportAdapter
 import com.psipro.app.databinding.FragmentAppointmentReportListBinding
 import com.psipro.app.ui.AppointmentReportListViewModel
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import com.psipro.app.R
 
 class AppointmentReportListFragment : Fragment() {
@@ -28,9 +31,11 @@ class AppointmentReportListFragment : Fragment() {
         binding.recyclerView.adapter = adapter
         binding.recyclerView.layoutManager = LinearLayoutManager(context)
 
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            viewModel.appointmentReports.collect { reports ->
-                adapter.submitList(reports)
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.appointmentReports.collect { reports ->
+                    adapter.submitList(reports)
+                }
             }
         }
 

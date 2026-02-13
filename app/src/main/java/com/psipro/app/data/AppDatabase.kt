@@ -64,7 +64,7 @@ import androidx.room.migration.Migration
 
 @Database(
     entities = [User::class, Patient::class, Appointment::class, PatientNote::class, PatientMessage::class, PatientReport::class, FinancialRecord::class, Prontuario::class, AuditLog::class, WhatsAppConversation::class, AnamneseModel::class, AnamneseCampo::class, AnamnesePreenchida::class, HistoricoFamiliar::class, HistoricoMedico::class, VidaEmocional::class, ObservacoesClinicas::class, AnotacaoSessao::class, CobrancaSessao::class, TipoSessao::class, CobrancaAgendamento::class, Autoavaliacao::class, Documento::class, Arquivo::class, Notification::class],
-    version = 24,
+    version = 26,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class, com.psipro.app.data.converters.AnamneseGroupConverter::class, com.psipro.app.data.converters.TipoDocumentoConverter::class, com.psipro.app.data.converters.CategoriaArquivoConverter::class, com.psipro.app.data.converters.TipoArquivoConverter::class)
@@ -172,8 +172,13 @@ abstract class AppDatabase : RoomDatabase() {
                 .addCallback(object : RoomDatabase.Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         super.onCreate(db)
-                        GlobalScope.launch(Dispatchers.IO) {
-                            seedDatabase(INSTANCE!!)
+                        // Use a proper coroutine scope instead of GlobalScope
+                        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO + kotlinx.coroutines.SupervisorJob()).launch {
+                            try {
+                                seedDatabase(INSTANCE!!)
+                            } catch (e: Exception) {
+                                android.util.Log.e("AppDatabase", "Erro no seed do banco", e)
+                            }
                         }
                     }
                 })
@@ -223,6 +228,81 @@ abstract class AppDatabase : RoomDatabase() {
                                     FOREIGN KEY (patientId) REFERENCES patients (id) ON DELETE CASCADE
                                 )
                             """)
+                        }
+                    },
+                    object : Migration(23, 24) {
+                        override fun migrate(database: SupportSQLiteDatabase) {
+                            // Migration 23->24: Adicionar campos em FinancialRecord
+                            try {
+                                database.execSQL("ALTER TABLE financial_records ADD COLUMN categoria TEXT NOT NULL DEFAULT ''")
+                                database.execSQL("ALTER TABLE financial_records ADD COLUMN observacao TEXT NOT NULL DEFAULT ''")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "Campos já existem ou erro: ${e.message}")
+                            }
+                        }
+                    },
+                    object : Migration(24, 25) {
+                        override fun migrate(database: SupportSQLiteDatabase) {
+                            // Migration 24->25: Reorganização do sistema financeiro
+                            // Adicionar campos em CobrancaSessao
+                            try {
+                                database.execSQL("ALTER TABLE cobrancas_sessao ADD COLUMN appointmentId INTEGER")
+                                database.execSQL("ALTER TABLE cobrancas_sessao ADD COLUMN metodoPagamento TEXT NOT NULL DEFAULT ''")
+                                // Tornar anotacaoSessaoId nullable (já é nullable na nova versão)
+                                // Não é possível alterar NOT NULL para NULL diretamente, então vamos recriar a tabela
+                                // Mas como pode quebrar dados existentes, vamos apenas adicionar os novos campos
+                                android.util.Log.d("Migration", "Campos adicionados em cobrancas_sessao")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "Erro ao adicionar campos em cobrancas_sessao: ${e.message}")
+                            }
+                            
+                            // Adicionar campo em CobrancaAgendamento
+                            try {
+                                database.execSQL("ALTER TABLE cobrancas_agendamento ADD COLUMN dataEvento INTEGER NOT NULL DEFAULT 0")
+                                // Se dataEvento não existir, copiar de dataAgendamento
+                                database.execSQL("UPDATE cobrancas_agendamento SET dataEvento = dataAgendamento WHERE dataEvento = 0")
+                                android.util.Log.d("Migration", "Campo dataEvento adicionado em cobrancas_agendamento")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "Erro ao adicionar dataEvento: ${e.message}")
+                            }
+                            
+                            // Criar índices para os novos campos
+                            try {
+                                database.execSQL("CREATE INDEX IF NOT EXISTS index_cobrancas_sessao_appointmentId ON cobrancas_sessao(appointmentId)")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "Erro ao criar índice: ${e.message}")
+                            }
+                        }
+                    }
+                    ,
+                    object : Migration(25, 26) {
+                        override fun migrate(database: SupportSQLiteDatabase) {
+                            // Migration 25->26: Campos de sincronização de pacientes (UUID/origin/dirty/lastSyncedAt)
+                            try {
+                                database.execSQL("ALTER TABLE patients ADD COLUMN uuid TEXT")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "patients.uuid já existe ou erro: ${e.message}")
+                            }
+                            try {
+                                database.execSQL("ALTER TABLE patients ADD COLUMN origin TEXT NOT NULL DEFAULT 'ANDROID'")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "patients.origin já existe ou erro: ${e.message}")
+                            }
+                            try {
+                                database.execSQL("ALTER TABLE patients ADD COLUMN dirty INTEGER NOT NULL DEFAULT 1")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "patients.dirty já existe ou erro: ${e.message}")
+                            }
+                            try {
+                                database.execSQL("ALTER TABLE patients ADD COLUMN lastSyncedAt INTEGER")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "patients.lastSyncedAt já existe ou erro: ${e.message}")
+                            }
+                            try {
+                                database.execSQL("CREATE INDEX IF NOT EXISTS index_patients_uuid ON patients(uuid)")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "Erro ao criar índice patients.uuid: ${e.message}")
+                            }
                         }
                     }
                 )

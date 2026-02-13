@@ -11,6 +11,8 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.psipro.app.adapter.PatientAdapter
 import com.psipro.app.databinding.ActivityPatientListBinding
@@ -18,11 +20,13 @@ import com.psipro.app.DetalhePacienteActivity
 import com.psipro.app.ui.AppointmentScheduleActivity
 import com.psipro.app.ui.viewmodels.PatientViewModel
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.collect
 import com.psipro.app.CadastroPacienteActivity
 
 
@@ -108,16 +112,18 @@ class PatientListActivity : SecureActivity() {
     }
 
     private fun observePatients() {
-        lifecycleScope.launchWhenStarted {
-            viewModel.patients.collect { patients ->
-                adapter.submitList(patients)
-                binding.emptyView.visibility = if (patients.isEmpty()) View.VISIBLE else View.GONE
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.patients.collect { patients ->
+                    adapter.submitList(patients)
+                    binding.emptyView.visibility = if (patients.isEmpty()) View.VISIBLE else View.GONE
+                }
             }
         }
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        onBackPressed()
+        finish()
         return true
     }
 
@@ -134,7 +140,7 @@ class PatientListActivity : SecureActivity() {
                 true
             }
             android.R.id.home -> {
-                onBackPressed()
+                finish()
                 true
             }
             else -> super.onOptionsItemSelected(item)

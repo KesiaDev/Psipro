@@ -546,10 +546,40 @@ private fun AgendaViewContent(
     val firstHour = remember(hours) { hours.minOrNull() ?: 8 }
 
     // Otimizar: pré-calcular appointments por data
-    val appointmentsByDate = remember(appointments) {
-        appointments.groupBy { 
-            it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() 
-        }
+    // Filtrar appointments apenas para os dias visíveis e converter corretamente
+    val appointmentsByDate = remember(appointments, days) {
+        val daysSet = days.toSet()
+        appointments
+            .filter { appointment ->
+                // Converter Date para LocalDate de forma segura
+                val appointmentDate = try {
+                    appointment.date.toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()
+                } catch (e: Exception) {
+                    android.util.Log.e("AgendaDebug", "Erro ao converter data: ${appointment.date}", e)
+                    null
+                }
+                appointmentDate != null && appointmentDate in daysSet
+            }
+            .groupBy { appointment ->
+                try {
+                    appointment.date.toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()
+                } catch (e: Exception) {
+                    android.util.Log.e("AgendaDebug", "Erro ao converter data no groupBy: ${appointment.date}", e)
+                    LocalDate.now() // Fallback
+                }
+            }
+    }
+    
+    // Log para debug
+    LaunchedEffect(appointmentsByDate, days) {
+        android.util.Log.d("AgendaDebug", "AgendaViewContent - Appointments por data: ${appointmentsByDate.mapKeys { it.key.toString() }}")
+        android.util.Log.d("AgendaDebug", "AgendaViewContent - Dias visíveis: ${days.map { it.toString() }}")
+        android.util.Log.d("AgendaDebug", "AgendaViewContent - Total de appointments recebidos: ${appointments.size}")
+        android.util.Log.d("AgendaDebug", "AgendaViewContent - Appointments filtrados: ${appointmentsByDate.values.flatten().size}")
     }
 
     Column(

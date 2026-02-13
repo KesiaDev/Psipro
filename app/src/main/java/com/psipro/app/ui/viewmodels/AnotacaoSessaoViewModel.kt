@@ -84,6 +84,8 @@ class AnotacaoSessaoViewModel @Inject constructor(
             // Criar cobrança automática
             try {
                 val valor = valorSessao ?: 0.0
+                android.util.Log.d("AnotacaoSessaoVM", "Valor da sessão recebido: $valor")
+                
                 if (valor > 0) {
                     val dataVencimento = Calendar.getInstance().apply {
                         add(Calendar.DAY_OF_MONTH, 7) // Vencimento em 7 dias
@@ -92,21 +94,27 @@ class AnotacaoSessaoViewModel @Inject constructor(
                     val cobranca = CobrancaSessao(
                         patientId = patientId,
                         anotacaoSessaoId = anotacaoId,
+                        appointmentId = null, // Será preenchido se a anotação estiver vinculada a um agendamento
                         numeroSessao = numeroSessao,
                         valor = valor,
                         dataSessao = anotacao.dataHora,
                         dataVencimento = dataVencimento,
                         status = StatusPagamento.A_RECEBER,
+                        metodoPagamento = "", // Será preenchido quando o pagamento for registrado
                         observacoes = "",
                         pixCopiaCola = "",
+                        tipoSessaoId = tipoSessaoId,
                         createdAt = Date(),
                         updatedAt = Date()
                     )
-                    cobrancaRepository.insert(cobranca)
+                    val cobrancaId = cobrancaRepository.insert(cobranca)
+                    android.util.Log.d("AnotacaoSessaoVM", "✅ Cobrança criada com sucesso: ID=$cobrancaId, Valor=$valor, Paciente=$patientId, Sessão=$numeroSessao")
+                } else {
+                    android.util.Log.w("AnotacaoSessaoVM", "⚠️ Valor da sessão é zero ou nulo, cobrança não será criada")
                 }
             } catch (e: Exception) {
                 // Log do erro, mas não falha a operação principal
-                println("Erro ao criar cobrança automática: ${e.message}")
+                android.util.Log.e("AnotacaoSessaoVM", "❌ Erro ao criar cobrança automática: ${e.message}", e)
             }
         }
     }
@@ -150,7 +158,7 @@ class AnotacaoSessaoViewModel @Inject constructor(
             anotacoes.collect { lista ->
                 val mapa = mutableMapOf<Long, StatusPagamento>()
                 for (anotacao in lista) {
-                    val cobranca = cobrancaRepository.getByAnotacaoSessao(anotacao.id)
+                    val cobranca = cobrancaRepository.getByAnotacaoSessao(anotacao.id) // anotacao.id nunca é null aqui
                     mapa[anotacao.id] = cobranca?.status ?: StatusPagamento.A_RECEBER
                 }
                 _statusPagamentos.value = mapa

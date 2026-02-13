@@ -1,6 +1,8 @@
 package com.psipro.app.data.entities
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.psipro.app.data.converters.DateConverter
@@ -24,7 +26,18 @@ enum class TipoArquivo {
     OUTRO
 }
 
-@Entity(tableName = "arquivos")
+@Entity(
+    tableName = "arquivos",
+    foreignKeys = [
+        ForeignKey(
+            entity = Patient::class,
+            parentColumns = ["id"],
+            childColumns = ["patientId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index("patientId")]
+)
 data class Arquivo(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

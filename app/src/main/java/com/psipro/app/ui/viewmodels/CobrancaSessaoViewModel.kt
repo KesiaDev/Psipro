@@ -37,13 +37,19 @@ class CobrancaSessaoViewModel @Inject constructor(
     fun carregarCobrancasPorPaciente(patientId: Long) {
         viewModelScope.launch {
             _isLoading.value = true
+            android.util.Log.d("CobrancaSessaoVM", "🔍 Carregando cobranças para paciente: $patientId")
             try {
                 cobrancaRepository.getByPatientId(patientId).collect { cobrancas ->
+                    android.util.Log.d("CobrancaSessaoVM", "📊 Cobranças encontradas: ${cobrancas.size}")
+                    cobrancas.forEach { cobranca ->
+                        android.util.Log.d("CobrancaSessaoVM", "💰 Cobrança: ID=${cobranca.id}, Valor=${cobranca.valor}, Status=${cobranca.status}, Sessão=${cobranca.numeroSessao}")
+                    }
                     _cobrancas.value = cobrancas
                     calcularResumoFinanceiroPaciente(cobrancas)
                     _isLoading.value = false
                 }
             } catch (e: Exception) {
+                android.util.Log.e("CobrancaSessaoVM", "❌ Erro ao carregar cobranças: ${e.message}", e)
                 _error.value = "Erro ao carregar cobranças: ${e.message}"
                 _isLoading.value = false
             }

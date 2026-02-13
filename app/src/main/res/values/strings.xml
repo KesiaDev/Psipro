@@ -93,6 +93,9 @@
     <string name="navigation_drawer_open">Abrir menu</string>
     <string name="navigation_drawer_close">Fechar menu</string>
 
+    <string name="platform_web">Plataforma Web</string>
+    <string name="sync_patients">Sincronizar</string>
+
     <!-- Help Screen -->
     <string name="help">Ajuda</string>
     

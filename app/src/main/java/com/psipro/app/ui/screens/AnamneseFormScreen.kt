@@ -23,16 +23,28 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun AnamneseFormScreen(
-    modelo: AnamneseModel,
     campos: List<AnamneseCampo>,
     onSalvar: (Map<Long, String>) -> Unit,
-    onCancel: () -> Unit = {},
-    isLoading: Boolean = false
+    onCancelar: () -> Unit
 ) {
     val respostas = remember { mutableStateMapOf<Long, String>() }
     var erro by remember { mutableStateOf<String?>(null) }
     var isSaving by remember { mutableStateOf(false) }
     var camposComErro by remember { mutableStateOf<Set<Long>>(emptySet()) }
+    
+    // Otimizar re-composições desnecessárias
+    val camposObrigatorios = remember(campos) { 
+        campos.filter { it.obrigatorio }.map { it.id }.toSet() 
+    }
+    
+    // Função otimizada para validação
+    val validarCampos = remember(camposObrigatorios) {
+        { respostas: Map<Long, String> ->
+            camposObrigatorios.all { campoId ->
+                !respostas[campoId].isNullOrBlank()
+            }
+        }
+    }
 
     val bronze = MaterialTheme.colorScheme.primary
     val surface = MaterialTheme.colorScheme.surface
@@ -50,7 +62,7 @@ fun AnamneseFormScreen(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onCancel) {
+            IconButton(onClick = onCancelar) {
                 Icon(
                     Icons.Default.ArrowBack,
                     contentDescription = "Voltar",
@@ -60,11 +72,6 @@ fun AnamneseFormScreen(
             Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    modelo.nome,
-                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
-                    color = bronze
-                )
-                Text(
                     "Preencha os campos abaixo",
                     style = MaterialTheme.typography.bodySmall,
                     color = onSurface.copy(alpha = 0.7f)
@@ -72,22 +79,22 @@ fun AnamneseFormScreen(
             }
             IconButton(
                 onClick = {
-                    if (validarCampos(campos, respostas)) {
+                    if (validarCampos(respostas.toMap())) {
                         isSaving = true
                         onSalvar(respostas.toMap())
                     }
                 },
-                enabled = !isLoading && !isSaving
+                enabled = !isSaving
             ) {
                 Icon(
                     Icons.Default.Save,
                     contentDescription = "Salvar",
-                    tint = if (isLoading || isSaving) onSurface.copy(alpha = 0.5f) else bronze
+                    tint = if (isSaving) onSurface.copy(alpha = 0.5f) else bronze
                 )
             }
         }
 
-        if (isLoading || isSaving) {
+        if (isSaving) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -98,7 +105,7 @@ fun AnamneseFormScreen(
                     CircularProgressIndicator()
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        if (isSaving) "Salvando..." else "Carregando...",
+                        "Salvando...",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -327,7 +334,7 @@ fun AnamneseFormScreen(
                 item {
                     Button(
                         onClick = {
-                            if (validarCampos(campos, respostas)) {
+                            if (validarCampos(respostas.toMap())) {
                                 isSaving = true
                                 onSalvar(respostas.toMap())
                             }
@@ -354,16 +361,6 @@ fun AnamneseFormScreen(
             }
         }
     }
-}
-
-private fun validarCampos(campos: List<AnamneseCampo>, respostas: Map<Long, String>): Boolean {
-    val camposObrigatorios = campos.filter { it.obrigatorio }
-    val camposVazios = camposObrigatorios.filter { campo ->
-        val resposta = respostas[campo.id] ?: ""
-        resposta.isBlank()
-    }
-    
-    return camposVazios.isEmpty()
 } 
 
 

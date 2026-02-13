@@ -13,9 +13,13 @@ import kotlinx.coroutines.launch
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: UserRepository
-    private val authManager = AuthManager.getInstance()
+    private val authManager: AuthManager
 
     init {
+        // Inicializar AuthManager primeiro
+        AuthManager.init(application)
+        authManager = AuthManager.getInstance()
+        
         val userDao = AppDatabase.getInstance(application).userDao()
         repository = UserRepository(userDao)
     }

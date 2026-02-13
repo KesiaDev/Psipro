@@ -8,10 +8,14 @@ import com.psipro.app.data.entities.RecurrenceType
 import com.psipro.app.data.repository.AppointmentRepository
 import com.psipro.app.notification.AppointmentNotificationService
 import com.psipro.app.data.repository.CobrancaAgendamentoRepository
+import com.psipro.app.data.repository.CobrancaSessaoRepository
+import com.psipro.app.data.repository.PatientRepository
 import com.psipro.app.data.entities.CobrancaAgendamento
+import com.psipro.app.data.entities.CobrancaSessao
 import com.psipro.app.data.entities.StatusPagamento
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.Date
@@ -24,7 +28,9 @@ import com.psipro.app.data.entities.generateRecurrenceDates
 class AppointmentViewModel @Inject constructor(
     private val repository: AppointmentRepository,
     private val notificationService: AppointmentNotificationService,
-    private val cobrancaRepository: CobrancaAgendamentoRepository
+    private val cobrancaAgendamentoRepository: CobrancaAgendamentoRepository,
+    private val cobrancaSessaoRepository: CobrancaSessaoRepository,
+    private val patientRepository: PatientRepository
 ) : ViewModel() {
     
     // Propriedade para todos os agendamentos
@@ -163,11 +169,19 @@ class AppointmentViewModel @Inject constructor(
             try {
                 repository.updateAppointmentStatus(appointmentId, status)
                 
-                // Se o status for REALIZADO, criar cobrança automática
+                // Se o status for REALIZADO, criar CobrancaSessao (não CobrancaAgendamento)
                 if (status == AppointmentStatus.REALIZADO) {
                     val appointment = repository.getAppointmentById(appointmentId)
-                    if (appointment != null && appointment.sessionValue > 0) {
-                        criarCobrancaAutomatica(appointment)
+                    if (appointment != null) {
+                        criarCobrancaSessaoDeAgendamento(appointment)
+                    }
+                }
+                
+                // Se o status for FALTOU ou CANCELOU, criar CobrancaAgendamento
+                if (status == AppointmentStatus.FALTOU || status == AppointmentStatus.CANCELOU) {
+                    val appointment = repository.getAppointmentById(appointmentId)
+                    if (appointment != null) {
+                        criarCobrancaAgendamentoPorEvento(appointment, status)
                     }
                 }
                 
@@ -239,29 +253,101 @@ class AppointmentViewModel @Inject constructor(
     fun getAppointmentsBySeriesId(seriesId: Long): Flow<List<Appointment>> =
         repository.getAppointmentsBySeriesId(seriesId)
 
-    private fun criarCobrancaAutomatica(appointment: Appointment) {
+    /**
+     * Cria CobrancaSessao quando um agendamento é marcado como REALIZADO.
+     * Esta é a cobrança da sessão realizada.
+     */
+    private fun criarCobrancaSessaoDeAgendamento(appointment: Appointment) {
         viewModelScope.launch {
             try {
+                val patientId = appointment.patientId ?: return@launch
+                val patient = patientRepository.getPatientById(patientId) ?: return@launch
+                val valorSessao = patient.sessionValue ?: appointment.sessionValue ?: 0.0
+                
+                if (valorSessao <= 0) return@launch
+                
+                // Calcular número da sessão (próximo número sequencial do paciente)
+                // Usar o máximo entre cobranças existentes e anotações existentes
+                val cobrancasExistentes = cobrancaSessaoRepository.getByPatientId(patientId).first()
+                val maxCobranca = cobrancasExistentes.maxOfOrNull { it.numeroSessao } ?: 0
+                // Nota: Se houver anotação sem cobrança, considerar também
+                // Por simplicidade, usamos apenas as cobranças (que são criadas junto com anotações)
+                val numeroSessao = maxCobranca + 1
+                
                 val dataVencimento = Calendar.getInstance().apply {
                     time = appointment.date
                     add(Calendar.DAY_OF_MONTH, 7) // Vencimento em 7 dias
                 }.time
                 
-                val cobranca = CobrancaAgendamento(
-                    patientId = appointment.patientId ?: 0L,
+                val cobrancaSessao = CobrancaSessao(
+                    patientId = patientId,
+                    anotacaoSessaoId = null, // Será preenchido quando anotação for criada
                     appointmentId = appointment.id,
-                    valor = appointment.sessionValue,
-                    dataAgendamento = appointment.date,
+                    numeroSessao = numeroSessao,
+                    valor = valorSessao,
+                    dataSessao = appointment.date,
                     dataVencimento = dataVencimento,
                     status = StatusPagamento.A_RECEBER,
-                    motivo = "CONSULTA_REALIZADA",
-                    observacoes = "Cobrança automática gerada para consulta realizada"
+                    metodoPagamento = "",
+                    observacoes = "Sessão realizada - ${appointment.title}",
+                    createdAt = Date(),
+                    updatedAt = Date()
                 )
                 
-                cobrancaRepository.insertCobranca(cobranca)
+                cobrancaSessaoRepository.insert(cobrancaSessao)
+                android.util.Log.d("AppointmentViewModel", "✅ CobrancaSessao criada para agendamento REALIZADO: ID=${appointment.id}, Valor=$valorSessao")
             } catch (e: Exception) {
-                // Log do erro, mas não falha a operação principal
-                println("Erro ao criar cobrança automática: ${e.message}")
+                android.util.Log.e("AppointmentViewModel", "Erro ao criar CobrancaSessao de agendamento REALIZADO: ${e.message}", e)
+            }
+        }
+    }
+    
+    /**
+     * Cria CobrancaAgendamento para eventos do agendamento (FALTA, CANCELAMENTO).
+     */
+    private fun criarCobrancaAgendamentoPorEvento(appointment: Appointment, status: AppointmentStatus) {
+        viewModelScope.launch {
+            try {
+                val patientId = appointment.patientId ?: return@launch
+                val patient = patientRepository.getPatientById(patientId) ?: return@launch
+                val valorSessao = patient.sessionValue ?: appointment.sessionValue ?: 0.0
+                
+                if (valorSessao <= 0) return@launch
+                
+                val dataVencimento = Calendar.getInstance().apply {
+                    time = appointment.date
+                    add(Calendar.DAY_OF_MONTH, 7) // Vencimento em 7 dias
+                }.time
+                
+                val motivo = when (status) {
+                    AppointmentStatus.FALTOU -> "FALTA"
+                    AppointmentStatus.CANCELOU -> "CANCELAMENTO"
+                    else -> "OUTRO"
+                }
+                
+                val observacoes = when (status) {
+                    AppointmentStatus.FALTOU -> "Cobrança por falta - ${appointment.title}"
+                    AppointmentStatus.CANCELOU -> "Cobrança por cancelamento - ${appointment.title}"
+                    else -> "Cobrança - ${appointment.title}"
+                }
+                
+                val cobrancaAgendamento = CobrancaAgendamento(
+                    patientId = patientId,
+                    appointmentId = appointment.id ?: 0L,
+                    valor = valorSessao,
+                    dataAgendamento = appointment.date,
+                    dataEvento = appointment.date, // Data do evento (falta/cancelamento)
+                    dataVencimento = dataVencimento,
+                    status = StatusPagamento.A_RECEBER,
+                    motivo = motivo,
+                    observacoes = observacoes,
+                    createdAt = Date(),
+                    updatedAt = Date()
+                )
+                
+                cobrancaAgendamentoRepository.insertCobranca(cobrancaAgendamento)
+            } catch (e: Exception) {
+                android.util.Log.e("AppointmentViewModel", "Erro ao criar CobrancaAgendamento por evento: ${e.message}", e)
             }
         }
     }

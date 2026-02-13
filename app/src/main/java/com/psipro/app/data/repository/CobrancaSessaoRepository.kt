@@ -19,7 +19,9 @@ class CobrancaSessaoRepository @Inject constructor(
     
     fun getVencidas(dataAtual: Date): Flow<List<CobrancaSessao>> = dao.getVencidas(dataAtual)
     
-    suspend fun getByAnotacaoSessao(anotacaoSessaoId: Long): CobrancaSessao? = dao.getByAnotacaoSessao(anotacaoSessaoId)
+    suspend fun getByAnotacaoSessao(anotacaoSessaoId: Long?): CobrancaSessao? = dao.getByAnotacaoSessao(anotacaoSessaoId)
+    
+    suspend fun getByAppointmentId(appointmentId: Long?): CobrancaSessao? = dao.getByAppointmentId(appointmentId)
     
     suspend fun getCountByStatus(status: StatusPagamento): Int = dao.getCountByStatus(status)
     

@@ -161,7 +161,6 @@ fun AnamneseCompleteFlow(
                 AnamneseScreen.FORM_FILL -> {
                     if (selectedModel != null && camposModelo.isNotEmpty()) {
                         AnamneseFormScreen(
-                            modelo = selectedModel!!,
                             campos = camposModelo,
                             onSalvar = { respostas ->
                                 anamneseViewModel.salvarAnamnese(
@@ -172,8 +171,7 @@ fun AnamneseCompleteFlow(
                                 showSnackbar = "Anamnese salva com sucesso"
                                 currentScreen = AnamneseScreen.LIST
                             },
-                            onCancel = { currentScreen = AnamneseScreen.MODEL_SELECTION },
-                            isLoading = isLoading
+                            onCancelar = { currentScreen = AnamneseScreen.MODEL_SELECTION }
                         )
                     } else {
                         // Loading ou erro

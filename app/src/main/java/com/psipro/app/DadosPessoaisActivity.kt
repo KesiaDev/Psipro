@@ -18,6 +18,7 @@ import java.text.NumberFormat
 import java.util.Locale
 import android.widget.ArrayAdapter
 import com.psipro.app.data.entities.AnamneseGroup
+import java.util.UUID
 
 @AndroidEntryPoint
 class DadosPessoaisActivity : AppCompatActivity() {
@@ -26,6 +27,7 @@ class DadosPessoaisActivity : AppCompatActivity() {
     private var patientId: Long = -1
     private var birthDate: Date? = null
     private var selectedAnamneseGroup: AnamneseGroup = AnamneseGroup.ADULTO
+    private var currentPatient: Patient? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -148,6 +150,7 @@ class DadosPessoaisActivity : AppCompatActivity() {
     }
 
     private fun preencherCampos(patient: Patient) {
+        currentPatient = patient
         binding.edtNome.setText(patient.name)
         binding.edtCpf.setText(patient.cpf)
         binding.edtTelefone.setText(patient.phone)
@@ -181,9 +184,13 @@ class DadosPessoaisActivity : AppCompatActivity() {
 
     private fun coletarDadosDosCampos(): Patient {
         val dataNascimentoFinal = birthDate ?: Date()
+        val base = currentPatient
         
         return Patient(
             id = patientId,
+            uuid = base?.uuid ?: UUID.randomUUID().toString(),
+            origin = "ANDROID",
+            dirty = true,
             name = binding.edtNome.text.toString(),
             cpf = binding.edtCpf.text.toString(),
             birthDate = dataNascimentoFinal,
@@ -202,9 +209,14 @@ class DadosPessoaisActivity : AppCompatActivity() {
                 .toDoubleOrNull() ?: 0.0,
             diaCobranca = binding.edtDiaCobranca.text.toString().toIntOrNull() ?: 1,
             lembreteCobranca = binding.switchLembreteCobranca.isChecked,
-            clinicalHistory = null,
-            medications = null,
-            allergies = null,
+            clinicalHistory = base?.clinicalHistory,
+            medications = base?.medications,
+            allergies = base?.allergies,
+            isEncrypted = base?.isEncrypted ?: false,
+            notes = base?.notes,
+            createdAt = base?.createdAt ?: Date(),
+            updatedAt = Date(),
+            lastSyncedAt = base?.lastSyncedAt,
             anamneseGroup = selectedAnamneseGroup
             // videoCallLink = binding.edtVideoCall.text.toString(),
             // rg = binding.edtRg.text.toString()

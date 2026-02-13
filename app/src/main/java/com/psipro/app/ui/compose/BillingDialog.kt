@@ -160,6 +160,80 @@ fun BillingNotificationDialog(
             }
         }
     }
+}
+
+/**
+ * Diálogo para perguntar se a sessão foi paga no momento.
+ * UX: Fluxo natural - psicólogo apenas confirma o que aconteceu.
+ */
+@Composable
+fun SessionPaymentDialog(
+    message: String,
+    sessionValue: Double,
+    onPaidNow: () -> Unit,
+    onPaidLater: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = false
+        )
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "✅",
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 24.dp),
+                    fontWeight = FontWeight.Medium
+                )
+                
+                // Botões de ação
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onPaidLater,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Depois")
+                    }
+                    
+                    Button(
+                        onClick = onPaidNow,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text("Pago agora")
+                    }
+                }
+            }
+        }
+    }
 } 
 
 

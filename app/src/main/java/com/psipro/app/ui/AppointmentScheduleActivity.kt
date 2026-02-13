@@ -446,18 +446,11 @@ class AppointmentScheduleActivity : SecureActivity() {
                                 agendarNotificacoes(newAppointment, notification15min, notification30min, notification45min)
                             }
                             
-                            // --- INTEGRAR FINANCEIRO ---
-                            lifecycleScope.launch {
-                                val valorSessao = selectedPatient?.sessionValue ?: 0.0
-                                val record = FinancialRecord(
-                                    patientId = selectedPatient!!.id,
-                                    description = newAppointment.title,
-                                    value = valorSessao,
-                                    type = "RECEITA",
-                                    date = newAppointment.date
-                                )
-                                financialRecordRepository.insert(record)
-                            }
+                            // NOTA: Não criar cobrança automática ao criar agendamento.
+                            // Cobrança será criada apenas quando:
+                            // - Agendamento for marcado como REALIZADO → cria CobrancaSessao
+                            // - Agendamento for marcado como FALTOU/CANCELOU → cria CobrancaAgendamento
+                            // - Anotação de sessão for registrada → cria CobrancaSessao
                             
                             // --- ENVIAR MENSAGEM PARA O PACIENTE ---
                             showSendMessageDialog(newAppointment)

@@ -17,6 +17,7 @@ import com.psipro.app.databinding.ActivityAppointmentDetailBinding
 import com.psipro.app.ui.viewmodels.AppointmentViewModel
 import com.psipro.app.ui.compose.BillingDialog
 import com.psipro.app.ui.compose.BillingNotificationDialog
+import com.psipro.app.ui.compose.SessionPaymentDialog
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -31,7 +32,21 @@ class AppointmentDetailActivity : AppCompatActivity() {
         binding = ActivityAppointmentDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
-        // Observar estados de cobrança
+        // Observar diálogo de pagamento de sessão (REALIZADA)
+        lifecycleScope.launch {
+            viewModel.showPaymentDialog.collect { showDialog ->
+                if (showDialog) {
+                    val message = viewModel.billingMessage.value
+                    val sessionValue = viewModel.sessionValue.value
+                    
+                    showSessionPaymentDialog(message, sessionValue) { wasPaid ->
+                        viewModel.confirmSessionPayment(wasPaid)
+                    }
+                }
+            }
+        }
+        
+        // Observar estados de cobrança (FALTA/CANCELAMENTO)
         lifecycleScope.launch {
             viewModel.showBillingDialog.collect { showDialog ->
                 if (showDialog) {
@@ -103,6 +118,37 @@ class AppointmentDetailActivity : AppCompatActivity() {
         val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
             .setView(dialogView)
             .setCancelable(true)
+            .create()
+        
+        dialog.show()
+    }
+    
+    private fun showSessionPaymentDialog(
+        message: String,
+        sessionValue: Double,
+        onPaymentDecision: (Boolean) -> Unit
+    ) {
+        val dialogView = ComposeView(this)
+        dialogView.setContent {
+            PsiproTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    SessionPaymentDialog(
+                        message = message,
+                        sessionValue = sessionValue,
+                        onPaidNow = { onPaymentDecision(true) },
+                        onPaidLater = { onPaymentDecision(false) },
+                        onDismiss = { viewModel.dismissPaymentDialog() }
+                    )
+                }
+            }
+        }
+        
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
             .create()
         
         dialog.show()

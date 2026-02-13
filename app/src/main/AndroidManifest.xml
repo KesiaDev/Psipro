@@ -25,16 +25,18 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Psipro"
+        android:usesCleartextTraffic="false"
         tools:targetApi="31">
         
-        <meta-data
+        <!-- Google Places API - Configure sua chave real aqui -->
+        <!-- <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="YOUR_API_KEY" />
+            android:value="SUA_CHAVE_AQUI" /> -->
 
-        <!-- Privacy Policy -->
-        <meta-data
+        <!-- Google Ads - Remover se não usar anúncios -->
+        <!-- <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="ca-app-pub-3940256099942544~3347511713" /> -->
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -63,7 +65,7 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="false">
         </activity>
 
         <activity

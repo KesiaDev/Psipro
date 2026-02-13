@@ -2,6 +2,7 @@ package com.psipro.app.data.entities
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.Date
 
@@ -14,7 +15,8 @@ import java.util.Date
             childColumns = ["patientId"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [Index("patientId")]
 )
 data class PatientNote(
     @PrimaryKey(autoGenerate = true)

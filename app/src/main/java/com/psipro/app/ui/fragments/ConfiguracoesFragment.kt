@@ -21,6 +21,9 @@ import com.psipro.app.databinding.FragmentConfiguracoesBinding
 import com.psipro.app.ui.EditProfileDialog
 import android.util.Log
 import com.psipro.app.ui.EditProfileActivity
+import com.psipro.app.utils.SHA1Helper
+import android.content.ClipData
+import android.content.ClipboardManager
 
 class ConfiguracoesFragment : Fragment() {
     private var _binding: FragmentConfiguracoesBinding? = null
@@ -116,6 +119,73 @@ class ConfiguracoesFragment : Fragment() {
                 .setMessage("Ao utilizar este aplicativo, você concorda com os termos e condições estabelecidos para o uso responsável e seguro da plataforma.")
                 .setPositiveButton("OK", null)
                 .show()
+        }
+        
+        binding.showSHA1Button.setOnClickListener {
+            showSHA1Dialog()
+        }
+    }
+    
+    private fun showSHA1Dialog() {
+        val sha1 = SHA1Helper.getSHA1Formatted(requireContext())
+        val sha1Raw = SHA1Helper.getSHA1(requireContext())
+        
+        if (sha1 == null || sha1Raw == null) {
+            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("SHA-1")
+                .setMessage("Não foi possível obter o SHA-1 do certificado.")
+                .setPositiveButton("OK", null)
+                .show()
+            return
+        }
+        
+        val message = """
+            SHA-1 do Certificado:
+            
+            $sha1
+            
+            (Formato com dois pontos)
+            
+            $sha1Raw
+            
+            (Formato sem dois pontos)
+            
+            Instruções:
+            1. Copie o SHA-1 acima
+            2. Acesse o Firebase Console
+            3. Vá em Configurações do Projeto
+            4. Selecione seu app Android
+            5. Clique em "Adicionar impressão digital"
+            6. Cole o SHA-1 e salve
+        """.trimIndent()
+        
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("SHA-1 do Certificado")
+            .setMessage(message)
+            .setPositiveButton("Copiar SHA-1") { _, _ ->
+                copyToClipboard(sha1)
+                Toast.makeText(requireContext(), "SHA-1 copiado para a área de transferência!", Toast.LENGTH_SHORT).show()
+            }
+            .setNeutralButton("Abrir Firebase Console") { _, _ ->
+                openFirebaseConsole()
+            }
+            .setNegativeButton("Fechar", null)
+            .show()
+    }
+    
+    private fun copyToClipboard(text: String) {
+        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText("SHA-1", text)
+        clipboard.setPrimaryClip(clip)
+    }
+    
+    private fun openFirebaseConsole() {
+        val url = "https://console.firebase.google.com/project/psipro-6237d/settings/general/android:com.psipro.app"
+        val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))
+        try {
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "Erro ao abrir Firebase Console: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 

@@ -20,6 +20,7 @@ import java.text.NumberFormat
 import java.util.Locale
 import android.widget.ArrayAdapter
 import com.psipro.app.data.entities.AnamneseGroup
+import java.util.UUID
 
 @AndroidEntryPoint
 class CadastroPacienteActivity : AppCompatActivity() {
@@ -239,6 +240,9 @@ class CadastroPacienteActivity : AppCompatActivity() {
         }
         
         val patient = Patient(
+            uuid = UUID.randomUUID().toString(),
+            origin = "ANDROID",
+            dirty = true,
             name = nome,
             cpf = cpf,
             birthDate = birthDate,
@@ -258,6 +262,8 @@ class CadastroPacienteActivity : AppCompatActivity() {
             medications = null, // Adapte se houver campo de medicamentos
             allergies = null, // Adapte se houver campo de alergias
             isEncrypted = false,
+            createdAt = Date(),
+            updatedAt = Date(),
             anamneseGroup = selectedAnamneseGroup
         )
         

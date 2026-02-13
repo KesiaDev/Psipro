@@ -7,13 +7,14 @@ import com.psipro.app.data.entities.FinancialRecord
 import com.psipro.app.data.entities.StatusPagamento
 import com.psipro.app.data.repository.CobrancaSessaoRepository
 import com.psipro.app.data.repository.FinancialRecordRepository
-import com.psipro.app.notification.FinanceiroNotificationService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -22,8 +23,7 @@ import javax.inject.Inject
 @HiltViewModel
 class FinanceiroUnificadoViewModel @Inject constructor(
     private val cobrancaRepository: CobrancaSessaoRepository,
-    private val financialRecordRepository: FinancialRecordRepository,
-    private val notificationService: FinanceiroNotificationService
+    private val financialRecordRepository: FinancialRecordRepository
 ) : ViewModel() {
 
     private val _cobrancas = MutableStateFlow<List<CobrancaSessao>>(emptyList())
@@ -48,40 +48,54 @@ class FinanceiroUnificadoViewModel @Inject constructor(
     private var ultimoCarregamento = 0L
 
     fun carregarDadosFinanceiros() {
-        val agora = System.currentTimeMillis()
-        val tempoDesdeUltimoCarregamento = agora - ultimoCarregamento
+        android.util.Log.d("FinanceiroViewModel", "Iniciando carregamento ULTRA-SEGURO")
         
-        android.util.Log.d("FinanceiroViewModel", "Tentando carregar dados. Dados carregados: $dadosCarregados, Tempo desde último: $tempoDesdeUltimoCarregamento")
-        
-        // Forçar recarregamento se solicitado ou se passou muito tempo (5 minutos)
-        if (dadosCarregados && _cobrancas.value.isNotEmpty() && tempoDesdeUltimoCarregamento < 300000) {
-            android.util.Log.d("FinanceiroViewModel", "Pulando carregamento - dados recentes")
-            return
-        }
-        
-        viewModelScope.launch {
-            android.util.Log.d("FinanceiroViewModel", "Iniciando carregamento de dados")
-            _isLoading.value = true
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
-                // Carregar dados de ambas as fontes de forma independente
-                val cobrancas = cobrancaRepository.getByStatus(StatusPagamento.A_RECEBER).first()
-                val records = financialRecordRepository.getAll().first()
+                _isLoading.value = true
+                _error.value = null
                 
-                android.util.Log.d("FinanceiroViewModel", "Dados carregados - Cobranças: ${cobrancas.size}, Records: ${records.size}")
-                
-                _cobrancas.value = cobrancas
-                _financialRecords.value = records
-                calcularResumoFinanceiroUnificado(cobrancas, records)
-                dadosCarregados = true
-                ultimoCarregamento = agora
-                
-                android.util.Log.d("FinanceiroViewModel", "Resumo calculado - Total Recebido: ${_resumoFinanceiro.value.totalRecebido}, A Receber: ${_resumoFinanceiro.value.totalAReceber}")
+                // Carregamento ULTRA-SIMPLES com timeout
+                kotlinx.coroutines.withTimeout(5000) { // 5 segundos máximo
+                    val cobrancas = try {
+                        cobrancaRepository.getByStatus(StatusPagamento.A_RECEBER).first()
+                    } catch (e: Exception) {
+                        android.util.Log.e("FinanceiroViewModel", "Erro ao carregar cobranças", e)
+                        emptyList<CobrancaSessao>()
+                    }
+                    
+                    val records = try {
+                        financialRecordRepository.getAll().first()
+                    } catch (e: Exception) {
+                        android.util.Log.e("FinanceiroViewModel", "Erro ao carregar records", e)
+                        emptyList<FinancialRecord>()
+                    }
+                    
+                    // Atualizar UI na thread principal
+                    withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        _cobrancas.value = cobrancas
+                        _financialRecords.value = records
+                    }
+                    
+                    // Calcular resumo ULTRA-SIMPLES
+                    calcularResumoFinanceiroSimples(cobrancas, records)
+                    
+                    android.util.Log.d("FinanceiroViewModel", "Carregamento concluído com sucesso")
+                }
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                android.util.Log.e("FinanceiroViewModel", "Timeout no carregamento", e)
+                withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    _error.value = "Carregamento demorou muito. Tente novamente."
+                }
             } catch (e: Exception) {
-                android.util.Log.e("FinanceiroViewModel", "Erro ao carregar dados", e)
-                _error.value = "Erro ao carregar dados financeiros: ${e.message}"
+                android.util.Log.e("FinanceiroViewModel", "Erro no carregamento", e)
+                withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    _error.value = "Erro: ${e.message}"
+                }
             } finally {
-                _isLoading.value = false
-                android.util.Log.d("FinanceiroViewModel", "Carregamento finalizado")
+                withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    _isLoading.value = false
+                }
             }
         }
     }
@@ -157,28 +171,123 @@ class FinanceiroUnificadoViewModel @Inject constructor(
         }
     }
 
+    private fun calcularResumoFinanceiroSimples(
+        cobrancas: List<CobrancaSessao>,
+        records: List<FinancialRecord>
+    ) {
+        try {
+            android.util.Log.d("FinanceiroViewModel", "Iniciando cálculo simples do resumo")
+            
+            // Calcular totais de forma simples e direta
+            val totalRecebidoCobrancas = cobrancas
+                .filter { it.status == StatusPagamento.PAGO }
+                .sumOf { it.valor }
+            
+            val totalAReceberCobrancas = cobrancas
+                .filter { it.status == StatusPagamento.A_RECEBER }
+                .sumOf { it.valor }
+            
+            val countPendentesCobrancas = cobrancas
+                .count { it.status == StatusPagamento.A_RECEBER }
+            
+            val countVencidasCobrancas = cobrancas
+                .count { it.status == StatusPagamento.VENCIDO }
+
+            // Calcular totais dos records financeiros
+            val totalRecebidoRecords = records
+                .filter { it.type == "RECEITA" }
+                .sumOf { it.value }
+            
+            val totalDespesasRecords = records
+                .filter { it.type == "DESPESA" }
+                .sumOf { it.value }
+
+            // Totais unificados
+            val totalRecebido = totalRecebidoCobrancas + totalRecebidoRecords
+            val totalAReceber = totalAReceberCobrancas
+            val totalDespesas = totalDespesasRecords
+            val resultadoPrevisto = totalAReceber - totalDespesas
+
+            android.util.Log.d("FinanceiroViewModel", "Resumo calculado - Total Recebido Cobranças: $totalRecebidoCobrancas, Records: $totalRecebidoRecords, Total: $totalRecebido")
+
+            // Atualizar UI na thread principal
+            _resumoFinanceiro.value = ResumoFinanceiroUnificado(
+                totalRecebido = totalRecebido,
+                totalAReceber = totalAReceber,
+                totalDespesas = totalDespesas,
+                resultadoPrevisto = resultadoPrevisto,
+                countPendentes = countPendentesCobrancas,
+                countVencidas = countVencidasCobrancas,
+                countCobrancas = cobrancas.size,
+                countRecords = records.size
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("FinanceiroViewModel", "Erro ao calcular resumo simples", e)
+            _error.value = "Erro ao calcular resumo: ${e.message}"
+        }
+    }
+
     private fun calcularResumoFinanceiroUnificado(
         cobrancas: List<CobrancaSessao>,
         records: List<FinancialRecord>
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
-                // Calcular totais das cobranças usando queries específicas
-                val totalRecebidoCobrancas = cobrancaRepository.getTotalRecebidoGeral()
+                android.util.Log.d("FinanceiroViewModel", "Iniciando cálculo do resumo")
                 
-                val totalAReceberCobrancas = cobrancaRepository.getTotalAReceber()
+                // Calcular totais das cobranças de forma assíncrona
+                val totalRecebidoCobrancasDeferred = async { 
+                    try {
+                        cobrancaRepository.getTotalRecebidoGeral()
+                    } catch (e: Exception) {
+                        android.util.Log.e("FinanceiroViewModel", "Erro ao calcular total recebido", e)
+                        0.0
+                    }
+                }
                 
-                val countPendentesCobrancas = cobrancaRepository.getCountPendentes()
-                val countVencidasCobrancas = cobrancaRepository.getCountByStatus(StatusPagamento.VENCIDO)
+                val totalAReceberCobrancasDeferred = async { 
+                    try {
+                        cobrancaRepository.getTotalAReceber()
+                    } catch (e: Exception) {
+                        android.util.Log.e("FinanceiroViewModel", "Erro ao calcular total a receber", e)
+                        0.0
+                    }
+                }
+                
+                val countPendentesCobrancasDeferred = async { 
+                    try {
+                        cobrancaRepository.getCountPendentes()
+                    } catch (e: Exception) {
+                        android.util.Log.e("FinanceiroViewModel", "Erro ao contar pendentes", e)
+                        0
+                    }
+                }
+                
+                val countVencidasCobrancasDeferred = async { 
+                    try {
+                        cobrancaRepository.getCountByStatus(StatusPagamento.VENCIDO)
+                    } catch (e: Exception) {
+                        android.util.Log.e("FinanceiroViewModel", "Erro ao contar vencidas", e)
+                        0
+                    }
+                }
 
-                // Calcular totais dos records financeiros
+                // Calcular totais dos records financeiros de forma otimizada
                 val totalRecebidoRecords = records
+                    .asSequence()
                     .filter { it.type == "RECEITA" }
                     .sumOf { it.value }
                 
                 val totalDespesasRecords = records
+                    .asSequence()
                     .filter { it.type == "DESPESA" }
                     .sumOf { it.value }
+
+                // Aguardar resultados das queries
+                val totalRecebidoCobrancas = totalRecebidoCobrancasDeferred.await()
+                val totalAReceberCobrancas = totalAReceberCobrancasDeferred.await()
+                val countPendentesCobrancas = countPendentesCobrancasDeferred.await()
+                val countVencidasCobrancas = countVencidasCobrancasDeferred.await()
 
                 // Totais unificados
                 val totalRecebido = totalRecebidoCobrancas + totalRecebidoRecords
@@ -188,19 +297,24 @@ class FinanceiroUnificadoViewModel @Inject constructor(
 
                 android.util.Log.d("FinanceiroViewModel", "Resumo calculado - Total Recebido Cobranças: $totalRecebidoCobrancas, Records: $totalRecebidoRecords, Total: $totalRecebido")
 
-                _resumoFinanceiro.value = ResumoFinanceiroUnificado(
-                    totalRecebido = totalRecebido,
-                    totalAReceber = totalAReceber,
-                    totalDespesas = totalDespesas,
-                    resultadoPrevisto = resultadoPrevisto,
-                    countPendentes = countPendentesCobrancas,
-                    countVencidas = countVencidasCobrancas,
-                    countCobrancas = cobrancas.size,
-                    countRecords = records.size
-                )
+                // Atualizar UI na thread principal
+                withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    _resumoFinanceiro.value = ResumoFinanceiroUnificado(
+                        totalRecebido = totalRecebido,
+                        totalAReceber = totalAReceber,
+                        totalDespesas = totalDespesas,
+                        resultadoPrevisto = resultadoPrevisto,
+                        countPendentes = countPendentesCobrancas,
+                        countVencidas = countVencidasCobrancas,
+                        countCobrancas = cobrancas.size,
+                        countRecords = records.size
+                    )
+                }
             } catch (e: Exception) {
                 android.util.Log.e("FinanceiroViewModel", "Erro ao calcular resumo", e)
-                _error.value = "Erro ao calcular resumo: ${e.message}"
+                withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    _error.value = "Erro ao calcular resumo: ${e.message}"
+                }
             }
         }
     }
@@ -278,37 +392,7 @@ class FinanceiroUnificadoViewModel @Inject constructor(
         }
     }
 
-    fun enviarNotificacaoPagamentosPendentes() {
-        viewModelScope.launch {
-            try {
-                val countPendentes = resumoFinanceiro.value.countPendentes
-                val totalPendente = resumoFinanceiro.value.totalAReceber
-                
-                if (countPendentes > 0) {
-                    notificationService.mostrarNotificacaoPagamentosPendentes(countPendentes, totalPendente)
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("FinanceiroViewModel", "Erro ao enviar notificação", e)
-            }
-        }
-    }
 
-    fun enviarNotificacaoRelatorioDiario() {
-        viewModelScope.launch {
-            try {
-                val totalRecebido = resumoFinanceiro.value.totalRecebido
-                val totalPendente = resumoFinanceiro.value.totalAReceber
-                val countRecebidos = _cobrancas.value.count { it.status == StatusPagamento.PAGO }
-                val countPendentes = resumoFinanceiro.value.countPendentes
-                
-                notificationService.mostrarNotificacaoRelatorioDiario(
-                    totalRecebido, totalPendente, countRecebidos, countPendentes
-                )
-            } catch (e: Exception) {
-                android.util.Log.e("FinanceiroViewModel", "Erro ao enviar notificação de relatório", e)
-            }
-        }
-    }
 
     fun forcarRecarregamento() {
         dadosCarregados = false
