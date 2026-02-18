@@ -1,14 +1,25 @@
 /**
  * Cliente HTTP centralizado para comunicação com a API do PsiPro
- * 
- * Configurações:
- * - Base URL via NEXT_PUBLIC_API_URL
- * - Token JWT automático via localStorage
+ *
+ * Todas as chamadas usam a base URL do backend (NEXT_PUBLIC_API_URL).
+ * Em produção (Railway): NEXT_PUBLIC_API_URL=https://psipro-backend-production.up.railway.app/api
+ *
+ * - Base URL via NEXT_PUBLIC_API_URL (obrigatório em produção)
+ * - Token JWT automático via localStorage (psipro_token)
  * - Interceptação de erros (401, 403, 500)
- * - Retorno de erros normalizados
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api').replace(/\/+$/, '');
+
+// DEBUG: Remover após auditoria
+if (typeof window !== 'undefined') {
+  console.log('[api] API_BASE_URL:', API_BASE_URL, '| termina com /api:', API_BASE_URL.endsWith('/api'));
+}
+
+/** URL base da API (para uso em handoff/test que não usam o cliente api). */
+export function getApiBaseUrl(): string {
+  return (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api').replace(/\/+$/, '');
+}
 
 export interface ApiError {
   message: string;
@@ -33,7 +44,8 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     const token = this.getToken();
-    const url = `${this.baseURL}${endpoint}`;
+    const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `${this.baseURL.replace(/\/+$/, '')}${path}`;
 
     const isFormData =
       typeof FormData !== 'undefined' && options.body instanceof FormData;

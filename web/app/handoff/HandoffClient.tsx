@@ -2,8 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import { getApiBaseUrl } from "../services/api";
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api").replace(/\/+$/, "");
+const API_BASE_URL = getApiBaseUrl();
 
 type HandoffResponse = {
   token?: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { api } from "../services/api";
+import { api, getApiBaseUrl } from "../services/api";
 import { clinicService } from "../services/clinicService";
 import { useToast } from "../contexts/ToastContext";
 import { useClinic } from "../contexts/ClinicContext";
@@ -18,8 +18,7 @@ export default function TestPage() {
     setLoading(true);
     try {
       // Verificar se backend está acessível
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-      
+      const apiUrl = getApiBaseUrl();
       const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: {
@@ -47,7 +46,7 @@ export default function TestPage() {
     } catch (error: any) {
       console.error("Erro no login:", error);
       if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
-        showError("Erro de conexão. Verifique se o backend está rodando em http://localhost:3001/api");
+        showError("Erro de conexão. Verifique NEXT_PUBLIC_API_URL e se o backend está acessível.");
       } else {
         showError(error.message || "Erro ao fazer login");
       }
@@ -82,7 +81,7 @@ export default function TestPage() {
       if (error.status === 401) {
         showError("Token inválido ou expirado. Faça login novamente.");
       } else       if (error.status === 0 || error.message?.includes('Failed to fetch')) {
-        showError("Erro de conexão. Verifique se o backend está rodando em http://localhost:3001/api");
+        showError("Erro de conexão. Verifique NEXT_PUBLIC_API_URL e se o backend está acessível.");
       } else {
         showError(`Erro: ${error.message} (Status: ${error.status || 'N/A'})`);
       }
@@ -114,7 +113,7 @@ export default function TestPage() {
           <div className="flex items-center gap-2">
             <span className="text-psipro-text-secondary">API URL:</span>
             <span className="text-psipro-text">
-              {process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api (padrão)"}
+              {getApiBaseUrl()}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -122,7 +121,7 @@ export default function TestPage() {
             <button
               onClick={async () => {
                 try {
-                  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+                  const apiUrl = getApiBaseUrl();
                   const response = await fetch(`${apiUrl}/auth/me`, {
                     headers: {
                       'Authorization': `Bearer ${currentToken || ''}`,
@@ -215,6 +214,50 @@ export default function TestPage() {
             Salvar Token
           </button>
         </div>
+      </div>
+
+      {/* Teste POST /clinics (auditoria) */}
+      <div className="bg-psipro-surface-elevated border border-psipro-border rounded-lg p-6 mb-6">
+        <h2 className="text-xl font-semibold text-psipro-text mb-4">
+          🧪 Teste POST /clinics (Auditoria)
+        </h2>
+        <button
+          onClick={async () => {
+            const apiUrl = getApiBaseUrl();
+            const token = localStorage.getItem("psipro_token");
+            console.log("[AUDIT] API_BASE_URL:", apiUrl);
+            console.log("[AUDIT] Token:", token ? `${token.substring(0, 30)}...` : "AUSENTE");
+            if (!token) {
+              showError("Faça login primeiro");
+              return;
+            }
+            try {
+              const url = `${apiUrl}/clinics`;
+              const res = await fetch(url, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": "Bearer " + token,
+                },
+                body: JSON.stringify({ name: "TESTE CLINICA AUDIT" }),
+              });
+              const data = await res.json().catch(() => ({}));
+              console.log("[AUDIT] Status:", res.status, "| Response:", data);
+              if (res.ok) {
+                showSuccess(`POST /clinics OK! Status ${res.status}`);
+              } else {
+                showError(`Erro ${res.status}: ${JSON.stringify(data)}`);
+              }
+            } catch (e) {
+              console.error("[AUDIT] Erro completo:", e);
+              showError("Erro de rede: " + (e instanceof Error ? e.message : String(e)));
+            }
+          }}
+          disabled={!currentToken}
+          className="w-full px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Testar POST /clinics
+        </button>
       </div>
 
       {/* Teste de Conexão */}

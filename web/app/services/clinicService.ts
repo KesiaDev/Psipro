@@ -69,6 +69,12 @@ export interface ClinicStats {
   revenue: number;
 }
 
+/** Resposta do POST /clinics: retorna clinic + novo accessToken (com clinicId/role). */
+export interface CreateClinicResponse {
+  clinic: Clinic;
+  accessToken: string;
+}
+
 class ClinicService {
   /**
    * Lista todas as clínicas do usuário autenticado
@@ -93,11 +99,11 @@ class ClinicService {
   }
 
   /**
-   * Cria uma nova clínica
+   * Cria uma nova clínica. Retorna clinic + accessToken (atualizar token no front).
    */
-  async createClinic(data: CreateClinicDto): Promise<Clinic> {
+  async createClinic(data: CreateClinicDto): Promise<CreateClinicResponse> {
     try {
-      return await api.post<Clinic>('/clinics', data);
+      return await api.post<CreateClinicResponse>('/clinics', data);
     } catch (error) {
       throw this.handleError(error);
     }
