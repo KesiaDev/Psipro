@@ -20,17 +20,30 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: any) {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
+      select: { id: true, email: true, clinicId: true, role: true },
     });
 
     if (!user) {
       throw new UnauthorizedException();
     }
 
-    /**
-     * Backend é a fonte única de verdade de identidade.
-     * Por compatibilidade entre módulos/clients, expomos `id` e `sub` com o mesmo valor.
-     */
-    return { id: user.id, sub: user.id, email: user.email };
+    // clinicId para isolamento multi-tenant (ETAPA 4)
+    let clinicId = user.clinicId;
+    if (!clinicId) {
+      const cu = await this.prisma.clinicUser.findFirst({
+        where: { userId: user.id, status: 'active' },
+        select: { clinicId: true },
+      });
+      clinicId = cu?.clinicId ?? undefined;
+    }
+
+    return {
+      id: user.id,
+      sub: user.id,
+      email: user.email,
+      clinicId: clinicId ?? undefined,
+      role: user.role,
+    };
   }
 }
 

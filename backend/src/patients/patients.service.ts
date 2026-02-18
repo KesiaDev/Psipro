@@ -8,12 +8,12 @@ import * as XLSX from 'xlsx';
 export class PatientsService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Retorna clínicas que o usuário pode acessar (ClinicUser + clínica principal)
+   */
   private async getUserClinics(userId: string) {
-    return this.prisma.clinicUser.findMany({
-      where: {
-        userId: userId,
-        status: 'active',
-      },
+    const clinicUsers = await this.prisma.clinicUser.findMany({
+      where: { userId, status: 'active' },
       select: {
         clinicId: true,
         role: true,
@@ -21,6 +21,21 @@ export class PatientsService {
         canEditAllPatients: true,
       },
     });
+
+    // Incluir clinicId principal (multi-tenant) se não estiver na lista
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { clinicId: true },
+    });
+    if (user?.clinicId && !clinicUsers.some((cu) => cu.clinicId === user.clinicId)) {
+      clinicUsers.push({
+        clinicId: user.clinicId,
+        role: 'owner',
+        canViewAllPatients: true,
+        canEditAllPatients: true,
+      });
+    }
+    return clinicUsers;
   }
 
   private async hasAccessToPatient(patientId: string, userId: string): Promise<boolean> {
@@ -149,11 +164,16 @@ export class PatientsService {
       });
     }
 
-    // Paciente independente
+    // Paciente independente (psicólogo individual) - usar clinicId do user se existir
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { clinicId: true },
+    });
     return this.prisma.patient.create({
       data: {
         ...createPatientDto,
         userId: userId,
+        clinicId: user?.clinicId ?? createPatientDto.clinicId ?? null,
         sharedWith: createPatientDto.sharedWith || [],
         source,
         origin,

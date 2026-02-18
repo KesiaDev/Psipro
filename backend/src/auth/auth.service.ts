@@ -61,12 +61,25 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
 
+    // ETAPA 5: Se não vier clinic, criar Clinic com planType INDIVIDUAL (psicólogo individual)
+    const clinic = await this.prisma.clinic.create({
+      data: {
+        name: registerDto.fullName,
+        email: registerDto.email,
+        plan: 'basic',
+        planType: 'INDIVIDUAL',
+        status: 'active',
+      },
+    });
+
     const user = await this.prisma.user.create({
       data: {
         email: registerDto.email,
         name: registerDto.fullName,
         password: hashedPassword,
         isIndependent: true,
+        clinicId: clinic.id,
+        role: 'OWNER',
       },
       select: {
         id: true,
@@ -101,6 +114,8 @@ export class AuthService {
         email: true,
         name: true,
         isIndependent: true,
+        clinicId: true,
+        role: true,
       },
     });
 
@@ -108,31 +123,33 @@ export class AuthService {
       throw new UnauthorizedException('Usuário não encontrado');
     }
 
-    // Se o usuário pertence a uma clínica ativa, usamos a primeira como "contexto" padrão.
-    // Isso evita quebra de clientes existentes e permite que o backend seja a fonte única de verdade.
-    const clinicMembership = await this.prisma.clinicUser.findFirst({
-      where: {
-        userId: user.id,
-        status: 'active',
-      },
-      select: {
-        clinicId: true,
-        role: true,
-        joinedAt: true,
-      },
-      orderBy: {
-        joinedAt: 'asc',
-      },
-    });
+    // clinicId: preferir user.clinicId (clínica principal) depois ClinicUser
+    let clinicId = user.clinicId ?? null;
+    let clinicUserRole: string | null = null;
+    if (!clinicId) {
+      const clinicMembership = await this.prisma.clinicUser.findFirst({
+        where: { userId: user.id, status: 'active' },
+        select: { clinicId: true, role: true },
+        orderBy: { joinedAt: 'asc' },
+      });
+      clinicId = clinicMembership?.clinicId ?? null;
+      if (clinicMembership) {
+        clinicUserRole = clinicMembership.role;
+      }
+    }
 
     const role: AuthMeRole =
-      clinicMembership && ['owner', 'admin'].includes(clinicMembership.role) ? 'ADMIN' : 'USER';
+      user.role === 'OWNER' ||
+      clinicUserRole === 'owner' ||
+      clinicUserRole === 'admin'
+        ? 'ADMIN'
+        : 'USER';
 
     return {
       id: user.id,
       email: user.email,
       role,
-      clinicId: clinicMembership?.clinicId ?? null,
+      clinicId,
       name: user.name,
     };
   }

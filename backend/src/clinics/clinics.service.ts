@@ -4,29 +4,67 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateClinicDto } from './dto/create-clinic.dto';
 import { UpdateClinicDto } from './dto/update-clinic.dto';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { UpdateClinicUserDto } from './dto/update-clinic-user.dto';
+import { PlanType } from '@prisma/client';
 
 @Injectable()
 export class ClinicsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private jwtService: JwtService,
+  ) {}
 
+  /**
+   * POST /clinics — Cria nova clínica e associa usuário como OWNER.
+   * Não exige clinicId; usuário pode não ter clínica ainda.
+   * Retorna clinic + novo accessToken com userId, email, clinicId, role.
+   */
   async create(userId: string, createClinicDto: CreateClinicDto) {
-    // Criar clínica
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true },
+    });
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    // Criar clínica com planType INDIVIDUAL e status active
     const clinic = await this.prisma.clinic.create({
       data: {
-        ...createClinicDto,
+        name: createClinicDto.name,
+        planType: PlanType.INDIVIDUAL,
+        status: 'active',
+        plan: 'basic',
+        ...(createClinicDto.email && { email: createClinicDto.email }),
+        ...(createClinicDto.phone && { phone: createClinicDto.phone }),
+        ...(createClinicDto.address && { address: createClinicDto.address }),
+        ...(createClinicDto.cnpj && { cnpj: createClinicDto.cnpj }),
       },
     });
 
-    // Adicionar criador como owner
-    await this.prisma.clinicUser.create({
+    // Atualizar usuário: clinicId e role OWNER
+    await this.prisma.user.update({
+      where: { id: userId },
       data: {
         clinicId: clinic.id,
-        userId: userId,
+        role: 'OWNER',
+        isIndependent: false,
+      },
+    });
+
+    // Manter consistência com ClinicUser (many-to-many)
+    await this.prisma.clinicUser.upsert({
+      where: {
+        clinicId_userId: { clinicId: clinic.id, userId },
+      },
+      create: {
+        clinicId: clinic.id,
+        userId,
         role: 'owner',
         status: 'active',
         canViewAllPatients: true,
@@ -34,15 +72,22 @@ export class ClinicsService {
         canViewFinancial: true,
         canManageUsers: true,
       },
+      update: { role: 'owner', status: 'active' },
     });
 
-    // Atualizar usuário para não ser mais independente (opcional)
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { isIndependent: false },
-    });
+    // Novo JWT contendo userId, email, clinicId, role
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      clinicId: clinic.id,
+      role: 'OWNER',
+    };
+    const accessToken = this.jwtService.sign(payload);
 
-    return clinic;
+    return {
+      clinic,
+      accessToken,
+    };
   }
 
   async findAll(userId: string) {

@@ -6,20 +6,29 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 export class PaymentsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(userId: string, createPaymentDto: CreatePaymentDto) {
-    // Verificar se o paciente pertence ao usuário
+  async create(userId: string, createPaymentDto: CreatePaymentDto, clinicId?: string) {
     const patient = await this.prisma.patient.findUnique({
       where: { id: createPaymentDto.patientId },
     });
 
-    if (!patient || patient.userId !== userId) {
-      throw new Error('Paciente não encontrado ou acesso negado');
+    if (!patient) {
+      throw new Error('Paciente não encontrado');
     }
+
+    const isOwner = patient.userId === userId;
+    const isShared = patient.sharedWith?.includes(userId);
+    const isSameClinic = clinicId && patient.clinicId === clinicId;
+    if (!isOwner && !isShared && !isSameClinic) {
+      throw new Error('Acesso negado ao paciente');
+    }
+
+    const resolvedClinicId = clinicId ?? patient.clinicId ?? undefined;
 
     const payment = await this.prisma.payment.create({
       data: {
         ...createPaymentDto,
         userId,
+        clinicId: resolvedClinicId,
         date: new Date(createPaymentDto.date),
         amount: createPaymentDto.amount,
         source: createPaymentDto.source || 'app',

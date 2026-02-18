@@ -11,7 +11,7 @@ export class PaymentsController {
 
   @Post()
   create(@CurrentUser() user: any, @Body() createPaymentDto: CreatePaymentDto) {
-    return this.paymentsService.create(user.sub, createPaymentDto);
+    return this.paymentsService.create(user.sub, createPaymentDto, user.clinicId);
   }
 
   @Get('patient/:patientId')
