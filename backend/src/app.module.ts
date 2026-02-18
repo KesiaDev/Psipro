@@ -10,6 +10,7 @@ import { FinancialModule } from './financial/financial.module';
 import { DocumentsModule } from './documents/documents.module';
 import { InsightsModule } from './insights/insights.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { SyncModule } from './sync/sync.module';
 
 /**
@@ -33,6 +34,7 @@ import { SyncModule } from './sync/sync.module';
     FinancialModule,
     DocumentsModule,
     InsightsModule,
+    DashboardModule,
     SyncModule,
   ],
 })

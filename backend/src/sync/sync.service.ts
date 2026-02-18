@@ -41,8 +41,13 @@ export class SyncService {
     return first.clinicId;
   }
 
-  async getPatients(userId: string, query: SyncPatientsQueryDto) {
-    const clinicId = await this.resolveClinicId(userId, query.clinicId);
+  async getPatients(
+    userId: string,
+    clinicIdFromToken: string | undefined,
+    query: SyncPatientsQueryDto,
+  ) {
+    const clinicId =
+      clinicIdFromToken ?? (await this.resolveClinicId(userId, query.clinicId));
     const updatedAfter = query.updatedAfter ? new Date(query.updatedAfter) : undefined;
 
     return this.prisma.patient.findMany({
@@ -50,7 +55,7 @@ export class SyncService {
         clinicId,
         ...(updatedAfter ? { updatedAt: { gt: updatedAfter } } : {}),
       },
-      orderBy: { updatedAt: 'asc' },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
