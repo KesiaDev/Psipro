@@ -97,7 +97,7 @@ class DashboardService {
   private async calculateMetrics(clinicId?: string): Promise<DashboardMetrics> {
     try {
       const [patients, appointments] = await Promise.all([
-        patientService.getPatients(clinicId),
+        patientService.getPatients(),
         appointmentService.getAppointments(clinicId),
       ]);
 

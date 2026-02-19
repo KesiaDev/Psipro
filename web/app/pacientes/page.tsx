@@ -33,8 +33,7 @@ export default function PacientesPage() {
   const loadPatients = async () => {
     setLoading(true);
     try {
-      const clinicId = currentClinic?.id;
-      const data = await patientService.getPatients(clinicId);
+      const data = await patientService.getPatients();
       setPatients(data);
     } catch (error) {
       showError("Erro ao carregar pacientes");
@@ -53,9 +52,8 @@ export default function PacientesPage() {
         email: values.email.trim() || undefined,
         cpf: values.cpf.trim() || undefined,
         birthDate: values.birthDate || undefined,
-        clinicId: currentClinic?.id,
         status: "Ativo",
-        source: "web", // compat: createPatient usa sync (origin WEB) quando clinicId existe
+        source: "web",
       };
 
       await patientService.createPatient(payload);

@@ -83,9 +83,9 @@ export interface UpdatePatientDto {
 class PatientService {
   /**
    * Lista pacientes da clínica ativa.
-   * Usa GET /api/patients — clinicId vem do header X-Clinic-Id automaticamente.
+   * GET /api/patients — clinicId vem do header X-Clinic-Id automaticamente.
    */
-  async getPatients(clinicId?: string): Promise<Patient[]> {
+  async getPatients(): Promise<Patient[]> {
     return await api.get<Patient[]>('/patients');
   }
 
@@ -113,8 +113,9 @@ class PatientService {
   }
 
   /**
-   * Upsert de pacientes para sync bidirecional (Android <-> Web).
-   * POST /sync/patients?clinicId=...
+   * Upsert de pacientes para sync bidirecional (Android ↔ Web).
+   * APENAS para sincronização — NÃO usar para CRUD normal.
+   * CRUD usa: createPatient() → POST /api/patients
    */
   async syncPatients(clinicId: string, patients: SyncPatientDto[]): Promise<Patient[]> {
     try {
