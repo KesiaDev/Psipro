@@ -69,10 +69,9 @@ export interface ClinicStats {
   revenue: number;
 }
 
-/** Resposta do POST /clinics: retorna clinic + novo accessToken (com clinicId/role). */
+/** Resposta do POST /clinics: retorna apenas clinic (arquitetura multi-clinic). */
 export interface CreateClinicResponse {
   clinic: Clinic;
-  accessToken: string;
 }
 
 class ClinicService {

@@ -31,23 +31,33 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
     try {
       const data = await clinicService.getClinics();
       setClinics(data);
-      
-      // Verificar se há clínica salva no localStorage
-      const savedClinicId = localStorage.getItem("psipro_current_clinic_id");
+
+      // active_clinic_id: obrigatório para header X-Clinic-Id
+      const savedClinicId =
+        localStorage.getItem("active_clinic_id") ||
+        localStorage.getItem("psipro_current_clinic_id");
       if (savedClinicId) {
         const saved = data.find((c) => c.id === savedClinicId);
         if (saved) {
+          localStorage.setItem("active_clinic_id", saved.id);
+          localStorage.removeItem("psipro_current_clinic_id");
           setCurrentClinicState(saved);
           setIsIndependent(false);
           setLoading(false);
           return;
-        } else {
-          // Clínica salva não existe mais, limpar
-          localStorage.removeItem("psipro_current_clinic_id");
         }
+        localStorage.removeItem("active_clinic_id");
+        localStorage.removeItem("psipro_current_clinic_id");
       }
-      
-      setIsIndependent(data.length === 0);
+      // Primeira clínica como ativa (após login)
+      if (data.length > 0) {
+        const first = data[0];
+        localStorage.setItem("active_clinic_id", first.id);
+        setCurrentClinicState(first);
+        setIsIndependent(false);
+      } else {
+        setIsIndependent(true);
+      }
     } catch (err: any) {
       console.error("Erro ao carregar clínicas:", err);
       setError(err.message || "Erro ao carregar clínicas");
@@ -65,11 +75,11 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
   const setCurrentClinic = (clinic: Clinic | null) => {
     setCurrentClinicState(clinic);
     setIsIndependent(clinic === null);
-    
+
     if (clinic) {
-      localStorage.setItem("psipro_current_clinic_id", clinic.id);
+      localStorage.setItem("active_clinic_id", clinic.id);
     } else {
-      localStorage.removeItem("psipro_current_clinic_id");
+      localStorage.removeItem("active_clinic_id");
     }
   };
 

@@ -21,7 +21,8 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "prisma:migrate-existing": "ts-node prisma/migrate-existing-data.ts"
+    "prisma:migrate-existing": "ts-node prisma/migrate-existing-data.ts",
+    "prisma:migrate-to-clinic-user": "ts-node prisma/migrate-to-clinic-user.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

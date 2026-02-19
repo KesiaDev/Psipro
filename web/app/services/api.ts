@@ -39,6 +39,11 @@ class ApiClient {
     return localStorage.getItem('psipro_token');
   }
 
+  private getActiveClinicId(): string | null {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('active_clinic_id');
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -62,6 +67,10 @@ class ApiClient {
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
+    }
+    const activeClinicId = this.getActiveClinicId();
+    if (activeClinicId) {
+      headers['X-Clinic-Id'] = activeClinicId;
     }
 
     try {

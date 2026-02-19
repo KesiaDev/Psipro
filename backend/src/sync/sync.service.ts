@@ -43,11 +43,10 @@ export class SyncService {
 
   async getPatients(
     userId: string,
-    clinicIdFromToken: string | undefined,
+    clinicIdFromHeader: string,
     query: SyncPatientsQueryDto,
   ) {
-    const clinicId =
-      clinicIdFromToken ?? (await this.resolveClinicId(userId, query.clinicId));
+    const clinicId = clinicIdFromHeader;
     const updatedAfter = query.updatedAfter ? new Date(query.updatedAfter) : undefined;
 
     return this.prisma.patient.findMany({
@@ -59,8 +58,7 @@ export class SyncService {
     });
   }
 
-  async syncPatients(userId: string, query: SyncPatientsQueryDto, incoming: SyncPatientDto[]) {
-    const clinicId = await this.resolveClinicId(userId, query.clinicId);
+  async syncPatients(userId: string, clinicId: string, incoming: SyncPatientDto[]) {
 
     // Processamento transacional: backend decide conflitos e retorna estado persistido.
     return this.prisma.$transaction(async (tx) => {

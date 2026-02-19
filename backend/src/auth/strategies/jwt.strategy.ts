@@ -20,29 +20,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: any) {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
-      select: { id: true, email: true, clinicId: true, role: true },
+      select: { id: true, email: true },
     });
 
     if (!user) {
       throw new UnauthorizedException();
     }
 
-    // clinicId para isolamento multi-tenant (ETAPA 4)
-    let clinicId = user.clinicId;
-    if (!clinicId) {
-      const cu = await this.prisma.clinicUser.findFirst({
-        where: { userId: user.id, status: 'active' },
-        select: { clinicId: true },
-      });
-      clinicId = cu?.clinicId ?? undefined;
-    }
-
+    // JWT não carrega clinicId. Usar header x-clinic-id + ClinicGuard.
     return {
       id: user.id,
       sub: user.id,
       email: user.email,
-      clinicId: clinicId ?? undefined,
-      role: user.role,
     };
   }
 }

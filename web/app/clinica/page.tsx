@@ -75,8 +75,8 @@ export default function ClinicaPage() {
       console.log("[handleCreateClinic] Chamando POST /clinics...");
       const data = await clinicService.createClinic({ name });
       console.log("[handleCreateClinic] Resposta createClinic:", data);
-      if (data.accessToken && typeof window !== "undefined") {
-        localStorage.setItem(TOKEN_KEY, data.accessToken);
+      if (data.clinic?.id && typeof window !== "undefined") {
+        localStorage.setItem("active_clinic_id", data.clinic.id);
       }
       setShowCreateModal(false);
       setNewClinicName("");

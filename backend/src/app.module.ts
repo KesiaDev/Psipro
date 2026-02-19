@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
 import { ClinicsModule } from './clinics/clinics.module';
 import { PatientsModule } from './patients/patients.module';
@@ -25,6 +26,7 @@ import { SyncModule } from './sync/sync.module';
       isGlobal: true,
     }),
     PrismaModule,
+    CommonModule,
     AuthModule,
     ClinicsModule,
     PatientsModule,

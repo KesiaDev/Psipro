@@ -107,7 +107,7 @@ model User {
   cpf       String?  @unique
   license   String?  // CRP, etc
   
-  // Clínica principal (obrigatório após migração; nullable para migração de dados existentes)
+  // @deprecated Use ClinicUser. Mantido para migração. Fonte de verdade: ClinicUser.
   clinicId  String?
   clinic    Clinic?  @relation("PrimaryClinic", fields: [clinicId], references: [id], onDelete: Restrict)
   

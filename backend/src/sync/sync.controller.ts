@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { ClinicGuard } from '../common/guards/clinic.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { CurrentClinicId } from '../common/decorators/current-clinic.decorator';
 import { SyncPatientsBodyDto } from './dto/sync-patients-body.dto';
@@ -7,7 +8,7 @@ import { SyncPatientsQueryDto } from './dto/sync-patients-query.dto';
 import { SyncService } from './sync.service';
 
 @Controller('sync')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ClinicGuard)
 export class SyncController {
   constructor(private readonly syncService: SyncService) {}
 
@@ -19,7 +20,7 @@ export class SyncController {
   @Get('patients')
   getPatients(
     @CurrentUser() user: any,
-    @CurrentClinicId() clinicId: string | undefined,
+    @CurrentClinicId() clinicId: string,
     @Query() query: SyncPatientsQueryDto,
   ) {
     return this.syncService.getPatients(user.sub, clinicId, query);
@@ -32,10 +33,11 @@ export class SyncController {
   @Post('patients')
   syncPatients(
     @CurrentUser() user: any,
+    @CurrentClinicId() clinicId: string,
     @Query() query: SyncPatientsQueryDto,
     @Body() body: SyncPatientsBodyDto,
   ) {
-    return this.syncService.syncPatients(user.sub, query, body.patients);
+    return this.syncService.syncPatients(user.sub, clinicId, body.patients);
   }
 }
 

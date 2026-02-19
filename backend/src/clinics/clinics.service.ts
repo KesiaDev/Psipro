@@ -4,7 +4,6 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateClinicDto } from './dto/create-clinic.dto';
 import { UpdateClinicDto } from './dto/update-clinic.dto';
@@ -14,10 +13,7 @@ import { PlanType } from '@prisma/client';
 
 @Injectable()
 export class ClinicsService {
-  constructor(
-    private prisma: PrismaService,
-    private jwtService: JwtService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   /**
    * POST /clinics — Cria nova clínica e associa usuário como OWNER.
@@ -47,17 +43,7 @@ export class ClinicsService {
       },
     });
 
-    // Atualizar usuário: clinicId e role OWNER
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        clinicId: clinic.id,
-        role: 'OWNER',
-        isIndependent: false,
-      },
-    });
-
-    // Manter consistência com ClinicUser (many-to-many)
+    // NÃO alterar User. Relação via ClinicUser (N:N).
     await this.prisma.clinicUser.upsert({
       where: {
         clinicId_userId: { clinicId: clinic.id, userId },
@@ -75,19 +61,8 @@ export class ClinicsService {
       update: { role: 'owner', status: 'active' },
     });
 
-    // Novo JWT contendo userId, email, clinicId, role
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      clinicId: clinic.id,
-      role: 'OWNER',
-    };
-    const accessToken = this.jwtService.sign(payload);
-
-    return {
-      clinic,
-      accessToken,
-    };
+    // Retorna apenas clinic. JWT não é regenerado.
+    return { clinic };
   }
 
   async findAll(userId: string) {
