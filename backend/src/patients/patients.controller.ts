@@ -1,12 +1,12 @@
 import {
   BadRequestException,
   Controller,
+  Delete,
   Get,
   Post,
   Body,
   Patch,
   Param,
-  Query,
   UseGuards,
   UseInterceptors,
   UploadedFile,
@@ -16,16 +16,32 @@ import { PatientsService } from './patients.service';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { ClinicGuard } from '../common/guards/clinic.guard';
+import { CurrentClinicId } from '../common/decorators/current-clinic.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('patients')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ClinicGuard)
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
+  @Get()
+  findAll(@CurrentClinicId() clinicId: string) {
+    return this.patientsService.findAll(clinicId);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string, @CurrentClinicId() clinicId: string) {
+    return this.patientsService.findOne(id, clinicId);
+  }
+
   @Post()
-  create(@CurrentUser() user: any, @Body() createPatientDto: CreatePatientDto) {
-    return this.patientsService.create(user.sub, createPatientDto);
+  create(
+    @CurrentUser() user: { sub: string },
+    @CurrentClinicId() clinicId: string,
+    @Body() createPatientDto: CreatePatientDto,
+  ) {
+    return this.patientsService.create(createPatientDto, clinicId, user.sub);
   }
 
   /**
@@ -35,15 +51,16 @@ export class PatientsController {
    * Campos esperados:
    * - file: arquivo .xlsx/.xls
    * - mapping: JSON string com o mapeamento de colunas (mesmo do Web)
-   * - clinicId (opcional): clínica ativa para associar os pacientes
+   *
+   * Pacientes são associados à clínica ativa (X-Clinic-Id).
    */
   @Post('import')
   @UseInterceptors(FileInterceptor('file'))
   async importPatients(
-    @CurrentUser() user: any,
+    @CurrentUser() user: { sub: string },
+    @CurrentClinicId() clinicId: string,
     @UploadedFile() file: any,
     @Body('mapping') mapping?: string,
-    @Body('clinicId') clinicId?: string,
   ) {
     if (!file) {
       throw new BadRequestException('Arquivo não enviado');
@@ -59,26 +76,25 @@ export class PatientsController {
       throw new BadRequestException('Mapping inválido');
     }
 
-    return this.patientsService.importFromExcel(user.sub, file.buffer, parsedMapping, clinicId);
-  }
-
-  @Get()
-  findAll(@CurrentUser() user: any, @Query('clinicId') clinicId?: string) {
-    return this.patientsService.findAll(user.sub, clinicId);
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.patientsService.findOne(id, user.sub);
+    return this.patientsService.importFromExcel(
+      user.sub,
+      file.buffer,
+      parsedMapping,
+      clinicId,
+    );
   }
 
   @Patch(':id')
   update(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentClinicId() clinicId: string,
     @Body() updatePatientDto: UpdatePatientDto,
   ) {
-    return this.patientsService.update(id, user.sub, updatePatientDto);
+    return this.patientsService.update(id, clinicId, updatePatientDto);
+  }
+
+  @Delete(':id')
+  delete(@Param('id') id: string, @CurrentClinicId() clinicId: string) {
+    return this.patientsService.delete(id, clinicId);
   }
 }
-

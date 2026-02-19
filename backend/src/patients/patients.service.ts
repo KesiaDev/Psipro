@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
@@ -8,118 +13,16 @@ import * as XLSX from 'xlsx';
 export class PatientsService {
   constructor(private prisma: PrismaService) {}
 
-  /**
-   * Retorna clínicas que o usuário pode acessar (ClinicUser + clínica principal)
-   */
-  private async getUserClinics(userId: string) {
-    const clinicUsers = await this.prisma.clinicUser.findMany({
-      where: { userId, status: 'active' },
-      select: {
-        clinicId: true,
-        role: true,
-        canViewAllPatients: true,
-        canEditAllPatients: true,
-      },
-    });
-
-    // Incluir clinicId principal (multi-tenant) se não estiver na lista
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { clinicId: true },
-    });
-    if (user?.clinicId && !clinicUsers.some((cu) => cu.clinicId === user.clinicId)) {
-      clinicUsers.push({
-        clinicId: user.clinicId,
-        role: 'owner',
-        canViewAllPatients: true,
-        canEditAllPatients: true,
-      });
-    }
-    return clinicUsers;
-  }
-
-  private async hasAccessToPatient(patientId: string, userId: string): Promise<boolean> {
-    const patient = await this.prisma.patient.findUnique({
-      where: { id: patientId },
-      select: {
-        userId: true,
-        clinicId: true,
-        sharedWith: true,
-      },
-    });
-
-    if (!patient) return false;
-
-    // Se é paciente próprio
-    if (patient.userId === userId) return true;
-
-    // Se é paciente da clínica
-    if (patient.clinicId) {
-      const clinicUser = await this.prisma.clinicUser.findUnique({
-        where: {
-          clinicId_userId: {
-            clinicId: patient.clinicId,
-            userId: userId,
-          },
-        },
-      });
-
-      if (clinicUser && clinicUser.status === 'active') {
-        // Se tem permissão para ver todos ou se está compartilhado
-        if (clinicUser.canViewAllPatients || patient.sharedWith.includes(userId)) {
-          return true;
-        }
-      }
-    }
-
-    // Se está na lista de compartilhados
-    if (patient.sharedWith && patient.sharedWith.includes(userId)) {
-      return true;
-    }
-
-    return false;
-  }
-
-  async findAll(userId: string, clinicId?: string) {
-    const userClinics = await this.getUserClinics(userId);
-    const clinicIds = userClinics.map((uc) => uc.clinicId);
-
-    const where: any = {
-      OR: [
-        { userId: userId }, // Próprios pacientes
-      ],
-    };
-
-    // Se especificou clínica e tem acesso
-    if (clinicId) {
-      const hasAccess = userClinics.some((uc) => uc.clinicId === clinicId);
-      if (hasAccess) {
-        where.OR.push({ clinicId: clinicId });
-      }
-    } else {
-      // Adicionar pacientes de todas as clínicas que tem acesso
-      if (clinicIds.length > 0) {
-        where.OR.push({ clinicId: { in: clinicIds } });
-      }
-    }
-
-    // Adicionar pacientes compartilhados
-    where.OR.push({ sharedWith: { has: userId } });
-
+  async findAll(clinicId: string) {
     return this.prisma.patient.findMany({
-      where,
+      where: { clinicId },
       orderBy: { updatedAt: 'desc' },
     });
   }
 
-  async findOne(id: string, userId: string) {
-    const hasAccess = await this.hasAccessToPatient(id, userId);
-    if (!hasAccess) {
-      throw new ForbiddenException('Acesso negado');
-    }
-
-    return this.prisma.patient.findUnique({
-      where: { id },
+  async findOne(id: string, clinicId: string) {
+    const patient = await this.prisma.patient.findFirst({
+      where: { id, clinicId },
       include: {
         sessions: {
           orderBy: { date: 'desc' },
@@ -130,50 +33,27 @@ export class PatientsService {
         },
       },
     });
+
+    if (!patient) {
+      throw new NotFoundException('Paciente não encontrado');
+    }
+
+    return patient;
   }
 
-  async create(userId: string, createPatientDto: CreatePatientDto) {
+  async create(
+    createPatientDto: CreatePatientDto,
+    clinicId: string,
+    userId: string,
+  ) {
     const source = createPatientDto.source || 'web';
     const origin = source === 'app' ? 'ANDROID' : 'WEB';
 
-    // Se for paciente de clínica
-    if (createPatientDto.clinicId) {
-      // Verificar se usuário pertence à clínica
-      const clinicUser = await this.prisma.clinicUser.findUnique({
-        where: {
-          clinicId_userId: {
-            clinicId: createPatientDto.clinicId,
-            userId: userId,
-          },
-        },
-      });
-
-      if (!clinicUser || clinicUser.status !== 'active') {
-        throw new ForbiddenException('Sem acesso a esta clínica');
-      }
-
-      return this.prisma.patient.create({
-        data: {
-          ...createPatientDto,
-          clinicId: createPatientDto.clinicId,
-          clinicOwnerId: userId,
-          sharedWith: createPatientDto.sharedWith || [],
-          source,
-          origin,
-        },
-      });
-    }
-
-    // Paciente independente (psicólogo individual) - usar clinicId do user se existir
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { clinicId: true },
-    });
     return this.prisma.patient.create({
       data: {
         ...createPatientDto,
-        userId: userId,
-        clinicId: user?.clinicId ?? createPatientDto.clinicId ?? null,
+        clinicId,
+        clinicOwnerId: userId,
         sharedWith: createPatientDto.sharedWith || [],
         source,
         origin,
@@ -184,12 +64,13 @@ export class PatientsService {
   /**
    * Importa pacientes a partir de um Excel, usando o mesmo mapeamento do Web.
    * Retorna a lista de pacientes criados (persistidos).
+   * Pacientes são associados à clínica ativa (clinicId).
    */
   async importFromExcel(
     userId: string,
     fileBuffer: Buffer,
     mapping: Record<string, string>,
-    clinicId?: string,
+    clinicId: string,
   ) {
     const nomeCol = mapping?.nome;
     const telefoneCol = mapping?.telefone;
@@ -198,33 +79,20 @@ export class PatientsService {
     const nascimentoCol = mapping?.dataNascimento;
 
     if (!nomeCol || !telefoneCol) {
-      throw new BadRequestException('Mapeamento inválido: nome e telefone são obrigatórios');
-    }
-
-    // Se veio clinicId, valida acesso uma vez (a criação também valida, mas isso evita trabalho desnecessário)
-    if (clinicId) {
-      const clinicUser = await this.prisma.clinicUser.findUnique({
-        where: {
-          clinicId_userId: {
-            clinicId,
-            userId,
-          },
-        },
-        select: { status: true },
-      });
-      if (!clinicUser || clinicUser.status !== 'active') {
-        throw new ForbiddenException('Sem acesso a esta clínica');
-      }
+      throw new BadRequestException(
+        'Mapeamento inválido: nome e telefone são obrigatórios',
+      );
     }
 
     const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-    const range = firstSheet['!ref'] ? XLSX.utils.decode_range(firstSheet['!ref']) : null;
+    const range = firstSheet['!ref']
+      ? XLSX.utils.decode_range(firstSheet['!ref'])
+      : null;
     if (!range) {
       throw new BadRequestException('Arquivo Excel inválido');
     }
 
-    // Construir headers exatamente como o Web faz (inclui "Coluna A/B/...")
     const sheetHeaders: string[] = [];
     for (let col = 0; col <= range.e.c; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
@@ -251,21 +119,29 @@ export class PatientsService {
       .map((row) => {
         const obj: Record<string, any> = {};
         sheetHeaders.forEach((header, idx) => {
-          obj[header] = row[idx] !== undefined && row[idx] !== null ? row[idx] : '';
+          obj[header] =
+            row[idx] !== undefined && row[idx] !== null ? row[idx] : '';
         });
         return obj;
       })
-      .filter((row) => Object.values(row).some((v) => String(v).trim() !== ''));
+      .filter((row) =>
+        Object.values(row).some((v) => String(v).trim() !== ''),
+      );
 
     if (rows.length === 0) {
       throw new BadRequestException('Arquivo Excel não contém dados válidos');
     }
 
     const toBirthDateISO = (value: any): string | undefined => {
-      if (value === null || value === undefined || String(value).trim() === '') return undefined;
-      if (value instanceof Date && !isNaN(value.getTime())) return value.toISOString();
+      if (
+        value === null ||
+        value === undefined ||
+        String(value).trim() === ''
+      )
+        return undefined;
+      if (value instanceof Date && !isNaN(value.getTime()))
+        return value.toISOString();
 
-      // Excel às vezes envia datas como número serial
       if (typeof value === 'number') {
         const parsed = XLSX.SSF.parse_date_code(value);
         if (parsed && parsed.y && parsed.m && parsed.d) {
@@ -285,38 +161,30 @@ export class PatientsService {
       cpf: cpfCol ? String(row[cpfCol] ?? '').trim() || undefined : undefined,
       email: emailCol ? String(row[emailCol] ?? '').trim() || undefined : undefined,
       birthDate: nascimentoCol ? toBirthDateISO(row[nascimentoCol]) : undefined,
-      clinicId: clinicId || undefined,
+      clinicId,
       status: 'Ativo',
       source: 'web',
     }));
 
-    // Validação mínima server-side
     const firstInvalid = createDtos.findIndex((p) => !p.name || !p.phone);
     if (firstInvalid >= 0) {
-      // +2 por causa do header e índice base 0
-      throw new BadRequestException(`Linha ${firstInvalid + 2}: Nome e telefone são obrigatórios`);
+      throw new BadRequestException(
+        `Linha ${firstInvalid + 2}: Nome e telefone são obrigatórios`,
+      );
     }
 
-    return await Promise.all(createDtos.map((dto) => this.create(userId, dto)));
+    return Promise.all(
+      createDtos.map((dto) => this.create(dto, clinicId, userId)),
+    );
   }
 
-  async update(id: string, userId: string, updatePatientDto: UpdatePatientDto) {
-    const patient = await this.prisma.patient.findUnique({
-      where: { id },
+  async update(id: string, clinicId: string, updatePatientDto: UpdatePatientDto) {
+    const patient = await this.prisma.patient.findFirst({
+      where: { id, clinicId },
     });
 
     if (!patient) {
       throw new NotFoundException('Paciente não encontrado');
-    }
-
-    // Verificar permissão de edição
-    const canEdit =
-      patient.userId === userId ||
-      (patient.clinicId &&
-        (await this.hasEditPermission(patient.clinicId, userId, patient.userId === userId)));
-
-    if (!canEdit) {
-      throw new ForbiddenException('Sem permissão para editar este paciente');
     }
 
     return this.prisma.patient.update({
@@ -331,28 +199,15 @@ export class PatientsService {
     });
   }
 
-  private async hasEditPermission(
-    clinicId: string | null,
-    userId: string,
-    isOwner: boolean,
-  ): Promise<boolean> {
-    if (isOwner) return true;
-
-    if (!clinicId) return false;
-
-    const clinicUser = await this.prisma.clinicUser.findUnique({
-      where: {
-        clinicId_userId: {
-          clinicId: clinicId,
-          userId: userId,
-        },
-      },
+  async delete(id: string, clinicId: string) {
+    const result = await this.prisma.patient.deleteMany({
+      where: { id, clinicId },
     });
 
-    return (
-      clinicUser?.status === 'active' &&
-      (clinicUser.canEditAllPatients || ['owner', 'admin'].includes(clinicUser.role))
-    );
+    if (result.count === 0) {
+      throw new NotFoundException('Paciente não encontrado');
+    }
+
+    return { success: true, deleted: result.count };
   }
 }
-

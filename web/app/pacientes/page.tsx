@@ -73,7 +73,7 @@ export default function PacientesPage() {
 
   const handleImportPatients = async (file: File, mapping: Record<string, string>) => {
     try {
-      await patientService.importPatients(file, mapping, currentClinic?.id);
+      await patientService.importPatients(file, mapping);
       showSuccess("Pacientes importados com sucesso");
       await loadPatients();
     } catch (error) {
