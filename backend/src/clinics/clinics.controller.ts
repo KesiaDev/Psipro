@@ -45,6 +45,11 @@ export class ClinicsController {
     return this.clinicsService.update(id, req.user.id, updateClinicDto);
   }
 
+  @Delete(':id')
+  delete(@Request() req, @Param('id') id: string) {
+    return this.clinicsService.delete(id, req.user.id);
+  }
+
   @Post(':id/invite')
   inviteUser(
     @Request() req,

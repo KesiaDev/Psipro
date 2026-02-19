@@ -120,6 +120,17 @@ class ClinicService {
   }
 
   /**
+   * Exclui uma clínica (apenas owner/admin)
+   */
+  async deleteClinic(id: string): Promise<void> {
+    try {
+      await api.delete(`/clinics/${id}`);
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
    * Convidar usuário para a clínica
    */
   async inviteUser(clinicId: string, data: InviteUserDto): Promise<any> {

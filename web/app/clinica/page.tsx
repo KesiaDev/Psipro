@@ -21,6 +21,11 @@ export default function ClinicaPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newClinicName, setNewClinicName] = useState("");
   const [creating, setCreating] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editClinicName, setEditClinicName] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const loadClinicDetails = async (clinicId: string) => {
     setLoadingDetails(true);
@@ -57,6 +62,44 @@ export default function ClinicaPage() {
     setSelectedClinic(clinic);
     if (clinic.members === undefined) {
       loadClinicDetails(clinic.id);
+    }
+  };
+
+  const canManageClinic = selectedClinic && ['owner', 'admin'].includes(selectedClinic.role || "");
+
+  const handleEditClinic = async () => {
+    if (!selectedClinic || !editClinicName.trim()) return;
+    setEditing(true);
+    try {
+      await clinicService.updateClinic(selectedClinic.id, { name: editClinicName.trim() });
+      showSuccess("Clínica atualizada!");
+      setShowEditModal(false);
+      await loadClinicDetails(selectedClinic.id);
+      await refreshClinics();
+    } catch (err: any) {
+      showError(err?.message || "Erro ao atualizar clínica");
+    } finally {
+      setEditing(false);
+    }
+  };
+
+  const handleDeleteClinic = async () => {
+    if (!selectedClinic) return;
+    setDeleting(true);
+    try {
+      await clinicService.deleteClinic(selectedClinic.id);
+      showSuccess("Clínica excluída.");
+      setShowDeleteConfirm(false);
+      setSelectedClinic(null);
+      await refreshClinics();
+      const activeId = typeof window !== "undefined" ? localStorage.getItem("active_clinic_id") : null;
+      if (activeId === selectedClinic.id) {
+        localStorage.removeItem("active_clinic_id");
+      }
+    } catch (err: any) {
+      showError(err?.message || "Erro ao excluir clínica");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -281,21 +324,107 @@ export default function ClinicaPage() {
                   </div>
                 )}
 
-                {selectedClinic.permissions?.canManageUsers && (
-                  <div className="flex gap-4">
-                    <button
-                      onClick={() => setShowInviteModal(true)}
-                      className="px-4 py-2 bg-psipro-primary text-white rounded-lg hover:bg-psipro-primary-dark transition-colors"
-                    >
-                      Convidar Membro
-                    </button>
-                    <button className="px-4 py-2 bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated transition-colors">
-                      Ver Dashboard
-                    </button>
-                  </div>
-                )}
+                <div className="flex flex-wrap gap-4">
+                  {selectedClinic.permissions?.canManageUsers && (
+                    <>
+                      <button
+                        onClick={() => setShowInviteModal(true)}
+                        className="px-4 py-2 bg-psipro-primary text-white rounded-lg hover:bg-psipro-primary-dark transition-colors"
+                      >
+                        Convidar Membro
+                      </button>
+                      <button
+                        onClick={() => router.push("/dashboard")}
+                        className="px-4 py-2 bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated transition-colors"
+                      >
+                        Ver Dashboard
+                      </button>
+                    </>
+                  )}
+                  {canManageClinic && (
+                    <>
+                      <button
+                        onClick={() => {
+                          setEditClinicName(selectedClinic?.name || "");
+                          setShowEditModal(true);
+                        }}
+                        className="px-4 py-2 bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated transition-colors"
+                      >
+                        Alterar
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="px-4 py-2 bg-red-500/10 text-red-600 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors"
+                      >
+                        Excluir
+                      </button>
+                    </>
+                  )}
+                </div>
               </>
             )}
+          </div>
+        )}
+
+        {showEditModal && selectedClinic && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-psipro-surface-elevated border border-psipro-border rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-xl font-bold text-psipro-text mb-4">Alterar clínica</h3>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-psipro-text mb-2">Nome</label>
+                <input
+                  type="text"
+                  value={editClinicName}
+                  onChange={(e) => setEditClinicName(e.target.value)}
+                  placeholder="Ex: Meu Consultório"
+                  className="w-full px-4 py-2 bg-psipro-background border border-psipro-border rounded-lg text-psipro-text focus:outline-none focus:ring-2 focus:ring-psipro-primary"
+                  disabled={editing}
+                />
+              </div>
+              <div className="flex gap-4">
+                <button
+                  onClick={handleEditClinic}
+                  disabled={editing || !editClinicName.trim()}
+                  className="flex-1 px-4 py-2 bg-psipro-primary text-white rounded-lg hover:bg-psipro-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {editing ? "Salvando..." : "Salvar"}
+                </button>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  disabled={editing}
+                  className="flex-1 px-4 py-2 bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showDeleteConfirm && selectedClinic && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-psipro-surface-elevated border border-psipro-border rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-xl font-bold text-psipro-text mb-2">Excluir clínica</h3>
+              <p className="text-psipro-text-secondary text-sm mb-4">
+                Tem certeza que deseja excluir &quot;{selectedClinic.name}&quot;? Esta ação não pode ser desfeita.
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={handleDeleteClinic}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {deleting ? "Excluindo..." : "Excluir"}
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2 bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

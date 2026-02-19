@@ -142,28 +142,42 @@ export class ClinicsService {
   }
 
   async update(id: string, userId: string, updateClinicDto: UpdateClinicDto) {
-    // Verificar se usuário é owner ou admin
-    const clinicUser = await this.prisma.clinicUser.findUnique({
-      where: {
-        clinicId_userId: {
-          clinicId: id,
-          userId: userId,
-        },
-      },
-    });
-
-    if (!clinicUser) {
-      throw new NotFoundException('Clínica não encontrada');
-    }
-
-    if (!['owner', 'admin'].includes(clinicUser.role)) {
-      throw new ForbiddenException('Sem permissão para editar clínica');
-    }
-
+    await this.assertCanManageClinic(id, userId);
     return this.prisma.clinic.update({
       where: { id },
       data: updateClinicDto,
     });
+  }
+
+  /**
+   * DELETE /clinics/:id — Apenas owner ou admin.
+   * Remove clínica e dados em cascata (ClinicUser, Patient, etc).
+   */
+  async delete(id: string, userId: string) {
+    await this.assertCanManageClinic(id, userId);
+
+    await this.prisma.user.updateMany({
+      where: { clinicId: id },
+      data: { clinicId: null },
+    });
+
+    return this.prisma.clinic.delete({
+      where: { id },
+    });
+  }
+
+  private async assertCanManageClinic(clinicId: string, userId: string) {
+    const clinicUser = await this.prisma.clinicUser.findUnique({
+      where: {
+        clinicId_userId: { clinicId, userId },
+      },
+    });
+    if (!clinicUser) {
+      throw new NotFoundException('Clínica não encontrada');
+    }
+    if (!['owner', 'admin'].includes(clinicUser.role)) {
+      throw new ForbiddenException('Sem permissão para gerenciar esta clínica');
+    }
   }
 
   async inviteUser(clinicId: string, userId: string, inviteUserDto: InviteUserDto) {
