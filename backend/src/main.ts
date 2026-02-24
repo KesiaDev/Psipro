@@ -6,12 +6,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // CORS
-  const corsOrigins = process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',')
-    : ['http://localhost:3001', 'http://localhost:3000'];
-  
   app.enableCors({
-    origin: corsOrigins,
+    origin: [
+      'https://triumphant-perception-production-8792.up.railway.app',
+      'http://localhost:3000',
+    ],
     credentials: true,
   });
 
