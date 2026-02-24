@@ -5,13 +5,11 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // CORS
   app.enableCors({
-    origin: process.env.FRONTEND_URL?.split(',') || true,
+    origin: true,
     credentials: true,
   });
 
-  // Validação global
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -20,12 +18,11 @@ async function bootstrap() {
     }),
   );
 
-  // Prefixo global
   app.setGlobalPrefix('api');
 
-  const port = process.env.PORT || 3001;
-  await app.listen(port);
-  console.log(`🚀 PsiPro API running on http://localhost:${port}/api`);
+  const port = process.env.PORT ? Number(process.env.PORT) : 8080;
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 PsiPro API running on port ${port}/api`);
 }
 
 bootstrap();
