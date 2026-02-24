@@ -7,10 +7,7 @@ async function bootstrap() {
 
   // CORS
   app.enableCors({
-    origin: [
-      'https://triumphant-perception-production-8792.up.railway.app',
-      'http://localhost:3000',
-    ],
+    origin: process.env.FRONTEND_URL?.split(',') || true,
     credentials: true,
   });
 
