@@ -39,9 +39,7 @@ lerna-debug.log*
 .env.local
 .env.*.local
 
-# Prisma
-/prisma/migrations
-
+# Prisma (migrations devem ser versionadas para deploy)
 
 
 
