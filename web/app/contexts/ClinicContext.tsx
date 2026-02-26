@@ -1,3 +1,15 @@
+/**
+ * ⚠️ ARQUIVO CRÍTICO - INTEGRAÇÃO BACKEND
+ *
+ * Este arquivo contém lógica essencial de integração com API,
+ * autenticação ou variáveis de ambiente.
+ *
+ * NÃO alterar estrutura, headers, interceptors ou contratos de API
+ * durante modernização visual.
+ *
+ * Qualquer alteração pode quebrar produção.
+ */
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";

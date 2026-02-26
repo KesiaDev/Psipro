@@ -143,28 +143,28 @@ export default function DashboardPage() {
   return (
     <>
       <OnboardingModal />
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="w-full min-w-0 py-6 sm:py-8">
       {/* Cabeçalho do Dashboard */}
-      <div className="mb-8">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-psipro-text mb-2 tracking-tight">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-psipro-text mb-2 tracking-tight">
               Dashboard
             </h1>
-            <p className="text-psipro-text-secondary text-lg">
+            <p className="text-psipro-text-secondary text-base sm:text-lg">
               Visão geral da sua clínica
             </p>
           </div>
           {currentClinic && (
-            <div className="text-right">
-              <p className="text-sm text-psipro-text-secondary mb-1">
+            <div className="text-left sm:text-right shrink-0">
+              <p className="text-sm text-psipro-text-secondary mb-1 truncate">
                 {currentClinic.name}
               </p>
               <RoleBadge role={currentClinic.role || ""} />
             </div>
           )}
           {isIndependent && (
-            <div className="text-right">
+            <div className="text-left sm:text-right shrink-0">
               <p className="text-sm text-psipro-text-secondary">Modo Independente</p>
             </div>
           )}

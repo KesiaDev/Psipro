@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { api } from "../services/api";
 import { clinicService } from "../services/clinicService";
+import { getApiUrl } from "@/lib/env";
 import { useToast } from "../contexts/ToastContext";
 import { useClinic } from "../contexts/ClinicContext";
 
@@ -18,7 +19,7 @@ export default function TestPage() {
     setLoading(true);
     try {
       // Verificar se backend está acessível
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+      const apiUrl = getApiUrl();
       
       const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
@@ -47,7 +48,7 @@ export default function TestPage() {
     } catch (error: any) {
       console.error("Erro no login:", error);
       if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
-        showError("Erro de conexão. Verifique se o backend está rodando em http://localhost:3001/api");
+        showError(`Erro de conexão. Verifique se o backend está rodando em ${getApiUrl()}`);
       } else {
         showError(error.message || "Erro ao fazer login");
       }
@@ -82,7 +83,7 @@ export default function TestPage() {
       if (error.status === 401) {
         showError("Token inválido ou expirado. Faça login novamente.");
       } else       if (error.status === 0 || error.message?.includes('Failed to fetch')) {
-        showError("Erro de conexão. Verifique se o backend está rodando em http://localhost:3001/api");
+        showError(`Erro de conexão. Verifique se o backend está rodando em ${getApiUrl()}`);
       } else {
         showError(`Erro: ${error.message} (Status: ${error.status || 'N/A'})`);
       }
@@ -114,7 +115,7 @@ export default function TestPage() {
           <div className="flex items-center gap-2">
             <span className="text-psipro-text-secondary">API URL:</span>
             <span className="text-psipro-text">
-              {process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api (padrão)"}
+              {getApiUrl()}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -122,7 +123,7 @@ export default function TestPage() {
             <button
               onClick={async () => {
                 try {
-                  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+                  const apiUrl = getApiUrl();
                   const response = await fetch(`${apiUrl}/auth/me`, {
                     headers: {
                       'Authorization': `Bearer ${currentToken || ''}`,

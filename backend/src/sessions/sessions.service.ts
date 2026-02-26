@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { PatientAccessHelper } from '../common/helpers/patient-access.helper';
 import { CreateSessionDto } from './dto/create-session.dto';
 
 @Injectable()
 export class SessionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private patientAccess: PatientAccessHelper,
+  ) {}
 
   async findAll(userId: string, clinicId?: string) {
     const where: any = { userId };
@@ -21,7 +25,7 @@ export class SessionsService {
 
       if (clinicUser && clinicUser.status === 'active') {
         if (clinicUser.canViewAllPatients || ['owner', 'admin'].includes(clinicUser.role)) {
-          where.patient = { clinicId: clinicId };
+          where.patient = { clinicId };
         }
       }
     }
@@ -41,24 +45,12 @@ export class SessionsService {
   }
 
   async findByPatient(patientId: string, userId: string) {
-    // Verificar acesso ao paciente (próprio, clínica ou compartilhado)
-    const patient = await this.prisma.patient.findUnique({
-      where: { id: patientId },
-    });
-
-    if (!patient) {
-      throw new NotFoundException('Paciente não encontrado');
-    }
-
-    // Verificar se tem acesso
-    const hasAccess =
-      patient.userId === userId ||
-      (patient.clinicId &&
-        (await this.hasClinicAccess(patient.clinicId, userId))) ||
-      (patient.sharedWith && patient.sharedWith.includes(userId));
-
+    const hasAccess = await this.patientAccess.hasAccessToPatient(
+      patientId,
+      userId,
+    );
     if (!hasAccess) {
-      throw new ForbiddenException('Acesso negado');
+      throw new NotFoundException('Paciente não encontrado');
     }
 
     return this.prisma.session.findMany({
@@ -81,20 +73,30 @@ export class SessionsService {
     return clinicUser?.status === 'active' && clinicUser.canViewAllPatients;
   }
 
-  async create(userId: string, createSessionDto: CreateSessionDto) {
-    // Verificar se o paciente pertence ao usuário
-    const patient = await this.prisma.patient.findUnique({
-      where: { id: createSessionDto.patientId },
-    });
-
-    if (!patient || patient.userId !== userId) {
+  async create(
+    userId: string,
+    clinicId: string | undefined,
+    createSessionDto: CreateSessionDto,
+  ) {
+    const hasAccess = await this.patientAccess.hasAccessToPatient(
+      createSessionDto.patientId,
+      userId,
+    );
+    if (!hasAccess) {
       throw new ForbiddenException('Paciente não encontrado ou acesso negado');
     }
+
+    const patient = await this.prisma.patient.findUnique({
+      where: { id: createSessionDto.patientId },
+      select: { clinicId: true },
+    });
+    const effectiveClinicId = clinicId ?? patient?.clinicId ?? undefined;
 
     return this.prisma.session.create({
       data: {
         ...createSessionDto,
         userId,
+        clinicId: effectiveClinicId,
         date: new Date(createSessionDto.date),
         source: createSessionDto.source || 'app',
       },

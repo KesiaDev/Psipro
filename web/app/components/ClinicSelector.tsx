@@ -41,9 +41,9 @@ export default function ClinicSelector() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 bg-psipro-surface-elevated border border-psipro-border rounded-lg hover:bg-psipro-surface transition-colors"
+        className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-psipro-surface-elevated border border-psipro-border rounded-lg hover:bg-psipro-surface transition-colors min-w-0 max-w-[180px] sm:max-w-none"
       >
-        <span className="text-sm text-psipro-text-secondary">
+        <span className="text-sm text-psipro-text-secondary truncate">
           {currentClinic ? currentClinic.name : "Modo Independente"}
         </span>
         <svg

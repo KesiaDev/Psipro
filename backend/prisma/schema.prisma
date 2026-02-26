@@ -22,6 +22,13 @@ datasource db {
 // Seed configuration
 // Run: npm run prisma:seed
 
+// Origem de escrita do registro (para sync Android <-> Web).
+// Observação: mantemos o campo legado `source` (app|web) para compatibilidade.
+enum PatientOrigin {
+  ANDROID
+  WEB
+}
+
 // Clínica / Organização
 model Clinic {
   id          String   @id @default(uuid())
@@ -127,6 +134,7 @@ model Patient {
   
   // Sincronização
   source      String   @default("app") // app | web
+  origin      PatientOrigin @default(WEB)
   syncHash    String?  // Hash para detectar mudanças
   lastSyncedAt DateTime?
   createdAt   DateTime @default(now())
@@ -188,6 +196,7 @@ model Session {
   id            String   @id @default(uuid())
   userId        String
   patientId     String
+  clinicId      String?  // Clínica (para isolamento multi-tenant)
   appointmentId String?  @unique
   date          DateTime
   duration      Int      @default(60)
@@ -209,6 +218,7 @@ model Session {
 
   @@index([userId])
   @@index([patientId])
+  @@index([clinicId])
   @@index([date])
   @@index([syncHash])
   @@map("sessions")
@@ -219,6 +229,7 @@ model Payment {
   id          String   @id @default(uuid())
   userId      String
   patientId   String
+  clinicId    String?  // Clínica (para isolamento multi-tenant)
   sessionId   String?  @unique
   amount      Decimal  @db.Decimal(10, 2)
   date        DateTime
@@ -240,6 +251,7 @@ model Payment {
 
   @@index([userId])
   @@index([patientId])
+  @@index([clinicId])
   @@index([date])
   @@index([status])
   @@index([syncHash])
@@ -250,6 +262,7 @@ model Payment {
 model FinancialRecord {
   id          String   @id @default(uuid())
   userId      String
+  clinicId    String?  // Clínica (para isolamento multi-tenant)
   date        DateTime
   type        String   // receita | despesa
   amount      Decimal  @db.Decimal(10, 2)
@@ -265,6 +278,7 @@ model FinancialRecord {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([clinicId])
   @@index([date])
   @@map("financial_records")
 }
@@ -274,6 +288,7 @@ model Document {
   id          String   @id @default(uuid())
   userId      String
   patientId   String?
+  clinicId    String?  // Clínica (para isolamento multi-tenant)
   name        String
   type        String   // Termo | Relatório | Receita | etc
   fileUrl     String?  // URL do arquivo (S3, local, etc)
@@ -294,6 +309,7 @@ model Document {
 
   @@index([userId])
   @@index([patientId])
+  @@index([clinicId])
   @@index([syncHash])
   @@map("documents")
 }
@@ -302,6 +318,7 @@ model Document {
 model Insight {
   id          String   @id @default(uuid())
   userId      String
+  clinicId    String?  // Clínica (para isolamento multi-tenant)
   type        String   // clinico | financeiro | agenda
   message     String
   context     Json?    // Dados contextuais
@@ -312,6 +329,7 @@ model Insight {
   updatedAt   DateTime @updatedAt
 
   @@index([userId])
+  @@index([clinicId])
   @@index([dismissed])
   @@map("insights")
 }

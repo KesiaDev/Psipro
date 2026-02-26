@@ -1,21 +1,26 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const logger = new Logger('Bootstrap');
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+  });
 
-  // CORS
-  const corsOrigins = process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',')
-    : ['http://localhost:3001', 'http://localhost:3000'];
-  
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
   app.enableCors({
-    origin: corsOrigins,
+    origin: true,
     credentials: true,
   });
 
-  // Validação global
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -24,14 +29,26 @@ async function bootstrap() {
     }),
   );
 
-  // Prefixo global
-  app.setGlobalPrefix('api');
+  app.useGlobalFilters(new AllExceptionsFilter());
 
-  const port = process.env.PORT || 3001;
-  await app.listen(port);
-  console.log(`🚀 PsiPro API running on http://localhost:${port}/api`);
+  app.setGlobalPrefix('api', { exclude: ['health'] });
+
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('PsiPro API')
+      .setDescription('API única para sincronização entre App Android e Web do PsiPro')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+    logger.log('Swagger disponível em /api/docs');
+  }
+
+  const port = process.env.PORT || 3000;
+  await app.listen(port, '0.0.0.0');
+  logger.log(`PsiPro API running on http://0.0.0.0:${port}/api`);
+  logger.log(`Health check: http://0.0.0.0:${port}/health`);
 }
 
 bootstrap();
-
-

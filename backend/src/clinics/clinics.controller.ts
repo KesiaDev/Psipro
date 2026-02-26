@@ -9,6 +9,7 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
+import { SkipClinicContext } from '../common/decorators/skip-clinic-context.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { ClinicsService } from './clinics.service';
 import { CreateClinicDto } from './dto/create-clinic.dto';
@@ -18,6 +19,7 @@ import { UpdateClinicUserDto } from './dto/update-clinic-user.dto';
 
 @Controller('clinics')
 @UseGuards(JwtAuthGuard)
+@SkipClinicContext()
 export class ClinicsController {
   constructor(private readonly clinicsService: ClinicsService) {}
 

@@ -31,23 +31,29 @@ interface InsightInput {
 export class InsightsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(userId: string) {
+  async findAll(userId: string, clinicId?: string) {
+    const where: { userId: string; dismissed: boolean; clinicId?: string } = {
+      userId,
+      dismissed: false,
+    };
+    if (clinicId) where.clinicId = clinicId;
+
     return this.prisma.insight.findMany({
-      where: {
-        userId,
-        dismissed: false,
-      },
+      where,
       orderBy: { createdAt: 'desc' },
       take: 10,
     });
   }
 
-  async dismiss(id: string, userId: string) {
+  async dismiss(id: string, userId: string, clinicId?: string) {
+    const where: { id: string; userId: string; clinicId?: string } = {
+      id,
+      userId,
+    };
+    if (clinicId) where.clinicId = clinicId;
+
     return this.prisma.insight.updateMany({
-      where: {
-        id,
-        userId,
-      },
+      where,
       data: {
         dismissed: true,
       },
@@ -57,9 +63,9 @@ export class InsightsService {
   /**
    * Gera insights resumidos (máximo 3) para consumo pelo App Android
    */
-  async getSummary(userId: string): Promise<InsightSummaryDTO[]> {
+  async getSummary(userId: string, clinicId?: string): Promise<InsightSummaryDTO[]> {
     // Coletar dados do banco
-    const input = await this.collectInsightData(userId);
+    const input = await this.collectInsightData(userId, clinicId);
     
     // Gerar insights
     const insights = this.generateInsights(input);
@@ -77,8 +83,11 @@ export class InsightsService {
   /**
    * Coleta dados do banco para gerar insights
    */
-  private async collectInsightData(userId: string): Promise<InsightInput> {
+  private async collectInsightData(userId: string, clinicId?: string): Promise<InsightInput> {
     const now = new Date();
+    const sessionWhere = (extra: object) => ({ userId, ...(clinicId && { clinicId }), ...extra });
+    const paymentWhere = (extra: object) => ({ userId, ...(clinicId && { clinicId }), ...extra });
+    const appointmentWhere = (extra: object) => ({ userId, ...(clinicId && { clinicId }), ...extra });
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
@@ -93,78 +102,46 @@ export class InsightsService {
 
     // Sessões deste mês
     const sessionsThisMonth = await this.prisma.session.count({
-      where: {
-        userId,
-        date: { gte: startOfMonth },
-        status: 'realizada',
-      },
+      where: sessionWhere({ date: { gte: startOfMonth }, status: 'realizada' }),
     });
 
     // Sessões do mês anterior
     const sessionsLastMonth = await this.prisma.session.count({
-      where: {
-        userId,
-        date: { gte: startOfLastMonth, lte: endOfLastMonth },
-        status: 'realizada',
-      },
+      where: sessionWhere({ date: { gte: startOfLastMonth, lte: endOfLastMonth }, status: 'realizada' }),
     });
 
     // Sessões desta semana
     const sessionsThisWeek = await this.prisma.session.count({
-      where: {
-        userId,
-        date: { gte: startOfWeek, lte: endOfWeek },
-        status: 'realizada',
-      },
+      where: sessionWhere({ date: { gte: startOfWeek, lte: endOfWeek }, status: 'realizada' }),
     });
 
     // Sessões agendadas para próxima semana
     const scheduledSessionsNextWeek = await this.prisma.appointment.count({
-      where: {
-        userId,
-        scheduledAt: { gte: nextWeekStart, lte: nextWeekEnd },
-        status: { in: ['agendada', 'confirmada'] },
-      },
+      where: appointmentWhere({ scheduledAt: { gte: nextWeekStart, lte: nextWeekEnd }, status: { in: ['agendada', 'confirmada'] } }),
     });
 
     // Faltas (sessões com status 'falta')
     const missedSessions = await this.prisma.session.count({
-      where: {
-        userId,
-        date: { gte: startOfMonth },
-        status: 'falta',
-      },
+      where: sessionWhere({ date: { gte: startOfMonth }, status: 'falta' }),
     });
 
     // Cancelamentos (últimos 30 dias)
     const thirtyDaysAgo = new Date(now);
     thirtyDaysAgo.setDate(now.getDate() - 30);
     const cancelledSessions = await this.prisma.appointment.count({
-      where: {
-        userId,
-        updatedAt: { gte: thirtyDaysAgo },
-        status: 'cancelada',
-      },
+      where: appointmentWhere({ updatedAt: { gte: thirtyDaysAgo }, status: 'cancelada' }),
     });
 
     // Receita do mês
     const monthlyRevenueResult = await this.prisma.payment.aggregate({
-      where: {
-        userId,
-        date: { gte: startOfMonth },
-        status: 'pago',
-      },
+      where: paymentWhere({ date: { gte: startOfMonth }, status: 'pago' }),
       _sum: { amount: true },
     });
     const monthlyRevenue = Number(monthlyRevenueResult._sum.amount || 0);
 
     // Receita do mês anterior
     const lastMonthRevenueResult = await this.prisma.payment.aggregate({
-      where: {
-        userId,
-        date: { gte: startOfLastMonth, lte: endOfLastMonth },
-        status: 'pago',
-      },
+      where: paymentWhere({ date: { gte: startOfLastMonth, lte: endOfLastMonth }, status: 'pago' }),
       _sum: { amount: true },
     });
     const lastMonthRevenue = Number(lastMonthRevenueResult._sum.amount || 0);
@@ -176,44 +153,33 @@ export class InsightsService {
 
     // Sessões não pagas
     const unpaidSessions = await this.prisma.session.count({
-      where: {
-        userId,
-        date: { gte: startOfMonth },
-        payment: null,
-      },
+      where: sessionWhere({ date: { gte: startOfMonth }, payment: null }),
     });
 
     // Total pendente
     const pendingRevenueResult = await this.prisma.payment.aggregate({
-      where: {
-        userId,
-        status: 'pendente',
-      },
+      where: paymentWhere({ status: 'pendente' }),
       _sum: { amount: true },
     });
     const totalPendingRevenue = Number(pendingRevenueResult._sum.amount || 0);
 
     // Pacientes ativos
     const activePatients = await this.prisma.patient.count({
-      where: {
-        userId,
-        status: 'Ativo',
-      },
+      where: clinicId ? { clinicId, status: 'Ativo' } : { OR: [{ userId }, { clinicId: { not: null } }], status: 'Ativo' },
     });
 
     // Novos pacientes este mês
     const newPatientsThisMonth = await this.prisma.patient.count({
-      where: {
-        userId,
-        createdAt: { gte: startOfMonth },
-      },
+      where: clinicId
+        ? { clinicId, createdAt: { gte: startOfMonth } }
+        : { OR: [{ userId }, { clinicId: { not: null } }], createdAt: { gte: startOfMonth } },
     });
 
     // Pacientes sem sessões agendadas
+    const patientsWithSessionsWhere = clinicId ? { clinicId, status: 'Ativo' } : { OR: [{ userId }, { clinicId: { not: null } }], status: 'Ativo' };
     const patientsWithSessions = await this.prisma.patient.findMany({
       where: {
-        userId,
-        status: 'Ativo',
+        ...patientsWithSessionsWhere,
         appointments: {
           some: {
             scheduledAt: { gte: now },
@@ -226,9 +192,10 @@ export class InsightsService {
     const patientsWithoutSessions = activePatients - patientsWithSessions.length;
 
     // Pacientes com muitas sessões (mais de 10 este mês)
+    const patientsWithManySessionsWhere = clinicId ? { clinicId } : { OR: [{ userId }, { clinicId: { not: null } }] };
     const patientsWithManySessions = await this.prisma.patient.count({
       where: {
-        userId,
+        ...patientsWithManySessionsWhere,
         sessions: {
           some: {
             date: { gte: startOfMonth },
@@ -239,13 +206,8 @@ export class InsightsService {
     });
 
     // Dia mais ocupado (simplificado - pode ser melhorado)
-    // Buscar todas as sessões e agrupar manualmente por dia da semana
     const sessionsThisMonthList = await this.prisma.session.findMany({
-      where: {
-        userId,
-        date: { gte: startOfMonth },
-        status: 'realizada',
-      },
+      where: sessionWhere({ date: { gte: startOfMonth }, status: 'realizada' }),
       select: { date: true },
     });
     

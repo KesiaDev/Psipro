@@ -95,16 +95,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-psipro-background px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-psipro-background px-4 py-6 sm:py-12">
       <div className="w-full max-w-md">
         {/* Logo/Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-psipro-text mb-2">PsiPro</h1>
-          <p className="text-psipro-text-secondary">Entre na sua conta</p>
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-psipro-text mb-2">PsiPro</h1>
+          <p className="text-psipro-text-secondary text-sm sm:text-base">Entre na sua conta</p>
         </div>
 
         {/* Form Card */}
-        <div className="bg-psipro-surface-elevated border border-psipro-border rounded-lg p-8 shadow-lg">
+        <div className="bg-psipro-surface-elevated border border-psipro-border rounded-lg p-6 sm:p-8 shadow-lg">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Erro geral */}
             {errors.general && (

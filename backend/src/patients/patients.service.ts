@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
+import * as XLSX from 'xlsx';
 
 @Injectable()
 export class PatientsService {
@@ -116,14 +117,23 @@ export class PatientsService {
     });
   }
 
-  async create(userId: string, createPatientDto: CreatePatientDto) {
+  async create(
+    userId: string,
+    clinicIdFromContext?: string,
+    createPatientDto?: CreatePatientDto,
+  ) {
+    const dto = createPatientDto ?? ({} as CreatePatientDto);
+    const effectiveClinicId = clinicIdFromContext ?? dto?.clinicId;
+    const source = dto.source || 'web';
+    const origin = source === 'app' ? 'ANDROID' : 'WEB';
+
     // Se for paciente de clínica
-    if (createPatientDto.clinicId) {
+    if (effectiveClinicId) {
       // Verificar se usuário pertence à clínica
       const clinicUser = await this.prisma.clinicUser.findUnique({
         where: {
           clinicId_userId: {
-            clinicId: createPatientDto.clinicId,
+            clinicId: effectiveClinicId,
             userId: userId,
           },
         },
@@ -135,11 +145,12 @@ export class PatientsService {
 
       return this.prisma.patient.create({
         data: {
-          ...createPatientDto,
-          clinicId: createPatientDto.clinicId,
+          ...dto,
+          clinicId: effectiveClinicId,
           clinicOwnerId: userId,
-          sharedWith: createPatientDto.sharedWith || [],
-          source: createPatientDto.source || 'web',
+          sharedWith: dto.sharedWith || [],
+          source,
+          origin,
         },
       });
     }
@@ -147,12 +158,132 @@ export class PatientsService {
     // Paciente independente
     return this.prisma.patient.create({
       data: {
-        ...createPatientDto,
+        ...dto,
         userId: userId,
-        sharedWith: createPatientDto.sharedWith || [],
-        source: createPatientDto.source || 'web',
+        sharedWith: dto.sharedWith || [],
+        source,
+        origin,
       },
     });
+  }
+
+  /**
+   * Importa pacientes a partir de um Excel, usando o mesmo mapeamento do Web.
+   * Retorna a lista de pacientes criados (persistidos).
+   */
+  async importFromExcel(
+    userId: string,
+    fileBuffer: Buffer,
+    mapping: Record<string, string>,
+    clinicId?: string,
+  ) {
+    const nomeCol = mapping?.nome;
+    const telefoneCol = mapping?.telefone;
+    const cpfCol = mapping?.cpf;
+    const emailCol = mapping?.email;
+    const nascimentoCol = mapping?.dataNascimento;
+
+    if (!nomeCol || !telefoneCol) {
+      throw new BadRequestException('Mapeamento inválido: nome e telefone são obrigatórios');
+    }
+
+    // Se veio clinicId, valida acesso uma vez (a criação também valida, mas isso evita trabalho desnecessário)
+    if (clinicId) {
+      const clinicUser = await this.prisma.clinicUser.findUnique({
+        where: {
+          clinicId_userId: {
+            clinicId,
+            userId,
+          },
+        },
+        select: { status: true },
+      });
+      if (!clinicUser || clinicUser.status !== 'active') {
+        throw new ForbiddenException('Sem acesso a esta clínica');
+      }
+    }
+
+    const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+    const range = firstSheet['!ref'] ? XLSX.utils.decode_range(firstSheet['!ref']) : null;
+    if (!range) {
+      throw new BadRequestException('Arquivo Excel inválido');
+    }
+
+    // Construir headers exatamente como o Web faz (inclui "Coluna A/B/...")
+    const sheetHeaders: string[] = [];
+    for (let col = 0; col <= range.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      const cell = firstSheet[cellAddress] as any;
+      let headerValue = '';
+      if (cell && cell.v !== undefined && cell.v !== null) {
+        headerValue = String(cell.v).trim();
+      }
+      if (headerValue === '') {
+        const colLetter = XLSX.utils.encode_col(col);
+        headerValue = `Coluna ${colLetter}`;
+      }
+      sheetHeaders.push(headerValue);
+    }
+
+    const rawData = XLSX.utils.sheet_to_json(firstSheet, {
+      header: 1,
+      defval: '',
+      blankrows: false,
+    }) as any[][];
+
+    const rows = rawData
+      .slice(1)
+      .map((row) => {
+        const obj: Record<string, any> = {};
+        sheetHeaders.forEach((header, idx) => {
+          obj[header] = row[idx] !== undefined && row[idx] !== null ? row[idx] : '';
+        });
+        return obj;
+      })
+      .filter((row) => Object.values(row).some((v) => String(v).trim() !== ''));
+
+    if (rows.length === 0) {
+      throw new BadRequestException('Arquivo Excel não contém dados válidos');
+    }
+
+    const toBirthDateISO = (value: any): string | undefined => {
+      if (value === null || value === undefined || String(value).trim() === '') return undefined;
+      if (value instanceof Date && !isNaN(value.getTime())) return value.toISOString();
+
+      // Excel às vezes envia datas como número serial
+      if (typeof value === 'number') {
+        const parsed = XLSX.SSF.parse_date_code(value);
+        if (parsed && parsed.y && parsed.m && parsed.d) {
+          const dt = new Date(Date.UTC(parsed.y, parsed.m - 1, parsed.d));
+          if (!isNaN(dt.getTime())) return dt.toISOString();
+        }
+      }
+
+      const dt = new Date(String(value));
+      if (!isNaN(dt.getTime())) return dt.toISOString();
+      return undefined;
+    };
+
+    const createDtos: CreatePatientDto[] = rows.map((row) => ({
+      name: String(row[nomeCol] ?? '').trim(),
+      phone: String(row[telefoneCol] ?? '').trim() || undefined,
+      cpf: cpfCol ? String(row[cpfCol] ?? '').trim() || undefined : undefined,
+      email: emailCol ? String(row[emailCol] ?? '').trim() || undefined : undefined,
+      birthDate: nascimentoCol ? toBirthDateISO(row[nascimentoCol]) : undefined,
+      clinicId: clinicId || undefined,
+      status: 'Ativo',
+      source: 'web',
+    }));
+
+    // Validação mínima server-side
+    const firstInvalid = createDtos.findIndex((p) => !p.name || !p.phone);
+    if (firstInvalid >= 0) {
+      // +2 por causa do header e índice base 0
+      throw new BadRequestException(`Linha ${firstInvalid + 2}: Nome e telefone são obrigatórios`);
+    }
+
+    return await Promise.all(createDtos.map((dto) => this.create(userId, clinicId, dto)));
   }
 
   async update(id: string, userId: string, updatePatientDto: UpdatePatientDto) {
@@ -178,6 +309,9 @@ export class PatientsService {
       where: { id },
       data: {
         ...updatePatientDto,
+        ...(updatePatientDto.source
+          ? { origin: updatePatientDto.source === 'app' ? 'ANDROID' : 'WEB' }
+          : {}),
         lastSyncedAt: new Date(),
       },
     });

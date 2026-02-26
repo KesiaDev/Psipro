@@ -1,4 +1,5 @@
 import { Controller, Post, Body, UseGuards, Get, Headers, UnauthorizedException } from '@nestjs/common';
+import { SkipClinicContext } from '../common/decorators/skip-clinic-context.decorator';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { HandoffDto } from './dto/handoff.dto';
@@ -7,6 +8,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('auth')
+@SkipClinicContext()
 export class AuthController {
   constructor(private authService: AuthService) {}
 

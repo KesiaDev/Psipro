@@ -8,7 +8,11 @@ import { useTheme } from "@/app/contexts/ThemeContext";
 import { useAuth } from "@/app/contexts/AuthContext";
 import ClinicSelector from "./ClinicSelector";
 
-export default function Header() {
+type HeaderProps = {
+  onMenuClick?: () => void;
+};
+
+export default function Header({ onMenuClick }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -31,22 +35,35 @@ export default function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-psipro-surface-elevated border-b border-psipro-border z-40 flex items-center px-6 shadow-sm">
-      <div className="flex items-center gap-3 min-w-0">
+    <header className="fixed top-0 left-0 right-0 h-14 sm:h-16 bg-psipro-surface-elevated border-b border-psipro-border z-40 flex items-center px-4 sm:px-6 shadow-sm">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+        {onMenuClick && (
+          <button
+            onClick={onMenuClick}
+            className="xl:hidden p-2 rounded-lg hover:bg-psipro-surface text-psipro-text shrink-0"
+            aria-label="Abrir menu"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        )}
         <Link href="/dashboard" className="flex items-center shrink-0">
           <Image
             src="/brand/logo-psipro.png"
             alt="PsiPro - Gestão Inteligente para Psicólogos"
             width={280}
             height={112}
-            className="h-[56px] sm:h-[48px] md:h-[56px] w-auto"
+            className="h-9 sm:h-10 md:h-12 w-auto max-w-[180px] sm:max-w-none"
             priority
             unoptimized
           />
         </Link>
       </div>
-      <div className="ml-auto flex items-center gap-4">
-        <ClinicSelector />
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+        <div className="hidden sm:block">
+          <ClinicSelector />
+        </div>
         {/* Toggle de tema */}
         <button
           onClick={toggleTheme}

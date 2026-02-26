@@ -1,20 +1,27 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { PatientAccessHelper } from '../common/helpers/patient-access.helper';
 
 @Injectable()
 export class FinancialService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private patientAccess: PatientAccessHelper,
+  ) {}
 
-  async getSummary(userId: string) {
+  async getSummary(userId: string, clinicId?: string) {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
 
+    const paymentWhere: { userId: string; date?: object; status?: string; clinicId?: string } = { userId };
+    if (clinicId) paymentWhere.clinicId = clinicId;
+
     // Receita do mês
     const monthlyRevenue = await this.prisma.payment.aggregate({
       where: {
-        userId,
+        ...paymentWhere,
         date: { gte: startOfMonth },
         status: 'pago',
       },
@@ -26,7 +33,7 @@ export class FinancialService {
     // Receita hoje
     const todayRevenue = await this.prisma.payment.aggregate({
       where: {
-        userId,
+        ...paymentWhere,
         date: {
           gte: new Date(now.setHours(0, 0, 0, 0)),
           lt: new Date(now.setHours(23, 59, 59, 999)),
@@ -41,7 +48,7 @@ export class FinancialService {
     // Total a receber
     const pendingAmount = await this.prisma.payment.aggregate({
       where: {
-        userId,
+        ...paymentWhere,
         status: 'pendente',
       },
       _sum: {
@@ -54,7 +61,7 @@ export class FinancialService {
     threeMonthsAgo.setMonth(now.getMonth() - 3);
     const totalReceived = await this.prisma.payment.aggregate({
       where: {
-        userId,
+        ...paymentWhere,
         date: { gte: threeMonthsAgo },
         status: 'pago',
       },
@@ -64,9 +71,11 @@ export class FinancialService {
     });
 
     // Ticket médio
+    const sessionWhere: { userId: string; date?: object; status?: string; clinicId?: string } = { userId };
+    if (clinicId) sessionWhere.clinicId = clinicId;
     const sessionsCount = await this.prisma.session.count({
       where: {
-        userId,
+        ...sessionWhere,
         date: { gte: threeMonthsAgo },
         status: 'realizada',
       },
@@ -85,22 +94,28 @@ export class FinancialService {
     };
   }
 
-  async getPatientFinancial(patientId: string, userId: string) {
-    // Verificar se o paciente pertence ao usuário
-    const patient = await this.prisma.patient.findUnique({
-      where: { id: patientId },
-    });
-
-    if (!patient || patient.userId !== userId) {
-      throw new Error('Acesso negado');
+  async getPatientFinancial(
+    patientId: string,
+    userId: string,
+    clinicId?: string,
+  ) {
+    const hasAccess = await this.patientAccess.hasAccessToPatient(
+      patientId,
+      userId,
+    );
+    if (!hasAccess) {
+      throw new ForbiddenException('Acesso negado');
     }
+
+    const aggWhere: { patientId: string; userId: string; clinicId?: string } = {
+      patientId,
+      userId,
+    };
+    if (clinicId) aggWhere.clinicId = clinicId;
 
     // Total faturado
     const totalFaturado = await this.prisma.payment.aggregate({
-      where: {
-        patientId,
-        userId,
-      },
+      where: aggWhere,
       _sum: {
         amount: true,
       },
@@ -108,11 +123,7 @@ export class FinancialService {
 
     // Total recebido
     const totalRecebido = await this.prisma.payment.aggregate({
-      where: {
-        patientId,
-        userId,
-        status: 'pago',
-      },
+      where: { ...aggWhere, status: 'pago' },
       _sum: {
         amount: true,
       },
@@ -120,11 +131,7 @@ export class FinancialService {
 
     // Total em aberto
     const totalAberto = await this.prisma.payment.aggregate({
-      where: {
-        patientId,
-        userId,
-        status: 'pendente',
-      },
+      where: { ...aggWhere, status: 'pendente' },
       _sum: {
         amount: true,
       },
