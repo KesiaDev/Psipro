@@ -4,31 +4,44 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { whereNotDeleted } from '../prisma/soft-delete.helper';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import * as XLSX from 'xlsx';
 
 @Injectable()
 export class PatientsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditService: AuditService,
+  ) {}
 
   async findAll(clinicId: string) {
     return this.prisma.patient.findMany({
-      where: { clinicId },
+      where: whereNotDeleted('patient', { clinicId }),
       orderBy: { updatedAt: 'desc' },
+    });
+  }
+
+  async getCount(clinicId: string) {
+    return this.prisma.patient.count({
+      where: whereNotDeleted('patient', { clinicId }),
     });
   }
 
   async findOne(id: string, clinicId: string) {
     const patient = await this.prisma.patient.findFirst({
-      where: { id, clinicId },
+      where: whereNotDeleted('patient', { id, clinicId }),
       include: {
         sessions: {
+          where: { deletedAt: null },
           orderBy: { date: 'desc' },
           take: 10,
         },
         payments: {
+          where: { deletedAt: null },
           orderBy: { date: 'desc' },
         },
       },
@@ -53,7 +66,7 @@ export class PatientsService {
       ? new Date(`${createPatientDto.birthDate}T00:00:00.000Z`)
       : null;
 
-    return this.prisma.patient.create({
+    const patient = await this.prisma.patient.create({
       data: {
         ...createPatientDto,
         birthDate: formattedBirthDate,
@@ -64,6 +77,17 @@ export class PatientsService {
         origin,
       },
     });
+
+    this.auditService.log({
+      userId,
+      clinicId,
+      action: 'patient_creation',
+      entity: 'Patient',
+      entityId: patient.id,
+      metadata: { name: patient.name },
+    }).catch(() => {});
+
+    return patient;
   }
 
   /**
@@ -183,16 +207,16 @@ export class PatientsService {
     );
   }
 
-  async update(id: string, clinicId: string, updatePatientDto: UpdatePatientDto) {
+  async update(id: string, clinicId: string, updatePatientDto: UpdatePatientDto, userId: string) {
     const patient = await this.prisma.patient.findFirst({
-      where: { id, clinicId },
+      where: whereNotDeleted('patient', { id, clinicId }),
     });
 
     if (!patient) {
       throw new NotFoundException('Paciente não encontrado');
     }
 
-    return this.prisma.patient.update({
+    const updated = await this.prisma.patient.update({
       where: { id },
       data: {
         ...updatePatientDto,
@@ -202,17 +226,43 @@ export class PatientsService {
         lastSyncedAt: new Date(),
       },
     });
+
+    this.auditService.log({
+      userId,
+      clinicId,
+      action: 'patient_update',
+      entity: 'Patient',
+      entityId: id,
+      metadata: { name: updated.name },
+    }).catch(() => {});
+
+    return updated;
   }
 
-  async delete(id: string, clinicId: string) {
-    const result = await this.prisma.patient.deleteMany({
-      where: { id, clinicId },
+  async delete(id: string, clinicId: string, userId: string) {
+    const patient = await this.prisma.patient.findFirst({
+      where: whereNotDeleted('patient', { id, clinicId }),
+      select: { name: true },
     });
 
-    if (result.count === 0) {
+    if (!patient) {
       throw new NotFoundException('Paciente não encontrado');
     }
 
-    return { success: true, deleted: result.count };
+    await this.prisma.patient.updateMany({
+      where: { id, clinicId },
+      data: { deletedAt: new Date() },
+    });
+
+    this.auditService.log({
+      userId,
+      clinicId,
+      action: 'patient_deletion',
+      entity: 'Patient',
+      entityId: id,
+      metadata: { name: patient.name },
+    }).catch(() => {});
+
+    return { success: true };
   }
 }

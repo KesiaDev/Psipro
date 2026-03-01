@@ -1,79 +1,106 @@
 /**
  * Serviço de Dashboard
  *
- * Consome exclusivamente a API real:
- * - GET /dashboard/metrics
- * - GET /dashboard/agenda-summary
- * - GET /dashboard/finance-summary
- *
+ * Consome exclusivamente a API real via api.ts.
  * Sem fallbacks. Sem dados mockados.
+ *
+ * Endpoints:
+ * - GET /patients/count
+ * - GET /appointments/today
+ * - GET /sessions/stats
+ * - GET /financial/summary
+ *
+ * Authorization e X-Clinic-Id enviados automaticamente pelo api.ts.
  */
 
-import { api, ApiError } from './api';
+import { api, ApiError } from "./api";
 
-export interface DashboardMetrics {
-  activePatients: number;
+export interface PatientsCount {
+  /** Número retornado diretamente quando o backend retorna number */
+  count?: number;
+}
+
+export interface AppointmentsToday {
+  count: number;
+  items: Array<{
+    id: string;
+    patientId: string;
+    scheduledAt: string;
+    duration?: number;
+    status?: string;
+    patient?: { id: string; name: string };
+  }>;
+}
+
+export interface SessionsStats {
   sessionsThisMonth: number;
   sessionsThisWeek: number;
-  monthlyRevenue: number;
-  pendingRevenue: number;
 }
 
-export interface AgendaSummary {
-  totalSessionsThisWeek: number;
-  busiestDays: string[];
-  emptiestDays: string[];
-  isEmpty: boolean;
-}
-
-export interface FinanceSummary {
-  monthlyRevenue: number;
-  averagePerSession: number;
-  unpaidSessions: number;
-  isEmpty: boolean;
+export interface FinancialSummary {
+  receitaHoje: number;
+  receitaMes: number;
+  totalRecebido: number;
+  totalAReceber: number;
+  ticketMedio: number;
 }
 
 class DashboardService {
   /**
-   * GET /dashboard/metrics
-   * X-Clinic-Id e Authorization via api client.
+   * GET /patients/count
+   * Retorna o total de pacientes ativos da clínica.
    */
-  async getMetrics(): Promise<DashboardMetrics> {
+  async getPatientsCount(): Promise<number> {
     try {
-      return await api.get<DashboardMetrics>('/dashboard/metrics');
+      const res = await api.get<number | { count: number }>("/patients/count");
+      return typeof res === "number" ? res : (res?.count ?? 0);
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
   /**
-   * GET /dashboard/agenda-summary
+   * GET /appointments/today
+   * Retorna consultas agendadas para hoje.
    */
-  async getAgendaSummary(): Promise<AgendaSummary> {
+  async getAppointmentsToday(): Promise<AppointmentsToday> {
     try {
-      return await api.get<AgendaSummary>('/dashboard/agenda-summary');
+      return await api.get<AppointmentsToday>("/appointments/today");
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
   /**
-   * GET /dashboard/finance-summary
+   * GET /sessions/stats
+   * Retorna estatísticas de sessões realizadas.
    */
-  async getFinanceSummary(): Promise<FinanceSummary> {
+  async getSessionsStats(): Promise<SessionsStats> {
     try {
-      return await api.get<FinanceSummary>('/dashboard/finance-summary');
+      return await api.get<SessionsStats>("/sessions/stats");
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * GET /financial/summary
+   * Retorna resumo financeiro. Requer admin ou psychologist.
+   */
+  async getFinancialSummary(): Promise<FinancialSummary> {
+    try {
+      return await api.get<FinancialSummary>("/financial/summary");
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
   private handleError(error: unknown): ApiError {
-    if (error && typeof error === 'object' && 'status' in error) {
+    if (error && typeof error === "object" && "status" in error) {
       return error as ApiError;
     }
     return {
-      message: 'Erro ao buscar dados do dashboard',
+      message: "Erro ao buscar dados do dashboard",
       status: 0,
     };
   }

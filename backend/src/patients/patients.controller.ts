@@ -16,18 +16,26 @@ import { PatientsService } from './patients.service';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { ClinicGuard } from '../common/guards/clinic.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentClinicId } from '../common/decorators/current-clinic.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('patients')
-@UseGuards(JwtAuthGuard, ClinicGuard)
+@UseGuards(JwtAuthGuard, ClinicGuard, RolesGuard)
+@Roles('admin', 'psychologist')
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
   @Get()
   findAll(@CurrentClinicId() clinicId: string) {
     return this.patientsService.findAll(clinicId);
+  }
+
+  @Get('count')
+  getCount(@CurrentClinicId() clinicId: string) {
+    return this.patientsService.getCount(clinicId);
   }
 
   @Get(':id')
@@ -87,14 +95,15 @@ export class PatientsController {
   @Patch(':id')
   update(
     @Param('id') id: string,
+    @CurrentUser() user: { sub: string },
     @CurrentClinicId() clinicId: string,
     @Body() updatePatientDto: UpdatePatientDto,
   ) {
-    return this.patientsService.update(id, clinicId, updatePatientDto);
+    return this.patientsService.update(id, clinicId, updatePatientDto, user.sub);
   }
 
   @Delete(':id')
-  delete(@Param('id') id: string, @CurrentClinicId() clinicId: string) {
-    return this.patientsService.delete(id, clinicId);
+  delete(@Param('id') id: string, @CurrentUser() user: { sub: string }, @CurrentClinicId() clinicId: string) {
+    return this.patientsService.delete(id, clinicId, user.sub);
   }
 }

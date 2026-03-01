@@ -1,33 +1,79 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { whereNotDeleted } from '../prisma/soft-delete.helper';
 import { CreateSessionDto } from './dto/create-session.dto';
 
 @Injectable()
 export class SessionsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(userId: string, clinicId?: string) {
-    const where: any = { userId };
+  private startOfMonth(): Date {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+  }
 
-    if (clinicId) {
-      const clinicUser = await this.prisma.clinicUser.findUnique({
+  private startOfWeek(): Date {
+    const d = new Date();
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(d.getFullYear(), d.getMonth(), diff, 0, 0, 0, 0);
+  }
+
+  async getStats(userId: string, clinicId: string) {
+    const clinicUser = await this.prisma.clinicUser.findUnique({
+      where: { clinicId_userId: { clinicId, userId } },
+      select: { canViewAllPatients: true, role: true },
+    });
+    if (!clinicUser) throw new NotFoundException('Clínica não encontrada ou sem acesso');
+
+    const where: any = { patient: { clinicId, deletedAt: null } };
+    if (!clinicUser.canViewAllPatients && !['owner', 'admin'].includes(clinicUser.role)) {
+      where.userId = userId;
+    }
+
+    const monthStart = this.startOfMonth();
+    const weekStart = this.startOfWeek();
+
+    const [sessionsThisMonth, sessionsThisWeek] = await Promise.all([
+      this.prisma.session.count({
         where: {
-          clinicId_userId: {
-            clinicId: clinicId,
-            userId: userId,
-          },
+          ...whereNotDeleted('session', where),
+          status: 'realizada',
+          date: { gte: monthStart },
         },
-      });
+      }),
+      this.prisma.session.count({
+        where: {
+          ...whereNotDeleted('session', where),
+          status: 'realizada',
+          date: { gte: weekStart },
+        },
+      }),
+    ]);
 
-      if (clinicUser && clinicUser.status === 'active') {
-        if (clinicUser.canViewAllPatients || ['owner', 'admin'].includes(clinicUser.role)) {
-          where.patient = { clinicId: clinicId };
-        }
-      }
+    return {
+      sessionsThisMonth,
+      sessionsThisWeek,
+    };
+  }
+
+  async findAll(userId: string, clinicId: string) {
+    const clinicUser = await this.prisma.clinicUser.findUnique({
+      where: { clinicId_userId: { clinicId, userId } },
+      select: { canViewAllPatients: true, role: true },
+    });
+    if (!clinicUser) throw new NotFoundException('Clínica não encontrada ou sem acesso');
+
+    const where: any = { patient: { clinicId } };
+    if (!clinicUser.canViewAllPatients && !['owner', 'admin'].includes(clinicUser.role)) {
+      where.userId = userId;
     }
 
     return this.prisma.session.findMany({
-      where,
+      where: {
+        ...whereNotDeleted('session', where),
+        patient: where.patient ? { ...where.patient, deletedAt: null } : { deletedAt: null },
+      },
       include: {
         patient: {
           select: {
@@ -40,55 +86,28 @@ export class SessionsService {
     });
   }
 
-  async findByPatient(patientId: string, userId: string) {
-    // Verificar acesso ao paciente (próprio, clínica ou compartilhado)
-    const patient = await this.prisma.patient.findUnique({
-      where: { id: patientId },
+  async findByPatient(patientId: string, userId: string, clinicId: string) {
+    const patient = await this.prisma.patient.findFirst({
+      where: whereNotDeleted('patient', { id: patientId, clinicId }),
     });
 
     if (!patient) {
-      throw new NotFoundException('Paciente não encontrado');
-    }
-
-    // Verificar se tem acesso
-    const hasAccess =
-      patient.userId === userId ||
-      (patient.clinicId &&
-        (await this.hasClinicAccess(patient.clinicId, userId))) ||
-      (patient.sharedWith && patient.sharedWith.includes(userId));
-
-    if (!hasAccess) {
-      throw new ForbiddenException('Acesso negado');
+      throw new NotFoundException('Paciente não encontrado ou não pertence à clínica');
     }
 
     return this.prisma.session.findMany({
-      where: {
-        patientId,
-      },
+      where: whereNotDeleted('session', { patientId }),
       orderBy: { date: 'desc' },
     });
   }
 
-  private async hasClinicAccess(clinicId: string, userId: string): Promise<boolean> {
-    const clinicUser = await this.prisma.clinicUser.findUnique({
-      where: {
-        clinicId_userId: {
-          clinicId: clinicId,
-          userId: userId,
-        },
-      },
-    });
-    return clinicUser?.status === 'active' && clinicUser.canViewAllPatients;
-  }
-
-  async create(userId: string, createSessionDto: CreateSessionDto) {
-    // Verificar se o paciente pertence ao usuário
-    const patient = await this.prisma.patient.findUnique({
-      where: { id: createSessionDto.patientId },
+  async create(userId: string, createSessionDto: CreateSessionDto, clinicId: string) {
+    const patient = await this.prisma.patient.findFirst({
+      where: whereNotDeleted('patient', { id: createSessionDto.patientId, clinicId }),
     });
 
-    if (!patient || patient.userId !== userId) {
-      throw new ForbiddenException('Paciente não encontrado ou acesso negado');
+    if (!patient) {
+      throw new ForbiddenException('Paciente não encontrado ou não pertence à clínica');
     }
 
     return this.prisma.session.create({
