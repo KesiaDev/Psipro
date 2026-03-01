@@ -6,15 +6,11 @@
  *
  * - Base URL via NEXT_PUBLIC_API_URL (obrigatório em produção)
  * - Token JWT automático via localStorage (psipro_token)
- * - Interceptação de erros (401, 403, 500)
+ * - Interceptação de 401: tenta refresh token, retry único, ou redireciona para /login
+ * - Interceptação de erros (403, 500)
  */
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api').replace(/\/+$/, '');
-
-// DEBUG: Remover após auditoria
-if (typeof window !== 'undefined') {
-  console.log('[api] API_BASE_URL:', API_BASE_URL, '| termina com /api:', API_BASE_URL.endsWith('/api'));
-}
 
 /** URL base da API (para uso em handoff/test que não usam o cliente api). */
 export function getApiBaseUrl(): string {
@@ -46,7 +42,8 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    isRetry = false
   ): Promise<T> {
     const token = this.getToken();
     const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
@@ -68,6 +65,7 @@ class ApiClient {
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
+    // X-Clinic-Id enviado em toda requisição (incluindo retry pós-refresh)
     const activeClinicId = this.getActiveClinicId();
     if (activeClinicId) {
       headers['X-Clinic-Id'] = activeClinicId;
@@ -91,13 +89,24 @@ class ApiClient {
           errors: errorData.errors,
         };
 
-        // Interceptar 401 (não autenticado)
+        // Interceptar 401 (não autenticado): tentar refresh ou redirecionar
         if (response.status === 401) {
-          // Limpar token inválido
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('psipro_token');
-            // Redirecionar para login se necessário
-            // window.location.href = '/login';
+          if (!isRetry && typeof window !== 'undefined') {
+            try {
+              const { authService } = await import('./authService');
+              await authService.refreshToken();
+              return this.request<T>(endpoint, options, true);
+            } catch {
+              const { authService } = await import('./authService');
+              authService.logout();
+              if (typeof window !== 'undefined') window.location.href = '/login';
+            }
+          } else {
+            if (typeof window !== 'undefined') {
+              const { authService } = await import('./authService');
+              authService.logout();
+              window.location.href = '/login';
+            }
           }
         }
 

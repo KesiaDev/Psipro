@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { clinicService } from "../services/clinicService";
+import { authService } from "../services/authService";
 import type { Clinic } from "../services/clinicService";
 
 interface ClinicContextType {
@@ -11,6 +12,7 @@ interface ClinicContextType {
   loading: boolean;
   error: string | null;
   setCurrentClinic: (clinic: Clinic | null) => void;
+  switchClinic: (clinicId: string) => Promise<void>;
   loadClinics: () => Promise<void>;
   refreshClinics: () => Promise<void>;
 }
@@ -83,6 +85,15 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const switchClinic = useCallback(async (clinicId: string) => {
+    await authService.switchClinic(clinicId);
+    const clinic = clinics.find((c) => c.id === clinicId);
+    if (clinic) {
+      setCurrentClinicState(clinic);
+      setIsIndependent(false);
+    }
+  }, [clinics]);
+
   useEffect(() => {
     loadClinics();
   }, []);
@@ -96,6 +107,7 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
         loading,
         error,
         setCurrentClinic,
+        switchClinic,
         loadClinics,
         refreshClinics,
       }}

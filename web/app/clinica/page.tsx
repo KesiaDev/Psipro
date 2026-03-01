@@ -147,29 +147,32 @@ export default function ClinicaPage() {
 
   const CreateClinicModal = () =>
     showCreateModal ? (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-psipro-surface-elevated border border-psipro-border rounded-lg p-6 max-w-md w-full mx-4">
-          <h3 className="text-xl font-bold text-psipro-text mb-4">
-            Criar Clínica
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-psipro-surface-elevated border border-psipro-border rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl">
+          <h3 className="text-xl font-bold text-psipro-text mb-2">
+            Criar nova clínica
           </h3>
-          <div className="mb-4">
+          <p className="text-psipro-text-secondary text-sm mb-6">
+            Dê um nome ao seu consultório para começar
+          </p>
+          <div className="mb-6">
             <label className="block text-sm font-medium text-psipro-text mb-2">
-              Nome da clínica
+              Nome
             </label>
             <input
               type="text"
               value={newClinicName}
               onChange={(e) => setNewClinicName(e.target.value)}
-              placeholder="Ex: Meu Consultório"
-              className="w-full px-4 py-2 bg-psipro-background border border-psipro-border rounded-lg text-psipro-text focus:outline-none focus:ring-2 focus:ring-psipro-primary"
+              placeholder="Ex: Consultório Dr. Silva"
+              className="w-full px-4 py-3 bg-psipro-background border border-psipro-border rounded-xl text-psipro-text focus:outline-none focus:ring-2 focus:ring-psipro-primary focus:border-transparent"
               disabled={creating}
             />
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-3">
             <button
               onClick={handleCreateClinic}
               disabled={creating || !newClinicName.trim()}
-              className="flex-1 px-4 py-2 bg-psipro-primary text-white rounded-lg hover:bg-psipro-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-3 bg-psipro-primary text-white rounded-xl font-medium hover:bg-psipro-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {creating ? "Criando..." : "Criar"}
             </button>
@@ -179,7 +182,7 @@ export default function ClinicaPage() {
                 setNewClinicName("");
               }}
               disabled={creating}
-              className="flex-1 px-4 py-2 bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated transition-colors"
+              className="flex-1 px-4 py-3 bg-psipro-surface border border-psipro-border rounded-xl font-medium hover:bg-psipro-surface-elevated transition-colors"
             >
               Cancelar
             </button>
@@ -191,208 +194,234 @@ export default function ClinicaPage() {
   if (clinics.length === 0) {
     return (
       <>
-        <div className="max-w-6xl mx-auto px-4 py-8">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-psipro-text">Clínicas</h1>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-psipro-primary text-white rounded-lg hover:bg-psipro-primary-dark transition-colors flex items-center gap-2"
-            >
-              + Nova Clínica
-            </button>
+        <div className="max-w-2xl mx-auto px-4 py-16 sm:py-24 text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-psipro-primary/15 flex items-center justify-center text-4xl">
+            🏥
           </div>
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-psipro-text mb-4">
-                Você ainda não faz parte de nenhuma clínica
-              </h2>
-              <p className="text-psipro-text-secondary mb-8">
-                Crie uma clínica ou aceite um convite para começar.
-              </p>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="px-6 py-3 bg-psipro-primary text-white rounded-lg hover:bg-psipro-primary-dark transition-colors"
-              >
-                Criar Clínica
-              </button>
-            </div>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-psipro-text mb-3">
+            Nenhuma clínica ainda
+          </h1>
+          <p className="text-psipro-text-secondary mb-10 text-lg">
+            Crie seu primeiro consultório ou aceite um convite para entrar em uma equipe.
+          </p>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center gap-2 px-8 py-4 bg-psipro-primary text-white rounded-xl font-medium shadow-lg shadow-psipro-primary/20 hover:bg-psipro-primary-dark transition-all"
+          >
+            <span className="text-xl">+</span> Criar minha primeira clínica
+          </button>
         </div>
         <CreateClinicModal />
       </>
     );
   }
 
+  const isSelected = (clinic: Clinic) => selectedClinic?.id === clinic.id;
+
   return (
     <>
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-3xl font-bold text-psipro-text">Clínicas</h1>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="px-4 py-2 bg-psipro-primary text-white rounded-lg hover:bg-psipro-primary-dark transition-colors flex items-center gap-2 whitespace-nowrap text-sm font-medium"
-              >
-                + Nova Clínica
-              </button>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+        {/* Header */}
+        <div className="mb-10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-psipro-text tracking-tight">
+                Minhas Clínicas
+              </h1>
+              <p className="text-psipro-text-secondary mt-1.5 text-base sm:text-lg">
+                Gerencie seus consultórios e equipe
+              </p>
             </div>
-            <p className="text-psipro-text-secondary mt-2">
-              Gerencie suas clínicas e equipe
-            </p>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-psipro-primary text-white rounded-xl font-medium shadow-lg shadow-psipro-primary/20 hover:bg-psipro-primary-dark hover:shadow-psipro-primary/30 transition-all duration-200 shrink-0"
+            >
+              <span className="text-lg">+</span>
+              Nova Clínica
+            </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Clinic cards grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
           {clinics.map((clinic) => (
             <div
               key={clinic.id}
               onClick={() => handleSelectClinic(clinic)}
-              className="bg-psipro-surface-elevated border border-psipro-border rounded-lg p-6 cursor-pointer hover:border-psipro-primary transition-colors"
+              className={`group relative rounded-2xl p-5 sm:p-6 cursor-pointer transition-all duration-300
+                ${isSelected(clinic)
+                  ? "bg-psipro-primary/10 border-2 border-psipro-primary shadow-lg shadow-psipro-primary/10"
+                  : "bg-psipro-surface-elevated border border-psipro-border hover:border-psipro-primary/50 hover:shadow-md hover:shadow-black/5 dark:hover:shadow-black/20"
+                }`}
             >
-              <h3 className="text-xl font-semibold text-psipro-text mb-2">
+              <div className="flex items-start justify-between mb-3">
+                <div className="w-12 h-12 rounded-xl bg-psipro-primary/15 flex items-center justify-center text-2xl group-hover:bg-psipro-primary/25 transition-colors">
+                  🏥
+                </div>
+                <RoleBadge role={clinic.role || ""} />
+              </div>
+              <h3 className="text-lg font-bold text-psipro-text mb-1 truncate pr-2">
                 {clinic.name}
               </h3>
-              <div className="text-sm text-psipro-text-secondary mb-4">
-                {clinic.members && (
-                  <div>{clinic.members.length} membro(s)</div>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <RoleBadge role={clinic.role || ""} />
+              <p className="text-sm text-psipro-text-muted">
+                {clinic.members?.length ?? 0} membro{clinic.members?.length !== 1 ? "s" : ""}
+              </p>
+              <div className="mt-4 pt-4 border-t border-psipro-divider">
+                <span className="text-xs font-medium text-psipro-primary">
+                  {isSelected(clinic) ? "Selecionada · Clique para ver detalhes" : "Clique para ver detalhes"}
+                </span>
               </div>
             </div>
           ))}
         </div>
 
+        {/* Selected clinic panel */}
         {selectedClinic && (
-          <div className="mt-8 bg-psipro-surface-elevated border border-psipro-border rounded-lg p-6">
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-psipro-text mb-2">
-                  {selectedClinic.name}
-                </h2>
-                {selectedClinic.email && (
-                  <div className="text-sm text-psipro-text-secondary">
-                    {selectedClinic.email}
-                  </div>
-                )}
-                {selectedClinic.phone && (
-                  <div className="text-sm text-psipro-text-secondary">
-                    {selectedClinic.phone}
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={() => setSelectedClinic(null)}
-                className="text-psipro-text-secondary hover:text-psipro-text transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-
-            {loadingDetails ? (
-              <SkeletonList count={2} />
-            ) : (
-              <>
-                {selectedClinic.members && selectedClinic.members.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-psipro-text mb-4">
-                      Membros
-                    </h3>
-                    <div className="space-y-2">
-                      {selectedClinic.members.map((member) => (
-                        <div
-                          key={member.id}
-                          className="flex justify-between items-center p-3 bg-psipro-background rounded-lg"
-                        >
-                          <div>
-                            <div className="font-medium text-psipro-text">
-                              {member.name}
-                            </div>
-                            <div className="text-sm text-psipro-text-secondary flex items-center gap-2">
-                              <span>{member.email}</span>
-                              <RoleBadge role={member.role} />
-                            </div>
-                          </div>
-                          <span className="px-2 py-1 text-xs bg-psipro-success/10 text-psipro-success rounded capitalize">
-                            {member.status}
-                          </span>
-                        </div>
-                      ))}
+          <div className="mt-10 rounded-2xl border border-psipro-border bg-psipro-surface-elevated overflow-hidden shadow-sm">
+            <div className="bg-gradient-to-r from-psipro-primary/5 to-transparent p-6 sm:p-8 border-b border-psipro-divider">
+              <div className="flex justify-between items-start gap-4">
+                <div className="min-w-0">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-psipro-text mb-1">
+                    {selectedClinic.name}
+                  </h2>
+                  {(selectedClinic.email || selectedClinic.phone) && (
+                    <div className="flex flex-wrap gap-4 mt-2 text-sm text-psipro-text-secondary">
+                      {selectedClinic.email && (
+                        <span className="flex items-center gap-1.5">✉️ {selectedClinic.email}</span>
+                      )}
+                      {selectedClinic.phone && (
+                        <span className="flex items-center gap-1.5">📞 {selectedClinic.phone}</span>
+                      )}
                     </div>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap gap-4">
-                  {selectedClinic.permissions?.canManageUsers && (
-                    <>
-                      <button
-                        onClick={() => setShowInviteModal(true)}
-                        className="px-4 py-2 bg-psipro-primary text-white rounded-lg hover:bg-psipro-primary-dark transition-colors"
-                      >
-                        Convidar Membro
-                      </button>
-                      <button
-                        onClick={() => router.push("/dashboard")}
-                        className="px-4 py-2 bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated transition-colors"
-                      >
-                        Ver Dashboard
-                      </button>
-                    </>
-                  )}
-                  {canManageClinic && (
-                    <>
-                      <button
-                        onClick={() => {
-                          setEditClinicName(selectedClinic?.name || "");
-                          setShowEditModal(true);
-                        }}
-                        className="px-4 py-2 bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated transition-colors"
-                      >
-                        Alterar
-                      </button>
-                      <button
-                        onClick={() => setShowDeleteConfirm(true)}
-                        className="px-4 py-2 bg-red-500/10 text-red-600 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors"
-                      >
-                        Excluir
-                      </button>
-                    </>
                   )}
                 </div>
-              </>
-            )}
+                <button
+                  onClick={() => setSelectedClinic(null)}
+                  className="p-2 rounded-lg text-psipro-text-muted hover:text-psipro-text hover:bg-psipro-surface transition-colors"
+                  aria-label="Fechar"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 sm:p-8">
+              {loadingDetails ? (
+                <SkeletonList count={2} />
+              ) : (
+                <>
+                  {selectedClinic.members && selectedClinic.members.length > 0 && (
+                    <div className="mb-8">
+                      <h3 className="text-base font-semibold text-psipro-text mb-4 flex items-center gap-2">
+                        <span>👥</span> Membros da equipe
+                      </h3>
+                      <div className="space-y-3">
+                        {selectedClinic.members.map((member) => (
+                          <div
+                            key={member.id}
+                            className="flex items-center justify-between gap-4 p-4 rounded-xl bg-psipro-background border border-psipro-border hover:border-psipro-primary/30 transition-colors"
+                          >
+                            <div className="flex items-center gap-4 min-w-0">
+                              <div className="w-10 h-10 rounded-full bg-psipro-primary/20 flex items-center justify-center text-psipro-primary font-bold shrink-0">
+                                {member.name?.charAt(0)?.toUpperCase() || "?"}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="font-semibold text-psipro-text truncate">
+                                  {member.name}
+                                </div>
+                                <div className="text-sm text-psipro-text-secondary truncate">
+                                  {member.email}
+                                </div>
+                                <div className="mt-1">
+                                  <RoleBadge role={member.role} />
+                                </div>
+                              </div>
+                            </div>
+                            <span className={`px-3 py-1 text-xs font-medium rounded-full shrink-0
+                              ${member.status?.toLowerCase() === "active" 
+                                ? "bg-psipro-success/15 text-psipro-success" 
+                                : "bg-psipro-surface text-psipro-text-muted"
+                              }`}
+                            >
+                              {member.status?.toLowerCase() === "active" ? "Ativo" : member.status || "—"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action buttons */}
+                  <div className="flex flex-wrap gap-3">
+                    {selectedClinic.permissions?.canManageUsers && (
+                      <>
+                        <button
+                          onClick={() => setShowInviteModal(true)}
+                          className="inline-flex items-center gap-2 px-4 py-2.5 bg-psipro-primary text-white rounded-xl font-medium hover:bg-psipro-primary-dark transition-colors"
+                        >
+                          <span>✉️</span> Convidar Membro
+                        </button>
+                        <button
+                          onClick={() => router.push("/dashboard")}
+                          className="inline-flex items-center gap-2 px-4 py-2.5 bg-psipro-surface border border-psipro-border rounded-xl font-medium hover:bg-psipro-surface-elevated hover:border-psipro-primary/30 transition-colors"
+                        >
+                          <span>📊</span> Ver Dashboard
+                        </button>
+                      </>
+                    )}
+                    {canManageClinic && (
+                      <>
+                        <button
+                          onClick={() => {
+                            setEditClinicName(selectedClinic?.name || "");
+                            setShowEditModal(true);
+                          }}
+                          className="inline-flex items-center gap-2 px-4 py-2.5 bg-psipro-surface border border-psipro-border rounded-xl font-medium hover:bg-psipro-surface-elevated hover:border-psipro-primary/30 transition-colors"
+                        >
+                          <span>✏️</span> Alterar
+                        </button>
+                        <button
+                          onClick={() => setShowDeleteConfirm(true)}
+                          className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-500/10 text-red-600 border border-red-500/30 rounded-xl font-medium hover:bg-red-500/20 transition-colors"
+                        >
+                          <span>🗑️</span> Excluir
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
 
         {showEditModal && selectedClinic && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-psipro-surface-elevated border border-psipro-border rounded-lg p-6 max-w-md w-full mx-4">
-              <h3 className="text-xl font-bold text-psipro-text mb-4">Alterar clínica</h3>
-              <div className="mb-4">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-psipro-surface-elevated border border-psipro-border rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl">
+              <h3 className="text-xl font-bold text-psipro-text mb-2">Alterar clínica</h3>
+              <div className="mb-6">
                 <label className="block text-sm font-medium text-psipro-text mb-2">Nome</label>
                 <input
                   type="text"
                   value={editClinicName}
                   onChange={(e) => setEditClinicName(e.target.value)}
-                  placeholder="Ex: Meu Consultório"
-                  className="w-full px-4 py-2 bg-psipro-background border border-psipro-border rounded-lg text-psipro-text focus:outline-none focus:ring-2 focus:ring-psipro-primary"
+                  placeholder="Ex: Consultório Dr. Silva"
+                  className="w-full px-4 py-3 bg-psipro-background border border-psipro-border rounded-xl text-psipro-text focus:outline-none focus:ring-2 focus:ring-psipro-primary focus:border-transparent"
                   disabled={editing}
                 />
               </div>
-              <div className="flex gap-4">
+              <div className="flex gap-3">
                 <button
                   onClick={handleEditClinic}
                   disabled={editing || !editClinicName.trim()}
-                  className="flex-1 px-4 py-2 bg-psipro-primary text-white rounded-lg hover:bg-psipro-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-3 bg-psipro-primary text-white rounded-xl font-medium hover:bg-psipro-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {editing ? "Salvando..." : "Salvar"}
                 </button>
                 <button
                   onClick={() => setShowEditModal(false)}
                   disabled={editing}
-                  className="flex-1 px-4 py-2 bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated transition-colors"
+                  className="flex-1 px-4 py-3 bg-psipro-surface border border-psipro-border rounded-xl font-medium hover:bg-psipro-surface-elevated transition-colors"
                 >
                   Cancelar
                 </button>
@@ -402,24 +431,24 @@ export default function ClinicaPage() {
         )}
 
         {showDeleteConfirm && selectedClinic && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-psipro-surface-elevated border border-psipro-border rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-psipro-surface-elevated border border-red-500/30 rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl">
               <h3 className="text-xl font-bold text-psipro-text mb-2">Excluir clínica</h3>
               <p className="text-psipro-text-secondary text-sm mb-4">
                 Tem certeza que deseja excluir &quot;{selectedClinic.name}&quot;? Esta ação não pode ser desfeita.
               </p>
-              <div className="flex gap-4">
+              <div className="flex gap-3 mt-6">
                 <button
                   onClick={handleDeleteClinic}
                   disabled={deleting}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {deleting ? "Excluindo..." : "Excluir"}
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
                   disabled={deleting}
-                  className="flex-1 px-4 py-2 bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated transition-colors"
+                  className="flex-1 px-4 py-3 bg-psipro-surface border border-psipro-border rounded-xl font-medium hover:bg-psipro-surface-elevated transition-colors"
                 >
                   Cancelar
                 </button>
@@ -429,37 +458,40 @@ export default function ClinicaPage() {
         )}
 
         {showInviteModal && selectedClinic && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-psipro-surface-elevated border border-psipro-border rounded-lg p-6 max-w-md w-full mx-4">
-              <h3 className="text-xl font-bold text-psipro-text mb-4">
-                Convidar Membro
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-psipro-surface-elevated border border-psipro-border rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl">
+              <h3 className="text-xl font-bold text-psipro-text mb-2">
+                Convidar membro
               </h3>
-              <div className="mb-4">
+              <p className="text-psipro-text-secondary text-sm mb-6">
+                Envie um convite por e-mail para adicionar alguém à equipe
+              </p>
+              <div className="mb-6">
                 <label className="block text-sm font-medium text-psipro-text mb-2">
-                  Email do usuário
+                  E-mail
                 </label>
                 <input
                   type="email"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder="usuario@email.com"
-                  className="w-full px-4 py-2 bg-psipro-background border border-psipro-border rounded-lg text-psipro-text focus:outline-none focus:ring-2 focus:ring-psipro-primary"
+                  placeholder="colega@email.com"
+                  className="w-full px-4 py-3 bg-psipro-background border border-psipro-border rounded-xl text-psipro-text focus:outline-none focus:ring-2 focus:ring-psipro-primary focus:border-transparent"
                 />
               </div>
-              <div className="flex gap-4">
+              <div className="flex gap-3">
                 <button
                   onClick={handleInviteUser}
                   disabled={!inviteEmail}
-                  className="flex-1 px-4 py-2 bg-psipro-primary text-white rounded-lg hover:bg-psipro-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-3 bg-psipro-primary text-white rounded-xl font-medium hover:bg-psipro-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Enviar Convite
+                  Enviar convite
                 </button>
                 <button
                   onClick={() => {
                     setShowInviteModal(false);
                     setInviteEmail("");
                   }}
-                  className="flex-1 px-4 py-2 bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated transition-colors"
+                  className="flex-1 px-4 py-3 bg-psipro-surface border border-psipro-border rounded-xl font-medium hover:bg-psipro-surface-elevated transition-colors"
                 >
                   Cancelar
                 </button>

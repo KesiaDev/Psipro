@@ -50,13 +50,12 @@ export default function DashboardPage() {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const clinicId = currentClinic?.id;
       const [metricsData, agendaData, financialData] = await Promise.all([
-        dashboardService.getMetrics(clinicId),
-        dashboardService.getAgendaSummary(clinicId),
-        dashboardService.getFinanceSummary(clinicId),
+        dashboardService.getMetrics(),
+        dashboardService.getAgendaSummary(),
+        dashboardService.getFinanceSummary(),
       ]);
-      
+
       setMetrics(metricsData);
       setAgenda(agendaData);
       setFinancial(financialData);

@@ -37,7 +37,7 @@ export default function LandingPage() {
             </div>
           </div>
           
-          {/* Mock simples do dashboard */}
+          {/* Preview visual do dashboard (placeholders, sem dados de negócio) */}
           <div className="mt-16 bg-psipro-surface-elevated border border-psipro-border rounded-lg p-8 max-w-4xl mx-auto">
             <div className="grid grid-cols-3 gap-4 mb-6">
               {[1, 2, 3].map((i) => (

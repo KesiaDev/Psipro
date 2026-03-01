@@ -89,7 +89,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    const refreshToken = authService.getRefreshToken();
+    if (refreshToken) {
+      try {
+        const baseUrl = (await import("../services/api")).getApiBaseUrl();
+        await fetch(`${baseUrl}/auth/logout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        });
+      } catch {
+        // Ignorar erro de rede; limpar local de qualquer forma
+      }
+    }
     authService.logout();
     setUser(null);
     setError(null);
