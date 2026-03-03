@@ -73,8 +73,10 @@ async function bootstrap() {
 
   const hasAppointmentsToday = mappedRoutes.some((r) => r.includes('/appointments/today'));
   const hasDashboardCount = mappedRoutes.some((r) => r.includes('/dashboard/count'));
+  const hasReports = mappedRoutes.some((r) => r.includes('/reports') && r.startsWith('GET'));
   console.log('✓ /api/appointments/today:', hasAppointmentsToday ? 'SIM' : 'NÃO');
   console.log('✓ /api/dashboard/count:', hasDashboardCount ? 'SIM' : 'NÃO');
+  console.log('✓ /api/reports (GET):', hasReports ? 'SIM' : 'NÃO');
 }
 
 bootstrap();
