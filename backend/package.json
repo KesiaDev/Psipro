@@ -8,10 +8,10 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "node dist/main",
+    "start": "node dist/src/main",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/src/main",
     "migrate:deploy": "prisma migrate deploy",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
@@ -23,7 +23,8 @@
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
     "prisma:migrate-existing": "ts-node prisma/migrate-existing-data.ts",
-    "prisma:migrate-to-clinic-user": "ts-node prisma/migrate-to-clinic-user.ts"
+    "prisma:migrate-to-clinic-user": "ts-node prisma/migrate-to-clinic-user.ts",
+    "cleanup:soft-deleted": "ts-node scripts/cleanup-soft-deleted.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -32,17 +33,22 @@
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/schedule": "^6.1.1",
+    "@nestjs/throttler": "^6.5.0",
     "@prisma/client": "^5.7.1",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "helmet": "^8.1.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
-    "xlsx": "^0.18.5",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
@@ -75,8 +81,8 @@
       "json",
       "ts"
     ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
+    "roots": ["<rootDir>/src", "<rootDir>/test"],
+    "testRegex": ".*\\.(spec|e2e-spec)\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
