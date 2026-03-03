@@ -9,7 +9,7 @@ import { ReportsService } from './reports.service';
 
 @Controller('reports')
 @UseGuards(JwtAuthGuard, ClinicGuard, RolesGuard)
-@Roles('admin', 'psychologist')
+@Roles('admin', 'psychologist', 'assistant')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
