@@ -6,12 +6,13 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
+    "build": "prisma generate && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "node dist/src/main",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/src/main",
+    "start:prod": "prisma migrate deploy && node dist/src/main",
+    "release": "prisma migrate deploy",
     "migrate:deploy": "prisma migrate deploy",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
@@ -22,6 +23,7 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
+    "prisma:seed-financial": "ts-node scripts/seed-financial-records.ts",
     "prisma:migrate-existing": "ts-node prisma/migrate-existing-data.ts",
     "prisma:migrate-to-clinic-user": "ts-node prisma/migrate-to-clinic-user.ts",
     "cleanup:soft-deleted": "ts-node scripts/cleanup-soft-deleted.ts"
@@ -48,7 +50,8 @@
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "ts-node": "^10.9.1",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "prisma": "^5.7.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
@@ -67,7 +70,6 @@
     "eslint-plugin-prettier": "^5.0.0",
     "jest": "^29.5.0",
     "prettier": "^3.0.0",
-    "prisma": "^5.7.1",
     "source-map-support": "^0.5.21",
     "supertest": "^6.3.3",
     "ts-jest": "^29.1.0",
