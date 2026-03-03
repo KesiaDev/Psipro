@@ -140,10 +140,6 @@ class DashboardActivity : AppCompatActivity() {
                         apply()
                     }
                     
-                    // Fazer logout do Firebase
-                    com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
-                    
-                    // Fazer logout do AuthManager
                     AuthManager.getInstance().logout()
                     val intent = Intent(this, MainActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -208,14 +204,8 @@ class DashboardActivity : AppCompatActivity() {
 
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         
-        // Priorizar dados do Firebase Auth, depois SharedPreferences
-        val firebaseAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
-        val currentUser = firebaseAuth.currentUser
-        
-        // Nome: Firebase displayName > SharedPreferences > Email > Padrão
-        val displayName = currentUser?.displayName 
-            ?: prefs.getString("profile_name", null)
-            ?: currentUser?.email?.substringBefore("@")
+        val displayName = prefs.getString("profile_name", null)
+            ?: prefs.getString("current_user_email", null)?.substringBefore("@")
             ?: "Seu Nome aqui"
         nameTextView.text = displayName
         
@@ -233,22 +223,21 @@ class DashboardActivity : AppCompatActivity() {
                     val bitmap = BitmapFactory.decodeFile(file.absolutePath)
                     photoImageView.setImageBitmap(bitmap)
                 } else {
-                    // Se arquivo não existe, tentar URL do Google
-                    loadPhotoFromUrl(photoImageView, photoUrl, currentUser?.photoUrl?.toString())
+                    loadPhotoFromUrl(photoImageView, photoUrl, null)
                 }
             }
-            photoUrl != null || currentUser?.photoUrl != null -> {
-                loadPhotoFromUrl(photoImageView, photoUrl, currentUser?.photoUrl?.toString())
+            photoUrl != null -> {
+                loadPhotoFromUrl(photoImageView, photoUrl, null)
             }
             else -> {
                 photoImageView.setImageResource(R.drawable.ic_account_circle)
             }
         }
         
-        android.util.Log.d("DashboardActivity", "Header atualizado - Nome: $displayName, Email: ${currentUser?.email}")
+        android.util.Log.d("DashboardActivity", "Header atualizado - Nome: $displayName")
     }
     
-    private fun loadPhotoFromUrl(imageView: ImageView, photoUrl: String?, firebasePhotoUrl: String?) {
+    private fun loadPhotoFromUrl(imageView: ImageView, photoUrl: String?, firebasePhotoUrl: String? = null) {
         // Sem Glide por enquanto
         // Fallback seguro para não quebrar o build
         imageView.setImageResource(R.drawable.ic_account_circle)

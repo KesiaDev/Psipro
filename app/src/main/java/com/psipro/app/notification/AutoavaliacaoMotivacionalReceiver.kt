@@ -1,25 +1,23 @@
 package com.psipro.app.notification
 
+import android.app.Application
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.psipro.app.notification.di.AutoavaliacaoEntryPoint
 import com.psipro.app.utils.AIMotivationalService
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
+import dagger.hilt.android.EntryPointAccessors
 
-@AndroidEntryPoint
 class AutoavaliacaoMotivacionalReceiver : BroadcastReceiver() {
-    
-    @Inject
-    lateinit var notificationService: AutoavaliacaoNotificationService
-    
+
     private val aiService = AIMotivationalService()
-    
+
     override fun onReceive(context: Context, intent: Intent) {
-        // Gera uma mensagem motivacional personalizada
+        val app = context.applicationContext as Application
+        val entryPoint = EntryPointAccessors.fromApplication(app, AutoavaliacaoEntryPoint::class.java)
+        val notificationService = entryPoint.autoavaliacaoNotificationService()
+
         val motivationalMessage = aiService.generateDefaultMessage()
-        
-        // Mostra a notificação
         notificationService.showMotivationalNotification(motivationalMessage)
     }
 } 

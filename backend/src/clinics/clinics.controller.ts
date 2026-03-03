@@ -10,6 +10,8 @@ import {
   Request,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { ClinicsService } from './clinics.service';
 import { CreateClinicDto } from './dto/create-clinic.dto';
 import { UpdateClinicDto } from './dto/update-clinic.dto';
@@ -17,7 +19,8 @@ import { InviteUserDto } from './dto/invite-user.dto';
 import { UpdateClinicUserDto } from './dto/update-clinic-user.dto';
 
 @Controller('clinics')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin')
 export class ClinicsController {
   constructor(private readonly clinicsService: ClinicsService) {}
 

@@ -1,5 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { whereNotDeleted } from '../prisma/soft-delete.helper';
 import { SyncPatientsQueryDto } from './dto/sync-patients-query.dto';
 import { SyncPatientDto } from './dto/sync-patient.dto';
 
@@ -50,10 +51,10 @@ export class SyncService {
     const updatedAfter = query.updatedAfter ? new Date(query.updatedAfter) : undefined;
 
     return this.prisma.patient.findMany({
-      where: {
+      where: whereNotDeleted('patient', {
         clinicId,
         ...(updatedAfter ? { updatedAt: { gt: updatedAfter } } : {}),
-      },
+      }),
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -104,8 +105,9 @@ export class SyncService {
           continue;
         }
 
-        const existing = await tx.patient.findUnique({
-          where: { id: p.id },
+        // Sync permite update em registros soft-deleted (cliente pode restaurar)
+        const existing = await tx.patient.findFirst({
+          where: { id: p.id, clinicId },
         });
 
         if (!existing) {

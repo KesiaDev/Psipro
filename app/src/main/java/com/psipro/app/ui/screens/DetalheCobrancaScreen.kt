@@ -18,7 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.psipro.app.data.entities.CobrancaSessao
 import com.psipro.app.data.entities.StatusPagamento
 import com.psipro.app.ui.viewmodels.CobrancaSessaoViewModel
-import com.psipro.app.utils.WhatsAppUtils
+import com.psipro.app.utils.ClipboardUtils
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -225,7 +225,7 @@ fun DetalheCobrancaScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             Button(
                                 onClick = {
-                                    WhatsAppUtils.copiarParaClipboard(context, cobranca.pixCopiaCola)
+                                    ClipboardUtils.copyToClipboard(context, cobranca.pixCopiaCola)
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             ) {

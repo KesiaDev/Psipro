@@ -8,10 +8,51 @@ data class BackendLoginRequest(
 )
 
 data class BackendLoginResponse(
+    @SerializedName("accessToken")
+    val accessToken: String? = null,
     @SerializedName("access_token")
-    val accessToken: String,
+    val accessTokenLegacy: String? = null,
+    val refreshToken: String? = null,
     val user: BackendUserBasic
+) {
+    fun effectiveAccessToken(): String = accessToken ?: accessTokenLegacy ?: ""
+}
+
+data class BackendRegisterRequest(
+    val email: String,
+    val password: String,
+    val fullName: String
 )
+
+data class BackendRefreshRequest(
+    val refreshToken: String
+)
+
+data class BackendRefreshResponse(
+    @SerializedName("accessToken")
+    val accessToken: String? = null,
+    @SerializedName("access_token")
+    val accessTokenLegacy: String? = null,
+    val refreshToken: String? = null
+) {
+    fun effectiveAccessToken(): String = accessToken ?: accessTokenLegacy ?: ""
+}
+
+data class BackendLogoutRequest(
+    val refreshToken: String
+)
+
+data class BackendSwitchClinicRequest(
+    val clinicId: String
+)
+
+data class BackendSwitchClinicResponse(
+    @SerializedName("accessToken")
+    val accessToken: String? = null,
+    val clinicId: String? = null
+) {
+    fun effectiveAccessToken(): String = accessToken ?: ""
+}
 
 data class BackendUserBasic(
     val id: String,

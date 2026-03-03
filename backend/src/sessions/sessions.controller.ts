@@ -10,7 +10,7 @@ import { CurrentClinicId } from '../common/decorators/current-clinic.decorator';
 
 @Controller('sessions')
 @UseGuards(JwtAuthGuard, ClinicGuard, RolesGuard)
-@Roles('admin', 'psychologist')
+@Roles('admin', 'psychologist', 'assistant')
 export class SessionsController {
   constructor(private readonly sessionsService: SessionsService) {}
 

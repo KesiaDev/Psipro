@@ -1,21 +1,22 @@
 package com.psipro.app.notification
 
+import android.app.Application
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.EntryPointAccessors
 import java.util.*
-import javax.inject.Inject
+import com.psipro.app.notification.di.AgendamentoEntryPoint
 
-@AndroidEntryPoint
 class AgendamentoNotificationReceiver : BroadcastReceiver() {
-
-    @Inject
-    lateinit var notificationService: AgendamentoNotificationService
 
     override fun onReceive(context: Context, intent: Intent) {
         try {
+            val app = context.applicationContext as Application
+            val entryPoint = EntryPointAccessors.fromApplication(app, AgendamentoEntryPoint::class.java)
+            val notificationService = entryPoint.agendamentoNotificationService()
+
             val titulo = intent.getStringExtra("titulo") ?: "Agendamento"
             val paciente = intent.getStringExtra("paciente") ?: "Paciente"
             val dataHora = Date(intent.getLongExtra("dataHora", 0))

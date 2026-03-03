@@ -2,24 +2,26 @@ package com.psipro.app.auth
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import android.util.Patterns
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.psipro.app.sync.di.SyncEntryPoint
+import dagger.hilt.android.EntryPointAccessors
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
 class AuthManager private constructor(context: Context) {
+    private val appContext: Context = context.applicationContext
     private val sharedPreferences: SharedPreferences
-    
+
     init {
-        val masterKey = MasterKey.Builder(context)
+        val masterKey = MasterKey.Builder(appContext)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
         var prefs: SharedPreferences? = null
         try {
             prefs = EncryptedSharedPreferences.create(
-                context,
+                appContext,
                 "auth_prefs",
                 masterKey,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
@@ -27,10 +29,10 @@ class AuthManager private constructor(context: Context) {
             )
         } catch (e: Exception) {
             // Erro de keystore: limpar prefs e tentar novamente
-            context.deleteSharedPreferences("auth_prefs")
+            appContext.deleteSharedPreferences("auth_prefs")
             try {
                 prefs = EncryptedSharedPreferences.create(
-                    context,
+                    appContext,
                     "auth_prefs",
                     masterKey,
                     EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
@@ -109,9 +111,22 @@ class AuthManager private constructor(context: Context) {
         return true
     }
     
-    // Gerenciamento de Sessão
+    // Gerenciamento de Sessão (fonte: BackendSessionStore)
     fun isLoggedIn(): Boolean {
-        return sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false)
+        return try {
+            val entryPoint = EntryPointAccessors.fromApplication(
+                appContext,
+                SyncEntryPoint::class.java
+            )
+            !entryPoint.sessionStore().getAccessToken().isNullOrBlank()
+        } catch (e: Exception) {
+            sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false)
+        }
+    }
+
+    fun notifyLoginSuccess() {
+        sharedPreferences.edit().putBoolean(KEY_IS_LOGGED_IN, true).apply()
+        notifyAuthStateChanged(true)
     }
     
     fun getCurrentUserEmail(): String? {
@@ -131,13 +146,18 @@ class AuthManager private constructor(context: Context) {
         return false
     }
     
-    // Logout
+    // Logout (chama backend + limpa sessão local)
     fun logout() {
+        try {
+            val entryPoint = EntryPointAccessors.fromApplication(appContext, SyncEntryPoint::class.java)
+            kotlinx.coroutines.runBlocking {
+                entryPoint.backendAuthManager().logout()
+            }
+        } catch (_: Exception) { }
         sharedPreferences.edit()
             .putBoolean(KEY_IS_LOGGED_IN, false)
             .remove(KEY_USER_EMAIL)
             .apply()
-        
         notifyAuthStateChanged(false)
     }
     

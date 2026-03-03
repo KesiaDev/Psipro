@@ -4,22 +4,24 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.psipro.app.auth.TokenManager
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Sessão de sync. Tokens delegados ao TokenManager.
+ */
 @Singleton
 class BackendSessionStore @Inject constructor(
-    @ApplicationContext context: Context
+    @ApplicationContext context: Context,
+    private val tokenManager: TokenManager
 ) {
-    private val prefs: SharedPreferences
-
-    init {
+    private val prefs: SharedPreferences by lazy {
         val masterKey = MasterKey.Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
-        prefs = EncryptedSharedPreferences.create(
+        EncryptedSharedPreferences.create(
             context,
             PREFS_NAME,
             masterKey,
@@ -28,14 +30,15 @@ class BackendSessionStore @Inject constructor(
         )
     }
 
-    fun getAccessToken(): String? = prefs.getString(KEY_ACCESS_TOKEN, null)
-    fun setAccessToken(token: String) {
-        prefs.edit().putString(KEY_ACCESS_TOKEN, token).apply()
-    }
+    fun getAccessToken(): String? = tokenManager.getAccessToken()
+    fun setAccessToken(token: String) = tokenManager.setAccessToken(token)
 
-    fun getClinicId(): String? = prefs.getString(KEY_CLINIC_ID, null)
+    fun getRefreshToken(): String? = tokenManager.getRefreshToken()
+    fun setRefreshToken(token: String) = tokenManager.setRefreshToken(token)
+
+    fun getClinicId(): String? = tokenManager.getActiveClinic()
     fun setClinicId(clinicId: String?) {
-        prefs.edit().putString(KEY_CLINIC_ID, clinicId).apply()
+        clinicId?.let { tokenManager.saveActiveClinic(it) }
     }
 
     fun getLastPatientsSyncAtIso(): String? = prefs.getString(KEY_LAST_PATIENTS_SYNC_AT, null)
@@ -44,17 +47,12 @@ class BackendSessionStore @Inject constructor(
     }
 
     fun clear() {
-        prefs.edit()
-            .remove(KEY_ACCESS_TOKEN)
-            .remove(KEY_CLINIC_ID)
-            .remove(KEY_LAST_PATIENTS_SYNC_AT)
-            .apply()
+        tokenManager.clearTokens()
+        prefs.edit().remove(KEY_LAST_PATIENTS_SYNC_AT).apply()
     }
 
     companion object {
         private const val PREFS_NAME = "psipro_backend_session"
-        private const val KEY_ACCESS_TOKEN = "access_token"
-        private const val KEY_CLINIC_ID = "clinic_id"
         private const val KEY_LAST_PATIENTS_SYNC_AT = "patients_last_sync_at"
     }
 }

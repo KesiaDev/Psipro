@@ -1,5 +1,5 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
-import { FinancialService } from './financial.service';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { FinancialService, CreateFinancialRecordDto, UpdateFinancialRecordDto } from './financial.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { ClinicGuard } from '../common/guards/clinic.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -16,6 +16,39 @@ export class FinancialController {
   @Get('summary')
   getSummary(@CurrentUser() user: any, @CurrentClinicId() clinicId: string) {
     return this.financialService.getSummary(user.sub, clinicId);
+  }
+
+  @Get('records')
+  findAllRecords(@CurrentUser() user: any, @CurrentClinicId() clinicId: string) {
+    return this.financialService.findAllRecords(user.sub, clinicId);
+  }
+
+  @Post('records')
+  createRecord(
+    @CurrentUser() user: any,
+    @CurrentClinicId() clinicId: string,
+    @Body() dto: CreateFinancialRecordDto,
+  ) {
+    return this.financialService.createRecord(user.sub, clinicId, dto);
+  }
+
+  @Patch('records/:id')
+  updateRecord(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @CurrentClinicId() clinicId: string,
+    @Body() dto: UpdateFinancialRecordDto,
+  ) {
+    return this.financialService.updateRecord(id, user.sub, clinicId, dto);
+  }
+
+  @Delete('records/:id')
+  deleteRecord(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @CurrentClinicId() clinicId: string,
+  ) {
+    return this.financialService.deleteRecord(id, user.sub, clinicId);
   }
 
   @Get('patient/:patientId')

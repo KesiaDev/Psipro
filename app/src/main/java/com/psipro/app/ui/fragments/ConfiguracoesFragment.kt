@@ -12,7 +12,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -77,19 +76,8 @@ class ConfiguracoesFragment : Fragment() {
 
         val prefs = requireContext().getSharedPreferences("settings", Context.MODE_PRIVATE)
 
-        // Alternância de tema (claro/escuro)
-        val isDarkMode = prefs.getString("app_theme", "light") == "dark"
-        binding.darkModeSwitch.isChecked = isDarkMode
-        binding.darkModeSwitch.text = if (isDarkMode) "Modo Escuro" else "Modo Claro"
-        binding.darkModeSwitch.setOnCheckedChangeListener { _, isChecked ->
-            val mode = if (isChecked) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
-            val themePref = if (isChecked) "dark" else "light"
-            prefs.edit().putString("app_theme", themePref).apply()
-            AppCompatDelegate.setDefaultNightMode(mode)
-            binding.darkModeSwitch.text = if (isChecked) "Modo Escuro" else "Modo Claro"
-            val msg = if (isChecked) "Modo escuro ativado" else "Modo claro ativado"
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-        }
+        // Tema escuro fixo (removido toggle)
+        binding.darkModeSwitch.visibility = android.view.View.GONE
 
         // Notificações
         val notificationsEnabled = prefs.getBoolean("notifications_enabled", true)

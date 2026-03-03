@@ -16,7 +16,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.psipro.app.adapter.MenuAdapter
-import com.psipro.app.ui.screens.WhatsAppHistoryActivity
 import com.psipro.app.DashboardActivity
 import com.psipro.app.ProntuarioListActivity
 import com.psipro.app.AnamneseActivity
@@ -24,8 +23,6 @@ import com.psipro.app.data.entities.AnamneseGroup
 import kotlinx.coroutines.flow.collectLatest
 import com.psipro.app.ui.AppointmentScheduleActivity
 import com.psipro.app.ui.screens.DocumentosActivity
-import com.psipro.app.ui.screens.WhatsAppDialogActivity
-import com.psipro.app.utils.WhatsAppUtils
 
 // Menu item data class
 data class MenuItem(val iconRes: Int, val title: String, val onClick: () -> Unit)
@@ -77,16 +74,6 @@ class DetalhePacienteActivity : AppCompatActivity() {
         }
         
         // O diálogo será mostrado quando necessário
-    }
-    
-    private fun showWhatsAppDialog(paciente: Patient, psicologoNome: String) {
-        // Abrir a Activity do diálogo WhatsApp
-        val intent = Intent(this, WhatsAppDialogActivity::class.java).apply {
-            putExtra("patient_id", paciente.id)
-            putExtra("patient_name", paciente.name)
-            putExtra("psicologo_nome", psicologoNome)
-        }
-        startActivity(intent)
     }
 
     override fun onResume() {
@@ -142,18 +129,6 @@ class DetalhePacienteActivity : AppCompatActivity() {
                 intent.putExtra("PATIENT_ID", currentPatientId)
                 intent.putExtra("PATIENT_NAME", patientName)
                 startActivity(intent)
-            },
-            MenuItem(R.drawable.ic_whatsapp, "WhatsApp") {
-                // Obter dados do paciente atual
-                patientViewModel.getPatientById(currentPatientId) { paciente ->
-                    if (paciente != null) {
-                        val psicologoNome = WhatsAppUtils.obterNomePsicologo(this)
-                        // Mostrar diálogo de seleção de mensagem
-                        showWhatsAppDialog(paciente, psicologoNome)
-                    } else {
-                        Toast.makeText(this, "Erro ao carregar dados do paciente", Toast.LENGTH_SHORT).show()
-                    }
-                }
             },
             MenuItem(R.drawable.ic_calendar, "Agendar consulta") {
                 val intent = Intent(this, DashboardActivity::class.java).apply {

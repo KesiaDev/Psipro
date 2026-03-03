@@ -10,6 +10,18 @@ interface BackendApiService {
     @POST("auth/login")
     suspend fun login(@Body body: BackendLoginRequest): Response<BackendLoginResponse>
 
+    @POST("auth/register")
+    suspend fun register(@Body body: BackendRegisterRequest): Response<BackendLoginResponse>
+
+    @POST("auth/refresh")
+    suspend fun refresh(@Body body: BackendRefreshRequest): Response<BackendRefreshResponse>
+
+    @POST("auth/logout")
+    suspend fun logout(@Body body: BackendLogoutRequest): Response<Unit>
+
+    @POST("auth/switch-clinic")
+    suspend fun switchClinic(@Body body: BackendSwitchClinicRequest): Response<BackendSwitchClinicResponse>
+
     @GET("auth/me")
     suspend fun me(): Response<BackendMeResponse>
 

@@ -116,21 +116,45 @@ model User {
   
   // Se for psicólogo autônomo (sem clínica) - legado, preferir planType da Clinic
   isIndependent Boolean @default(true)
-  
+
+  // Bloqueio de login após falhas consecutivas
+  failedLoginAttempts Int       @default(0)
+  lockUntil           DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relações
   clinics        ClinicUser[]  // Clínicas adicionais que o usuário pertence
   patients       Patient[]     // Pacientes próprios (se independente)
+  refreshTokens  RefreshToken[]
   appointments  Appointment[]
   sessions      Session[]
   payments      Payment[]
   financialRecords FinancialRecord[]
   documents     Document[]
+  auditLogs    AuditLog[]
 
   @@index([clinicId])
   @@map("users")
+}
+
+model RefreshToken {
+  id              String    @id @default(uuid())
+  token           String    @unique
+  userId          String
+  clinicId        String?
+  expiresAt       DateTime
+  createdAt       DateTime  @default(now())
+  revoked         Boolean   @default(false)
+  replacedByToken String?
+  deviceInfo      String?
+  ipAddress       String?
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
 }
 
 // Paciente
@@ -165,6 +189,7 @@ model Patient {
   lastSyncedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? // Soft delete
 
   // Relações
   clinic      Clinic?  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
@@ -175,6 +200,7 @@ model Patient {
   documents   Document[]
 
   @@index([clinicId])
+  @@index([deletedAt])
   @@index([userId])
   @@index([syncHash])
   @@map("patients")
@@ -202,6 +228,7 @@ model Appointment {
   lastSyncedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? // Soft delete
 
   // Relações
   clinic      Clinic?  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
@@ -213,6 +240,7 @@ model Appointment {
   @@index([userId])
   @@index([patientId])
   @@index([scheduledAt])
+  @@index([deletedAt])
   @@index([syncHash])
   @@map("appointments")
 }
@@ -234,14 +262,16 @@ model Session {
   lastSyncedAt  DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  deletedAt     DateTime? // Soft delete
 
   // Relações
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
   payment       Payment?
 
   @@index([userId])
+  @@index([deletedAt])
   @@index([patientId])
   @@index([date])
   @@index([syncHash])
@@ -250,16 +280,17 @@ model Session {
 
 // Pagamento
 model Payment {
-  id          String   @id @default(uuid())
-  userId      String
-  patientId   String
-  clinicId    String?  // Isolamento multi-tenant (nullable para migração)
-  sessionId   String?  @unique
-  amount      Decimal  @db.Decimal(10, 2)
-  date        DateTime
-  method      String?  // Dinheiro | PIX | Cartão | etc
-  status      String   @default("pago") // pago | pendente | cancelado
-  notes       String?
+  id            String   @id @default(uuid())
+  userId        String
+  patientId     String
+  clinicId      String?  // Isolamento multi-tenant (nullable para migração)
+  sessionId     String?  @unique
+  sessionNumber Int?     // Número da sessão (max+1 ao criar cobrança automática)
+  amount        Decimal  @db.Decimal(10, 2)
+  date          DateTime
+  method        String?  // Dinheiro | PIX | Cartão | etc
+  status        String   @default("pago") // pago | pendente | cancelado
+  notes         String?
   
   // Sincronização
   source      String   @default("app")
@@ -267,19 +298,22 @@ model Payment {
   lastSyncedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? // Soft delete
 
   // Relações
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
   clinic      Clinic?  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-  session     Session? @relation(fields: [sessionId], references: [id])
+  session     Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
 
+  @@unique([patientId, sessionNumber])
   @@index([userId])
   @@index([clinicId])
   @@index([patientId])
   @@index([date])
   @@index([status])
   @@index([syncHash])
+  @@index([deletedAt])
   @@map("payments")
 }
 
@@ -378,5 +412,28 @@ model Subscription {
 
   @@index([clinicId])
   @@map("subscriptions")
+}
+
+// Auditoria enterprise — eventos críticos para rastreabilidade
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  clinicId  String   // Clínica ativa ou user.clinicId / primeira ClinicUser
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([clinicId])
+  @@index([entity])
+  @@index([createdAt])
+  @@index([clinicId, createdAt])
+  @@map("audit_logs")
 }
 

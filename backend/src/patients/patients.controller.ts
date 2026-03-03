@@ -24,7 +24,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('patients')
 @UseGuards(JwtAuthGuard, ClinicGuard, RolesGuard)
-@Roles('admin', 'psychologist')
+@Roles('admin', 'psychologist', 'assistant')
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
@@ -36,6 +36,11 @@ export class PatientsController {
   @Get('count')
   getCount(@CurrentClinicId() clinicId: string) {
     return this.patientsService.getCount(clinicId);
+  }
+
+  @Get('recent')
+  getRecent(@CurrentClinicId() clinicId: string) {
+    return this.patientsService.getRecent(clinicId);
   }
 
   @Get(':id')

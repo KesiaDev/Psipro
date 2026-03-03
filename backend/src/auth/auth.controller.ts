@@ -1,8 +1,20 @@
-import { Controller, Post, Body, UseGuards, Get, Headers, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Get,
+  Headers,
+  UnauthorizedException,
+  Req,
+} from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { RefreshDto } from './dto/refresh.dto';
 import { HandoffDto } from './dto/handoff.dto';
 import { RegisterDto } from './dto/register.dto';
+import { SwitchClinicDto } from './dto/switch-clinic.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
@@ -10,11 +22,33 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('login')
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto, @Req() req: { headers?: { 'user-agent'?: string; 'x-forwarded-for'?: string }; ip?: string }) {
+    const deviceInfo = req?.headers?.['user-agent'];
+    const ipAddress = req?.ip;
+    return this.authService.login(loginDto, { deviceInfo, ipAddress, request: { ip: ipAddress, headers: req?.headers } });
   }
 
+  @Post('logout')
+  async logout(@Body() body: RefreshDto, @Req() req?: { ip?: string; headers?: { 'user-agent'?: string } }) {
+    await this.authService.logout(body.refreshToken, req ? { ip: req.ip, headers: req.headers } : undefined);
+  }
+
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post('refresh')
+  async refresh(@Body() body: RefreshDto) {
+    try {
+      return await this.authService.refresh(body.refreshToken);
+    } catch (err) {
+      if (err instanceof UnauthorizedException) {
+        throw err;
+      }
+      throw new UnauthorizedException('Token inválido');
+    }
+  }
+
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
@@ -42,6 +76,18 @@ export class AuthController {
     }
 
     return this.authService.handoff(token);
+  }
+
+  /**
+   * POST /auth/switch-clinic
+   *
+   * Troca a clínica ativa do usuário. Valida pertencimento via ClinicUser.
+   * Retorna novo accessToken com clinicId atualizado. Não altera refreshToken.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('switch-clinic')
+  async switchClinic(@CurrentUser() user: any, @Body() dto: SwitchClinicDto, @Req() req?: { ip?: string; headers?: { 'user-agent'?: string } }) {
+    return this.authService.switchClinic(user.sub, dto.clinicId, req ? { ip: req.ip, headers: req.headers } : undefined);
   }
 
   /**

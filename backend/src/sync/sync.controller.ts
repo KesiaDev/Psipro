@@ -1,6 +1,8 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { ClinicGuard } from '../common/guards/clinic.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { CurrentClinicId } from '../common/decorators/current-clinic.decorator';
 import { SyncPatientsBodyDto } from './dto/sync-patients-body.dto';
@@ -8,7 +10,8 @@ import { SyncPatientsQueryDto } from './dto/sync-patients-query.dto';
 import { SyncService } from './sync.service';
 
 @Controller('sync')
-@UseGuards(JwtAuthGuard, ClinicGuard)
+@UseGuards(JwtAuthGuard, ClinicGuard, RolesGuard)
+@Roles('admin', 'psychologist')
 export class SyncController {
   constructor(private readonly syncService: SyncService) {}
 

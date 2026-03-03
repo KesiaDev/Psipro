@@ -189,6 +189,34 @@ async function main() {
 
   console.log('✅ Pacientes criados:', clinicPatients.length + independentPatients.length);
 
+  // Registros financeiros de teste (apenas se não existirem)
+  const financialCount = await prisma.financialRecord.count();
+  if (financialCount === 0) {
+    await prisma.financialRecord.createMany({
+      data: [
+        {
+          userId: owner.id,
+          clinicId: clinic.id,
+          date: new Date(),
+          type: 'receita',
+          amount: 150.0,
+          description: 'Sessão - Maria Silva',
+          category: 'session',
+        },
+        {
+          userId: owner.id,
+          clinicId: clinic.id,
+          date: new Date(),
+          type: 'despesa',
+          amount: 50.0,
+          description: 'Material de expediente',
+          category: 'other',
+        },
+      ],
+    });
+    console.log('✅ 2 registros financeiros de teste criados');
+  }
+
   console.log('🎉 Seed concluído!');
   console.log('\n📋 Credenciais:');
   console.log('  Owner da Clínica: owner@psiclinic.com / senha123');

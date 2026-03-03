@@ -14,7 +14,7 @@ import com.psipro.app.ui.screens.FinanceiroDashboardActivity
 import com.psipro.app.ui.screens.NovaSessaoActivity
 import com.psipro.app.ui.screens.home.HomeScreen
 import com.psipro.app.ui.AppointmentDetailActivity
-import com.psipro.app.utils.WhatsAppUtils
+import android.net.Uri
 import androidx.fragment.app.viewModels
 import com.psipro.app.ui.viewmodels.AppointmentViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -48,8 +48,12 @@ class HomeInteligenteFragment : Fragment() {
                             startActivity(intent)
                         },
                         onNavigateToWhatsApp = { phoneNumber ->
-                            // Abrir WhatsApp
-                            WhatsAppUtils.enviarMensagemWhatsApp(requireContext(), phoneNumber, "")
+                            // Abrir app de telefone para contato
+                            val tel = phoneNumber.replace(Regex("[^0-9+]"), "")
+                            if (tel.isNotEmpty()) {
+                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$tel"))
+                                startActivity(intent)
+                            }
                         },
                         onNavigateToFinancial = {
                             // Navegar para financeiro

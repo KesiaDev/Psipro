@@ -309,6 +309,7 @@ export class AppointmentsService {
   }
 
   async getToday(userId: string, clinicId: string) {
+    console.log('GET /appointments/today chamado');
     const clinicUser = await this.prisma.clinicUser.findUnique({
       where: { clinicId_userId: { clinicId, userId } },
       select: { canViewAllPatients: true, role: true },
@@ -336,10 +337,65 @@ export class AppointmentsService {
       orderBy: { scheduledAt: 'asc' },
     });
 
+    const appointmentsFormatted = appointments.map((a) => {
+      const time = a.scheduledAt.toTimeString().slice(0, 5);
+      const statusMap: Record<string, string> = {
+        agendada: 'scheduled',
+        confirmada: 'confirmed',
+        realizada: 'completed',
+        cancelada: 'cancelled',
+      };
+      return {
+        id: a.id,
+        patient: a.patient?.name ?? '—',
+        patientName: a.patient?.name ?? '—',
+        time,
+        startTime: time,
+        type: a.type ?? 'Consulta',
+        sessionType: a.type ?? 'Consulta',
+        status: statusMap[a.status] ?? 'pending',
+      };
+    });
+
     return {
       count: appointments.length,
+      appointments: appointmentsFormatted,
+      data: appointmentsFormatted,
       items: appointments,
     };
+  }
+
+  async getRecent(userId: string, clinicId: string) {
+    const clinicUser = await this.prisma.clinicUser.findUnique({
+      where: { clinicId_userId: { clinicId, userId } },
+      select: { canViewAllPatients: true, role: true },
+    });
+    if (!clinicUser) throw new NotFoundException('Clínica não encontrada ou sem acesso');
+
+    const where: any = { clinicId };
+    if (!clinicUser.canViewAllPatients && !['owner', 'admin'].includes(clinicUser.role)) {
+      where.userId = userId;
+    }
+
+    const appointments = await this.prisma.appointment.findMany({
+      where: {
+        ...whereNotDeleted('appointment', where),
+        status: { notIn: ['cancelada', 'cancelado', 'CANCELADO', 'CANCELADA'] },
+        scheduledAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+      },
+      include: { patient: { select: { id: true, name: true } } },
+      orderBy: { scheduledAt: 'desc' },
+      take: 10,
+    });
+
+    return appointments.map((a) => ({
+      id: a.id,
+      patient: a.patient?.name ?? '—',
+      time: a.scheduledAt.toTimeString().slice(0, 5),
+      type: a.type ?? 'Consulta',
+      status: a.status,
+      scheduledAt: a.scheduledAt.toISOString(),
+    }));
   }
 
   async findOne(id: string, userId: string, clinicId: string) {

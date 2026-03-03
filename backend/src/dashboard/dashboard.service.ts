@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { whereNotDeleted } from '../prisma/soft-delete.helper';
 
 @Injectable()
 export class DashboardService {
@@ -33,30 +34,27 @@ export class DashboardService {
       revenueResult,
       pendingResult,
     ] = await Promise.all([
-      this.prisma.patient.count({ where: { clinicId } }),
+      this.prisma.patient.count({ where: whereNotDeleted('patient', { clinicId }) }),
       this.prisma.appointment.count({
-        where: {
+        where: whereNotDeleted('appointment', {
           clinicId,
           status: 'realizada',
           scheduledAt: { gte: monthStart },
-        },
+        }),
       }),
       this.prisma.appointment.count({
-        where: {
+        where: whereNotDeleted('appointment', {
           clinicId,
           status: { in: ['agendada', 'confirmada'] },
           scheduledAt: { gte: weekStart },
-        },
+        }),
       }),
       this.prisma.payment.aggregate({
-        where: {
-          clinicId,
-          date: { gte: monthStart },
-        },
+        where: whereNotDeleted('payment', { clinicId, date: { gte: monthStart } }),
         _sum: { amount: true },
       }),
       this.prisma.payment.aggregate({
-        where: { clinicId, status: 'pendente' },
+        where: whereNotDeleted('payment', { clinicId, status: 'pendente' }),
         _sum: { amount: true },
       }),
     ]);
@@ -75,13 +73,13 @@ export class DashboardService {
     const weekEnd = this.endOfWeek();
 
     const appointments = await this.prisma.appointment.findMany({
-      where: {
+      where: whereNotDeleted('appointment', {
         clinicId,
         scheduledAt: {
           gte: weekStart,
           lte: weekEnd,
         },
-      },
+      }),
       select: { scheduledAt: true },
     });
 
@@ -114,21 +112,18 @@ export class DashboardService {
 
     const [revenueResult, pendingResult, sessionsCount] = await Promise.all([
       this.prisma.payment.aggregate({
-        where: {
-          clinicId,
-          date: { gte: monthStart },
-        },
+        where: whereNotDeleted('payment', { clinicId, date: { gte: monthStart } }),
         _sum: { amount: true },
       }),
       this.prisma.payment.count({
-        where: { clinicId, status: 'pendente' },
+        where: whereNotDeleted('payment', { clinicId, status: 'pendente' }),
       }),
       this.prisma.appointment.count({
-        where: {
+        where: whereNotDeleted('appointment', {
           clinicId,
           status: 'realizada',
           scheduledAt: { gte: monthStart },
-        },
+        }),
       }),
     ]);
 
@@ -142,6 +137,48 @@ export class DashboardService {
       averagePerSession,
       unpaidSessions,
       isEmpty: sessionsCount === 0 && monthlyRevenue === 0,
+    };
+  }
+
+  async getCount(clinicId: string) {
+    const [patients, appointments, sessions] = await Promise.all([
+      this.prisma.patient.count({ where: whereNotDeleted('patient', { clinicId }) }),
+      this.prisma.appointment.count({
+        where: whereNotDeleted('appointment', {
+          clinicId,
+          status: { notIn: ['cancelada', 'cancelado'] },
+        }),
+      }),
+      this.prisma.session.count({
+        where: whereNotDeleted('session', {
+          status: 'realizada',
+          patient: { clinicId, deletedAt: null },
+        }),
+      }),
+    ]);
+    return { patients, appointments, sessions };
+  }
+
+  async getStats(clinicId: string) {
+    const [metrics, agendaSummary, financeSummary] = await Promise.all([
+      this.getMetrics(clinicId),
+      this.getAgendaSummary(clinicId),
+      this.getFinanceSummary(clinicId),
+    ]);
+    return {
+      ...metrics,
+      agendaSummary,
+      financeSummary,
+    };
+  }
+
+  async getSummary(clinicId: string) {
+    const count = await this.getCount(clinicId);
+    const financeSummary = await this.getFinanceSummary(clinicId);
+    return {
+      ...count,
+      monthlyRevenue: financeSummary.monthlyRevenue,
+      averagePerSession: financeSummary.averagePerSession,
     };
   }
 }

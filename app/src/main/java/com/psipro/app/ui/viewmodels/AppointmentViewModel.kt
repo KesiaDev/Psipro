@@ -6,14 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.psipro.app.data.entities.Appointment
 import com.psipro.app.data.entities.AppointmentStatus
-import com.psipro.app.data.entities.CobrancaAgendamento
-import com.psipro.app.data.entities.CobrancaSessao
-import com.psipro.app.data.entities.StatusPagamento
 import com.psipro.app.data.models.AppointmentSummary
 import com.psipro.app.data.repository.AppointmentRepository
-import com.psipro.app.data.repository.CobrancaAgendamentoRepository
-import com.psipro.app.data.repository.CobrancaSessaoRepository
-import com.psipro.app.data.repository.PatientRepository
 import com.psipro.app.utils.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -24,10 +18,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AppointmentViewModel @Inject constructor(
-    private val repository: AppointmentRepository,
-    private val cobrancaAgendamentoRepository: CobrancaAgendamentoRepository,
-    private val cobrancaSessaoRepository: CobrancaSessaoRepository,
-    private val patientRepository: PatientRepository
+    private val repository: AppointmentRepository
 ) : ViewModel() {
 
     private val _appointments = MutableStateFlow<List<Appointment>>(emptyList())
@@ -136,18 +127,7 @@ class AppointmentViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _loading.value = true
-                val hasConflicts = repository.hasConflictingAppointments(
-                    appointment.date,
-                    appointment.startTime,
-                    appointment.endTime,
-                    0L
-                )
-                
-                if (hasConflicts) {
-                    _appointmentError.emit("Já existe uma consulta agendada neste horário")
-                    return@launch
-                }
-
+                // B3: Conflito validado no backend. Tratar 409 quando API retornar.
                 val appointmentId = repository.insertAppointment(appointment)
                 
                 // Integração financeira para CONFIRMADO
@@ -169,18 +149,7 @@ class AppointmentViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _loading.value = true
-                val hasConflicts = repository.hasConflictingAppointments(
-                    appointment.date,
-                    appointment.startTime,
-                    appointment.endTime,
-                    appointment.id
-                )
-
-                if (hasConflicts) {
-                    _appointmentError.emit("Já existe uma consulta agendada neste horário")
-                    return@launch
-                }
-
+                // B3: Conflito validado no backend. Tratar 409 quando API retornar.
                 repository.updateAppointment(appointment)
                 
                 // Integração financeira baseada no status
@@ -189,7 +158,10 @@ class AppointmentViewModel @Inject constructor(
                 _appointmentSaved.emit(true)
                 loadAppointments(_selectedDate.value)
             } catch (e: Exception) {
-                _appointmentError.emit("Erro ao atualizar consulta: ${e.message}")
+                _appointmentError.emit(
+                    if (com.psipro.app.utils.isConflict409(e)) "Já existe uma consulta agendada neste horário."
+                    else "Erro ao atualizar consulta: ${e.message}"
+                )
             } finally {
                 _loading.value = false
             }
@@ -291,21 +263,9 @@ class AppointmentViewModel @Inject constructor(
     private fun handleCompletedAppointment(appointment: Appointment) {
         viewModelScope.launch {
             try {
-                val patient = appointment.patientId?.let { patientRepository.getPatientById(it) }
-                val valorSessao = patient?.sessionValue ?: appointment.sessionValue ?: 0.0
-                
-                if (valorSessao > 0) {
-                    // CONCEITO: Sessão confirmada É cobrança
-                    // Perguntar se foi paga no momento antes de criar
-                    _billingAppointment.value = appointment
-                    _sessionValue.value = valorSessao
-                    _billingMessage.value = "✅ Sessão realizada!\n💰 Valor: R$ ${String.format("%.2f", valorSessao)}\n\nFoi paga agora?"
-                    _showPaymentDialog.value = true
-                } else {
-                    // Sessão sem valor - apenas confirmar
-                    _billingMessage.value = "✅ Sessão realizada com sucesso!"
-                    _showBillingDialog.value = true
-                }
+                // B3: Cobrança gerada no backend ao marcar REALIZADO. Apenas exibir confirmação.
+                _billingMessage.value = "✅ Sessão realizada!\n💰 A cobrança será registrada automaticamente."
+                _showBillingDialog.value = true
             } catch (e: Exception) {
                 _error.value = Event("Erro ao processar realização: ${e.message}")
             }
@@ -314,53 +274,12 @@ class AppointmentViewModel @Inject constructor(
     
     /**
      * Confirma o pagamento da sessão realizada.
-     * Se foiPago = true, marca como PAGA. Caso contrário, cria como PENDENTE.
+     * B3: Cobrança criada no backend. Esta função apenas fecha o fluxo local.
      */
     fun confirmSessionPayment(wasPaid: Boolean, metodoPagamento: String = "") {
-        viewModelScope.launch {
-            try {
-                val appointment = _billingAppointment.value ?: return@launch
-                val patientId = appointment.patientId ?: return@launch
-                val patient = patientRepository.getPatientById(patientId) ?: return@launch
-                val valorSessao = _sessionValue.value
-                
-                if (valorSessao <= 0) return@launch
-                
-                // Calcular número da sessão
-                val cobrancasExistentes = cobrancaSessaoRepository.getByPatientId(patientId).first()
-                val numeroSessao = (cobrancasExistentes.maxOfOrNull { it.numeroSessao } ?: 0) + 1
-                
-                val dataVencimento = Calendar.getInstance().apply {
-                    time = appointment.date
-                    add(Calendar.DAY_OF_MONTH, 7) // Vencimento em 7 dias
-                }.time
-                
-                val cobrancaSessao = CobrancaSessao(
-                    patientId = patientId,
-                    anotacaoSessaoId = null, // Será preenchido quando anotação for criada
-                    appointmentId = appointment.id,
-                    numeroSessao = numeroSessao,
-                    valor = valorSessao,
-                    dataSessao = appointment.date,
-                    dataVencimento = dataVencimento,
-                    status = if (wasPaid) StatusPagamento.PAGO else StatusPagamento.A_RECEBER,
-                    dataPagamento = if (wasPaid) Date() else null,
-                    metodoPagamento = metodoPagamento,
-                    observacoes = "Sessão realizada - ${appointment.title}",
-                    createdAt = Date(),
-                    updatedAt = Date()
-                )
-                
-                cobrancaSessaoRepository.insert(cobrancaSessao)
-                
-                val statusText = if (wasPaid) "paga" else "registrada (pendente)"
-                _billingMessage.value = "✅ Sessão $statusText!\n💰 R$ ${String.format("%.2f", valorSessao)}"
-                _showPaymentDialog.value = false
-                _showBillingDialog.value = true
-            } catch (e: Exception) {
-                _error.value = Event("Erro ao processar pagamento: ${e.message}")
-            }
-        }
+        _showPaymentDialog.value = false
+        _showBillingDialog.value = true
+        _billingMessage.value = "✅ Sessão realizada! A cobrança foi registrada pelo sistema."
     }
     
     fun dismissPaymentDialog() {
@@ -371,14 +290,9 @@ class AppointmentViewModel @Inject constructor(
     private fun handleNoShowAppointment(appointment: Appointment) {
         viewModelScope.launch {
             try {
-                val patient = appointment.patientId?.let { patientRepository.getPatientById(it) }
-                val valorSessao = patient?.sessionValue ?: appointment.sessionValue
-                
-                if (valorSessao > 0) {
-                    _billingAppointment.value = appointment
-                    _billingMessage.value = "❌ Paciente faltou na consulta.\n💰 Deseja gerar cobrança pela falta?\nValor: R$ ${String.format("%.2f", valorSessao)}"
-                    _showBillingDialog.value = true
-                }
+                // B3: Cobrança por falta/cancelamento - backend-driven. Apenas exibir mensagem.
+                _billingMessage.value = "❌ Paciente faltou na consulta."
+                _showBillingDialog.value = true
             } catch (e: Exception) {
                 _error.value = Event("Erro ao processar falta: ${e.message}")
             }
@@ -388,68 +302,20 @@ class AppointmentViewModel @Inject constructor(
     private fun handleCancelledAppointment(appointment: Appointment) {
         viewModelScope.launch {
             try {
-                val patient = appointment.patientId?.let { patientRepository.getPatientById(it) }
-                val valorSessao = patient?.sessionValue ?: appointment.sessionValue
-                
-                if (valorSessao > 0) {
-                    _billingAppointment.value = appointment
-                    _billingMessage.value = "❌ Consulta cancelada.\n💰 Deseja gerar cobrança pelo cancelamento?\nValor: R$ ${String.format("%.2f", valorSessao)}"
-                    _showBillingDialog.value = true
-                }
+                // B3: Backend cancela cobrança vinculada ao marcar CANCELADO.
+                _billingMessage.value = "❌ Consulta cancelada."
+                _showBillingDialog.value = true
             } catch (e: Exception) {
                 _error.value = Event("Erro ao processar cancelamento: ${e.message}")
             }
         }
     }
     
-    // Função para confirmar geração de cobrança
+    // Função para confirmar geração de cobrança.
+    // B3: Cobrança gerada no backend. Apenas fecha o diálogo.
     fun confirmBilling(generateBilling: Boolean) {
-        viewModelScope.launch {
-            try {
-                val appointment = _billingAppointment.value
-                if (appointment != null && generateBilling) {
-                    val patient = appointment.patientId?.let { patientRepository.getPatientById(it) }
-                    val valorSessao = patient?.sessionValue ?: appointment.sessionValue
-                    
-                    val dataVencimento = Calendar.getInstance().apply {
-                        time = appointment.date
-                        add(Calendar.DAY_OF_MONTH, 7) // Vencimento em 7 dias
-                    }.time
-                    
-                    val motivo = when (appointment.status) {
-                        AppointmentStatus.FALTOU -> "FALTA"
-                        AppointmentStatus.CANCELOU -> "CANCELAMENTO"
-                        else -> "OUTRO"
-                    }
-                    
-                    val observacoes = when (appointment.status) {
-                        AppointmentStatus.FALTOU -> "Cobrança por falta - ${appointment.title}"
-                        AppointmentStatus.CANCELOU -> "Cobrança por cancelamento - ${appointment.title}"
-                        else -> "Cobrança - ${appointment.title}"
-                    }
-                    
-                    val cobranca = CobrancaAgendamento(
-                        patientId = appointment.patientId ?: 0L,
-                        appointmentId = appointment.id,
-                        valor = valorSessao,
-                        dataAgendamento = appointment.date,
-                        dataEvento = appointment.date, // Data do evento (falta/cancelamento)
-                        dataVencimento = dataVencimento,
-                        motivo = motivo,
-                        observacoes = observacoes
-                    )
-                    
-                    cobrancaAgendamentoRepository.insertCobranca(cobranca)
-                    
-                    _billingMessage.value = "✅ Cobrança gerada com sucesso!\n💰 Valor: R$ ${String.format("%.2f", valorSessao)}"
-                }
-                
-                _showBillingDialog.value = false
-                _billingAppointment.value = null
-            } catch (e: Exception) {
-                _error.value = Event("Erro ao gerar cobrança: ${e.message}")
-            }
-        }
+        _showBillingDialog.value = false
+        _billingAppointment.value = null
     }
     
     // Função para fechar o diálogo de cobrança

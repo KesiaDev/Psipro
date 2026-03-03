@@ -20,7 +20,7 @@ import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 
 @Controller('appointments')
 @UseGuards(JwtAuthGuard, ClinicGuard, RolesGuard)
-@Roles('admin', 'psychologist')
+@Roles('admin', 'psychologist', 'assistant')
 export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}
 
@@ -32,6 +32,11 @@ export class AppointmentsController {
   @Get('today')
   getToday(@CurrentUser() user: any, @CurrentClinicId() clinicId: string) {
     return this.appointmentsService.getToday(user.sub, clinicId);
+  }
+
+  @Get('recent')
+  getRecent(@CurrentUser() user: any, @CurrentClinicId() clinicId: string) {
+    return this.appointmentsService.getRecent(user.sub, clinicId);
   }
 
   @Get(':id')

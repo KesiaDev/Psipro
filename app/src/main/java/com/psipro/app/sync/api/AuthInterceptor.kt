@@ -12,20 +12,24 @@ class AuthInterceptor @Inject constructor(
         val request = chain.request()
         val path = request.url.encodedPath
 
-        // Endpoints públicos
-        if (path.endsWith("/auth/login")) {
+        // Endpoints públicos (não enviam Authorization)
+        if (path.endsWith("/auth/login") || path.endsWith("/auth/register") ||
+            path.endsWith("/auth/refresh") || path.endsWith("/auth/logout")) {
             return chain.proceed(request)
         }
 
         val token = sessionStore.getAccessToken()
-        if (token.isNullOrBlank()) {
-            return chain.proceed(request)
-        }
+        val clinicId = sessionStore.getClinicId()
 
-        val authenticated = request.newBuilder()
-            .header("Authorization", "Bearer $token")
-            .build()
-        return chain.proceed(authenticated)
+        val newRequest = request.newBuilder().apply {
+            if (!token.isNullOrBlank()) {
+                addHeader("Authorization", "Bearer $token")
+            }
+            if (!clinicId.isNullOrBlank()) {
+                addHeader("X-Clinic-Id", clinicId)
+            }
+        }.build()
+        return chain.proceed(newRequest)
     }
 }
 

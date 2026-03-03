@@ -9,7 +9,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.psipro.app.R
 import com.psipro.app.data.AppDatabase
-import com.psipro.app.utils.WhatsAppUtils
+import com.psipro.app.ui.screens.FinanceiroDashboardActivity
 import java.util.Calendar
 
 class LembreteCobrancaWorker(
@@ -21,13 +21,12 @@ class LembreteCobrancaWorker(
         return try {
             val db = AppDatabase.getInstance(applicationContext)
             val patientDao = db.patientDao()
-            val pacientes = patientDao.getAll() // Certifique-se que este método existe
+            val pacientes = patientDao.getAll()
             val hoje = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
             val pacientesParaNotificar = pacientes.filter { it.lembreteCobranca && it.diaCobranca == hoje }
             val notificationManager = NotificationManagerCompat.from(applicationContext)
             pacientesParaNotificar.forEachIndexed { index, paciente ->
-                val mensagem = WhatsAppUtils.gerarMensagemLembretePaciente(paciente)
-                val intent = WhatsAppUtils.intentWhatsApp(applicationContext, paciente.phone, mensagem)
+                val intent = Intent(applicationContext, FinanceiroDashboardActivity::class.java)
                 val pendingIntent = PendingIntent.getActivity(
                     applicationContext,
                     1000 + index,
@@ -36,8 +35,8 @@ class LembreteCobrancaWorker(
                 )
                 val builder = NotificationCompat.Builder(applicationContext, "cobranca_channel")
                     .setSmallIcon(R.drawable.ic_error)
-                    .setContentTitle("Cobrança para ${paciente.name}")
-                    .setContentText("Toque para enviar WhatsApp de cobrança")
+                    .setContentTitle("Cobrança pendente: ${paciente.name}")
+                    .setContentText("Toque para abrir o financeiro")
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setAutoCancel(true)
                     .setContentIntent(pendingIntent)

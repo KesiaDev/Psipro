@@ -31,6 +31,38 @@ export class PatientsService {
     });
   }
 
+  async getRecent(clinicId: string) {
+    const patients = await this.prisma.patient.findMany({
+      where: whereNotDeleted('patient', { clinicId }),
+      include: {
+        sessions: {
+          where: { deletedAt: null },
+          orderBy: { date: 'desc' },
+          take: 1,
+        },
+        _count: { select: { sessions: true } },
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 10,
+    });
+
+    return {
+      patients: patients.map((p) => {
+        const lastSession = p.sessions[0];
+        return {
+          id: p.id,
+          name: p.name,
+          full_name: p.name,
+          last_session_at: lastSession?.date?.toISOString() ?? null,
+          lastSession: lastSession?.date?.toISOString() ?? null,
+          sessions_count: p._count.sessions,
+          sessions: p._count.sessions,
+          progress: 'stable' as const,
+        };
+      }),
+    };
+  }
+
   async findOne(id: string, clinicId: string) {
     const patient = await this.prisma.patient.findFirst({
       where: whereNotDeleted('patient', { id, clinicId }),

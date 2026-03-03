@@ -10,10 +10,15 @@ import { UpdateClinicDto } from './dto/update-clinic.dto';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { UpdateClinicUserDto } from './dto/update-clinic-user.dto';
 import { PlanType } from '@prisma/client';
+import { AuditService } from '../audit/audit.service';
+import { whereNotDeleted } from '../prisma/soft-delete.helper';
 
 @Injectable()
 export class ClinicsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditService: AuditService,
+  ) {}
 
   /**
    * POST /clinics — Cria nova clínica e associa usuário como OWNER.
@@ -219,7 +224,7 @@ export class ClinicsService {
     }
 
     // Criar convite
-    return this.prisma.clinicUser.create({
+    const created = await this.prisma.clinicUser.create({
       data: {
         clinicId: clinicId,
         userId: user.id,
@@ -231,6 +236,17 @@ export class ClinicsService {
         canManageUsers: inviteUserDto.canManageUsers || false,
       },
     });
+
+    this.auditService.log({
+      userId,
+      clinicId,
+      action: 'clinic_invite',
+      entity: 'ClinicUser',
+      entityId: created.id,
+      metadata: { targetEmail: inviteUserDto.email, role: created.role },
+    }).catch(() => {});
+
+    return created;
   }
 
   async updateUser(
@@ -272,7 +288,7 @@ export class ClinicsService {
       throw new ForbiddenException('Não é possível alterar role do owner');
     }
 
-    return this.prisma.clinicUser.update({
+    const updated = await this.prisma.clinicUser.update({
       where: {
         clinicId_userId: {
           clinicId: clinicId,
@@ -281,6 +297,19 @@ export class ClinicsService {
       },
       data: updateDto,
     });
+
+    if (updateDto.role && targetUser.role !== updateDto.role) {
+      this.auditService.log({
+        userId: currentUserId,
+        clinicId,
+        action: 'role_change',
+        entity: 'ClinicUser',
+        entityId: targetUserId,
+        metadata: { targetUserId, from: targetUser.role, to: updateDto.role },
+      }).catch(() => {});
+    }
+
+    return updated;
   }
 
   async removeUser(clinicId: string, targetUserId: string, currentUserId: string) {
@@ -348,24 +377,20 @@ export class ClinicsService {
 
     const [patientsCount, appointmentsCount, sessionsCount, revenue] = await Promise.all([
       this.prisma.patient.count({
-        where: { clinicId: clinicId },
+        where: whereNotDeleted('patient', { clinicId: clinicId }),
       }),
       this.prisma.appointment.count({
-        where: { clinicId: clinicId },
+        where: whereNotDeleted('appointment', { clinicId: clinicId }),
       }),
       this.prisma.session.count({
-        where: {
-          patient: {
-            clinicId: clinicId,
-          },
-        },
+        where: whereNotDeleted('session', {
+          patient: { clinicId: clinicId, deletedAt: null },
+        }),
       }),
       this.prisma.payment.aggregate({
         where: {
-          patient: {
-            clinicId: clinicId,
-          },
-          status: 'pago',
+          ...whereNotDeleted('payment', { status: 'pago' }),
+          patient: { clinicId: clinicId, deletedAt: null },
         },
         _sum: {
           amount: true,

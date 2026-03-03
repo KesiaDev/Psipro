@@ -9,12 +9,13 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.psipro.app.R
 import com.psipro.app.ui.AppointmentScheduleActivity
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import java.text.SimpleDateFormat
 import java.util.*
 
 class AgendamentoNotificationService @Inject constructor(
-    private val context: Context
+    @ApplicationContext private val context: Context
 ) {
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     private val channelId = "agendamento_channel"

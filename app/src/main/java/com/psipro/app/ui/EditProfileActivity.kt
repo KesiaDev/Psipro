@@ -15,9 +15,6 @@ import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
 import com.psipro.app.databinding.ActivityEditProfileBinding
 import com.google.android.material.chip.Chip
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
 import java.util.*
 import android.content.res.ColorStateList
 import android.widget.LinearLayout
@@ -173,15 +170,7 @@ class EditProfileActivity : AppCompatActivity() {
         setupWhatsAppField()
         setupCRPField()
         
-        // Carregar dados do Firestore apenas se houver autenticação Firebase
-        val firebaseAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
-        if (firebaseAuth.currentUser != null) {
-            carregarPerfilFirestore { profile ->
-                if (profile != null) preencherCampos(profile)
-            }
-        } else {
-            android.util.Log.d("EditProfileActivity", "Usuário não autenticado no Firebase, usando apenas dados locais")
-        }
+        // Perfil carregado das SharedPreferences (dados locais)
 
         binding.btnSave.setOnClickListener { salvarPerfilComFoto() }
         binding.btnCancel.setOnClickListener { finish() }
@@ -429,26 +418,9 @@ class EditProfileActivity : AppCompatActivity() {
         // Criar objeto do perfil
         val profile = montarPerfil(fotoUrlAtual)
 
-        // Verificar se há autenticação Firebase
-        val firebaseAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
-        if (firebaseAuth.currentUser != null) {
-            // Salvar no Firestore se autenticado
-            salvarPerfilFirestore(profile) { sucesso, erro ->
-                if (sucesso) {
-                    salvarDadosLocais()
-                    Toast.makeText(this, "Perfil atualizado com sucesso!", Toast.LENGTH_SHORT).show()
-                    finish()
-                } else {
-                    Toast.makeText(this, "Erro ao salvar perfil: $erro", Toast.LENGTH_SHORT).show()
-                }
-            }
-        } else {
-            // Salvar apenas localmente se não autenticado
-            android.util.Log.d("EditProfileActivity", "Salvando apenas localmente (sem Firebase)")
-            salvarDadosLocais()
-            Toast.makeText(this, "Perfil atualizado com sucesso!", Toast.LENGTH_SHORT).show()
-            finish()
-        }
+        salvarDadosLocais()
+        Toast.makeText(this, "Perfil atualizado com sucesso!", Toast.LENGTH_SHORT).show()
+        finish()
     }
     
     private fun salvarDadosLocais() {
@@ -552,68 +524,6 @@ class EditProfileActivity : AppCompatActivity() {
                 null
             }
         }
-    }
-
-    private fun salvarPerfilFirestore(profile: PsicologoProfile, onResult: (Boolean, String?) -> Unit) {
-        Log.d("SALVAR_PERFIL", "Tentando salvar no Firestore: $profile")
-        val uid = FirebaseAuth.getInstance().currentUser?.uid
-        if (uid == null) {
-            Log.e("SALVAR_PERFIL", "Usuário não autenticado ao salvar no Firestore!")
-            onResult(false, "Usuário não autenticado")
-            return
-        }
-        val db = FirebaseFirestore.getInstance()
-        db.collection("psicologos").document(uid)
-            .set(profile)
-            .addOnSuccessListener {
-                Log.d("SALVAR_PERFIL", "Perfil salvo com sucesso no Firestore!")
-                onResult(true, null)
-            }
-            .addOnFailureListener { e ->
-                Log.e("SALVAR_PERFIL", "Erro ao salvar no Firestore: ${e.message}")
-                onResult(false, e.message)
-            }
-    }
-
-    private fun carregarPerfilFirestore(onResult: (PsicologoProfile?) -> Unit) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid
-        if (uid == null) {
-            onResult(null)
-            return
-        }
-        val db = FirebaseFirestore.getInstance()
-        db.collection("psicologos").document(uid)
-            .get()
-            .addOnSuccessListener { doc ->
-                if (doc.exists()) {
-                    val profile = doc.toObject(PsicologoProfile::class.java)
-                    onResult(profile)
-                } else {
-                    onResult(null)
-                }
-            }
-            .addOnFailureListener { onResult(null) }
-    }
-
-    private fun uploadFotoPerfil(uri: Uri, userId: String, onResult: (String?) -> Unit) {
-        Toast.makeText(this, "Enviando para o Firebase Storage...", Toast.LENGTH_SHORT).show()
-        val storageRef = FirebaseStorage.getInstance().reference
-            .child("profile_photos/$userId/${UUID.randomUUID()}.jpg")
-        storageRef.putFile(uri)
-            .addOnSuccessListener {
-                Toast.makeText(this, "Upload concluído! Obtendo URL...", Toast.LENGTH_SHORT).show()
-                storageRef.downloadUrl.addOnSuccessListener { downloadUri ->
-                    Toast.makeText(this, "URL obtida!", Toast.LENGTH_SHORT).show()
-                    onResult(downloadUri.toString())
-                }.addOnFailureListener {
-                    Toast.makeText(this, "Falha ao obter URL da foto", Toast.LENGTH_SHORT).show()
-                    onResult(null)
-                }
-            }
-            .addOnFailureListener {
-                Toast.makeText(this, "Falha no upload da foto", Toast.LENGTH_SHORT).show()
-                onResult(null)
-            }
     }
 
     // Limpa arquivos antigos do diretório de fotos de perfil

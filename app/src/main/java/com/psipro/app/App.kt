@@ -31,28 +31,14 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+
+        // Forçar tema escuro premium (companion app)
+        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
+            androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
+        )
         
         // Configurar tratamento de exceções não capturadas
         setupUncaughtExceptionHandler()
-        
-        // Verificar inicialização do Firebase
-        try {
-            val firebaseApp = com.google.firebase.FirebaseApp.getInstance()
-            Log.d("App", "Firebase inicializado: ${firebaseApp.name}")
-            Log.d("App", "Firebase options: ${firebaseApp.options.projectId}")
-        } catch (e: Exception) {
-            Log.e("App", "Erro ao verificar Firebase", e)
-        }
-        
-        // Verificar Firebase Auth
-        try {
-            val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
-            val currentUser = auth.currentUser
-            Log.d("App", "Firebase Auth inicializado")
-            Log.d("App", "Usuário atual: ${currentUser?.email ?: "Nenhum"}")
-        } catch (e: Exception) {
-            Log.e("App", "Erro ao verificar Firebase Auth", e)
-        }
         
         // Inicializar componentes de forma assíncrona para evitar ANR
         applicationScope.launch {

@@ -54,11 +54,6 @@
             android:exported="false" />
 
         <receiver
-            android:name=".notification.WhatsAppReminderReceiver"
-            android:enabled="true"
-            android:exported="false" />
-
-        <receiver
             android:name=".notification.AutoavaliacaoMotivacionalReceiver"
             android:enabled="true"
             android:exported="false" />
@@ -104,13 +99,6 @@
             android:label="Lista de Pacientes" />
 
         <activity
-            android:name=".ui.ReportsActivity"
-            android:exported="false"
-            android:label="Relatórios" />
-
-
-        
-        <activity
             android:name=".DadosPessoaisActivity"
             android:exported="false"
             android:label="Dados Pessoais" />
@@ -129,10 +117,6 @@
             android:name=".ui.EditProfileActivity"
             android:theme="@style/Theme.Psipro" />
         
-        <activity
-            android:name=".ui.OnboardingActivity"
-            android:exported="false" />
-            
         <activity
             android:name=".ui.screens.FinanceiroDashboardActivity"
             android:exported="false"
@@ -221,18 +205,6 @@
             android:exported="false"
             android:label="Arquivos"
             android:theme="@style/Theme.Psipro" />
-        <activity
-            android:name=".ui.screens.WhatsAppDialogActivity"
-            android:exported="false"
-            android:label="WhatsApp"
-            android:theme="@style/Theme.Psipro" />
-            
-        <activity
-            android:name=".ui.screens.WhatsAppHistoryActivity"
-            android:exported="false"
-            android:label="Histórico WhatsApp"
-            android:theme="@style/Theme.Psipro" />
-        
     </application>
 
 </manifest>

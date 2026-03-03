@@ -9,6 +9,7 @@ import { ClinicContextHelper } from '../clinic-context.helper';
 /**
  * Valida x-clinic-id no header e garante que o usuário pertence à clínica.
  * Anexa clinicId validado em request.clinicId.
+ * NOTA: Retorna 400 (BadRequestException) se x-clinic-id ausente/inválido — não 404 nem 403.
  */
 @Injectable()
 export class ClinicGuard implements CanActivate {
