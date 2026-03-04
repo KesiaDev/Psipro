@@ -133,6 +133,11 @@ export class PatientsService {
     mapping: Record<string, string>,
     clinicId: string,
   ) {
+    if (!clinicId?.trim()) {
+      throw new BadRequestException('clinicId é obrigatório para importação');
+    }
+    const clinicIdTrim = clinicId.trim();
+
     const nomeCol = mapping?.nome;
     const telefoneCol = mapping?.telefone;
     const cpfCol = mapping?.cpf;
@@ -222,7 +227,7 @@ export class PatientsService {
       cpf: cpfCol ? String(row[cpfCol] ?? '').trim() || undefined : undefined,
       email: emailCol ? String(row[emailCol] ?? '').trim() || undefined : undefined,
       birthDate: nascimentoCol ? toBirthDateISO(row[nascimentoCol]) : undefined,
-      clinicId,
+      clinicId: clinicIdTrim,
       status: 'Ativo',
       source: 'web',
     }));
@@ -235,7 +240,7 @@ export class PatientsService {
     }
 
     return Promise.all(
-      createDtos.map((dto) => this.create(dto, clinicId, userId)),
+      createDtos.map((dto) => this.create(dto, clinicIdTrim, userId)),
     );
   }
 

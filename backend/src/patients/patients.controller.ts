@@ -75,9 +75,18 @@ export class PatientsController {
     @CurrentClinicId() clinicId: string,
     @UploadedFile() file: { buffer: Buffer; originalname?: string } | undefined,
     @Body('mapping') mapping?: string,
+    @Body('clinicId') formClinicId?: string,
   ) {
     if (!file?.buffer) {
       throw new BadRequestException('Arquivo não enviado');
+    }
+
+    // Garantir clinicId: header é validado pelo ClinicGuard; form é fallback se vier
+    const effectiveClinicId = clinicId?.trim() || formClinicId?.trim();
+    if (!effectiveClinicId) {
+      throw new BadRequestException(
+        'Clínica não identificada. Envie o header X-Clinic-Id ou clinicId no formulário.',
+      );
     }
 
     const ext = (file.originalname || '').toLowerCase();
@@ -96,13 +105,13 @@ export class PatientsController {
         user.sub,
         file.buffer,
         parsedMapping,
-        clinicId,
+        effectiveClinicId,
       );
     }
 
     return this.patientsImportService.importFromExcel(
       file.buffer,
-      clinicId,
+      effectiveClinicId,
       user.sub,
     );
   }

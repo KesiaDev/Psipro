@@ -135,13 +135,18 @@ class PatientService {
   async importPatients(
     file: File,
     mapping: Record<string, string>,
-  ): Promise<Patient[]> {
+  ): Promise<Patient[] | { imported: number; skipped: number }> {
     try {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('mapping', JSON.stringify(mapping));
+      // Enviar clinicId no body como backup (header X-Clinic-Id pode ser necessário)
+      const clinicId = typeof window !== 'undefined' ? localStorage.getItem('active_clinic_id') : null;
+      if (clinicId) {
+        formData.append('clinicId', clinicId);
+      }
 
-      return await api.postFormData<Patient[]>('/patients/import', formData);
+      return await api.postFormData<Patient[] | { imported: number; skipped: number }>('/patients/import', formData);
     } catch (error) {
       throw this.handleError(error);
     }

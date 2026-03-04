@@ -35,6 +35,11 @@ export class PatientsImportService {
     clinicId: string,
     userId: string,
   ): Promise<ImportResult> {
+    if (!clinicId?.trim()) {
+      throw new BadRequestException('clinicId é obrigatório para importação');
+    }
+    const clinicIdTrim = clinicId.trim();
+
     const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     if (!sheetName) {
@@ -65,7 +70,7 @@ export class PatientsImportService {
 
     // Emails já existentes na clínica (para evitar duplicatas)
     const existingPatients = await this.prisma.patient.findMany({
-      where: { clinicId, deletedAt: null },
+      where: { clinicId: clinicIdTrim, deletedAt: null },
       select: { email: true },
     });
     const existingEmails = new Set(
@@ -104,13 +109,13 @@ export class PatientsImportService {
       }
 
       try {
-        const patient = await this.prisma.patient.create({
+        await this.prisma.patient.create({
           data: {
             name,
             email: email || null,
             phone: phone || null,
             birthDate,
-            clinicId,
+            clinicId: clinicIdTrim,
             clinicOwnerId: userId,
             observations: genero ? `Gênero: ${genero}` : null,
             status: 'Ativo',
@@ -132,7 +137,7 @@ export class PatientsImportService {
       this.auditService
         .log({
           userId,
-          clinicId,
+          clinicId: clinicIdTrim,
           action: 'patient_import_excel',
           entity: 'Patient',
           entityId: '',
