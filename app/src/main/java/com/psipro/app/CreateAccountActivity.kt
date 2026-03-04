@@ -63,25 +63,20 @@ class CreateAccountActivity : AppCompatActivity() {
                         com.psipro.app.sync.di.SyncEntryPoint::class.java
                     )
                     val backendAuth = entryPoint.backendAuthManager()
-                    val ok = backendAuth.register(email, password, name)
+                    backendAuth.register(email, password, name)
 
                     withContext(Dispatchers.Main) {
                         binding.btnCreateAccount.isEnabled = true
                         binding.btnCreateAccount.text = "CRIAR CONTA"
-
-                        if (ok) {
-                            backendAuth.ensureClinicId()
-                            val prefs = getSharedPreferences("settings", MODE_PRIVATE)
-                            prefs.edit().putString("profile_name", name).putString("profile_email", email).apply()
-                            Toast.makeText(this@CreateAccountActivity, "Conta criada com sucesso!", Toast.LENGTH_SHORT).show()
-                            val resultIntent = Intent()
-                            resultIntent.putExtra("email", email)
-                            resultIntent.putExtra("password", password)
-                            setResult(RESULT_OK, resultIntent)
-                            finish()
-                        } else {
-                            Toast.makeText(this@CreateAccountActivity, "Erro ao criar conta. Este e-mail já pode estar cadastrado.", Toast.LENGTH_LONG).show()
-                        }
+                        backendAuth.ensureClinicId()
+                        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+                        prefs.edit().putString("profile_name", name).putString("profile_email", email).apply()
+                        Toast.makeText(this@CreateAccountActivity, "Conta criada com sucesso!", Toast.LENGTH_SHORT).show()
+                        val resultIntent = Intent()
+                        resultIntent.putExtra("email", email)
+                        resultIntent.putExtra("password", password)
+                        setResult(RESULT_OK, resultIntent)
+                        finish()
                     }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {

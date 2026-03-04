@@ -135,8 +135,9 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterDto) {
-    const existing = await this.prisma.user.findUnique({
-      where: { email: registerDto.email },
+    const email = registerDto.email.trim().toLowerCase();
+    const existing = await this.prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
       select: { id: true },
     });
 
@@ -150,7 +151,7 @@ export class AuthService {
     const clinic = await this.prisma.clinic.create({
       data: {
         name: registerDto.fullName,
-        email: registerDto.email,
+        email,
         plan: 'basic',
         planType: 'INDIVIDUAL',
         status: 'active',
@@ -159,7 +160,7 @@ export class AuthService {
 
     const user = await this.prisma.user.create({
       data: {
-        email: registerDto.email,
+        email,
         name: registerDto.fullName,
         password: hashedPassword,
         isIndependent: true,

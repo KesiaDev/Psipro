@@ -26,7 +26,8 @@
     "prisma:seed-financial": "ts-node scripts/seed-financial-records.ts",
     "prisma:migrate-existing": "ts-node prisma/migrate-existing-data.ts",
     "prisma:migrate-to-clinic-user": "ts-node prisma/migrate-to-clinic-user.ts",
-    "cleanup:soft-deleted": "ts-node scripts/cleanup-soft-deleted.ts"
+    "cleanup:soft-deleted": "ts-node scripts/cleanup-soft-deleted.ts",
+    "list-users": "ts-node scripts/list-users.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

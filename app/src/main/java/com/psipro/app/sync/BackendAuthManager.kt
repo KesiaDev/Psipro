@@ -35,22 +35,16 @@ class BackendAuthManager @Inject constructor(
     }
 
     suspend fun register(email: String, password: String, fullName: String): Boolean {
-        return try {
-            val resp = api.register(BackendRegisterRequest(email = email, password = password, fullName = fullName))
-            if (!resp.isSuccessful || resp.body() == null) {
-                Log.w(TAG, "Backend register failed: http=${resp.code()}")
-                false
-            } else {
-                val body = resp.body()!!
-                store.setAccessToken(body.effectiveAccessToken())
-                body.refreshToken?.let { store.setRefreshToken(it) }
-                Log.i(TAG, "Backend register ok")
-                true
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Backend register exception", e)
-            false
+        val resp = api.register(BackendRegisterRequest(email = email, password = password, fullName = fullName))
+        if (!resp.isSuccessful || resp.body() == null) {
+            Log.w(TAG, "Backend register failed: http=${resp.code()} body=${resp.errorBody()?.string()}")
+            throw retrofit2.HttpException(resp)
         }
+        val body = resp.body()!!
+        store.setAccessToken(body.effectiveAccessToken())
+        body.refreshToken?.let { store.setRefreshToken(it) }
+        Log.i(TAG, "Backend register ok")
+        return true
     }
 
     suspend fun refreshToken(): Boolean {
