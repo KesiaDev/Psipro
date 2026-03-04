@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { clinicService } from "../services/clinicService";
 import { authService } from "../services/authService";
+import { useAuth } from "./AuthContext";
 import type { Clinic } from "../services/clinicService";
 
 interface ClinicContextType {
@@ -20,6 +21,7 @@ interface ClinicContextType {
 const ClinicContext = createContext<ClinicContextType | undefined>(undefined);
 
 export function ClinicProvider({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth();
   const [currentClinic, setCurrentClinicState] = useState<Clinic | null>(null);
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [isIndependent, setIsIndependent] = useState(true);
@@ -95,8 +97,14 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
   }, [clinics]);
 
   useEffect(() => {
-    loadClinics();
-  }, []);
+    if (isAuthenticated) {
+      loadClinics();
+    } else {
+      setLoading(false);
+      setClinics([]);
+      setCurrentClinicState(null);
+    }
+  }, [isAuthenticated]);
 
   return (
     <ClinicContext.Provider

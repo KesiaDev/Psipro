@@ -27,6 +27,7 @@ export interface User {
   id: string;
   email: string;
   fullName: string;
+  clinicId?: string;
   createdAt?: string;
 }
 
@@ -45,6 +46,9 @@ class AuthService {
       this.setToken(response.accessToken);
       this.setRefreshToken(response.refreshToken);
       this.setUser(response.user);
+      if (response.user.clinicId && typeof window !== 'undefined') {
+        localStorage.setItem('active_clinic_id', response.user.clinicId);
+      }
 
       return response;
     } catch (error) {
@@ -62,6 +66,9 @@ class AuthService {
       this.setToken(response.accessToken);
       this.setRefreshToken(response.refreshToken);
       this.setUser(response.user);
+      if (response.user.clinicId && typeof window !== 'undefined') {
+        localStorage.setItem('active_clinic_id', response.user.clinicId);
+      }
 
       return response;
     } catch (error) {
@@ -199,6 +206,9 @@ class AuthService {
     try {
       const user = await api.get<User>('/auth/me');
       this.setUser(user); // Atualizar cache
+      if (user.clinicId && typeof window !== 'undefined') {
+        localStorage.setItem('active_clinic_id', user.clinicId);
+      }
       return user;
     } catch (error) {
       // Se falhar, limpar tokens inválidos

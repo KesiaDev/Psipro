@@ -71,7 +71,7 @@ export class ClinicsService {
   }
 
   async findAll(userId: string) {
-    // Buscar todas as clínicas do usuário
+    // Buscar todas as clínicas do usuário via ClinicUser
     const clinicUsers = await this.prisma.clinicUser.findMany({
       where: {
         userId: userId,
@@ -82,16 +82,34 @@ export class ClinicsService {
       },
     });
 
-    return clinicUsers.map((cu) => ({
-      ...cu.clinic,
-      role: cu.role,
-      permissions: {
-        canViewAllPatients: cu.canViewAllPatients,
-        canEditAllPatients: cu.canEditAllPatients,
-        canViewFinancial: cu.canViewFinancial,
-        canManageUsers: cu.canManageUsers,
-      },
-    }));
+    if (clinicUsers.length > 0) {
+      return clinicUsers.map((cu) => ({
+        ...cu.clinic,
+        role: cu.role,
+        permissions: {
+          canViewAllPatients: cu.canViewAllPatients,
+          canEditAllPatients: cu.canEditAllPatients,
+          canViewFinancial: cu.canViewFinancial,
+          canManageUsers: cu.canManageUsers,
+        },
+      }));
+    }
+
+    // Fallback: usuário com User.clinicId mas sem ClinicUser (registros antigos)
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { clinicId: true },
+    });
+    if (user?.clinicId) {
+      const clinic = await this.prisma.clinic.findUnique({
+        where: { id: user.clinicId },
+      });
+      if (clinic) {
+        return [{ ...clinic, role: 'owner', permissions: { canViewAllPatients: true, canEditAllPatients: true, canViewFinancial: true, canManageUsers: true } }];
+      }
+    }
+
+    return [];
   }
 
   async findOne(id: string, userId: string) {

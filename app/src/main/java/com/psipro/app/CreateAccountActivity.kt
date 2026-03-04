@@ -82,7 +82,7 @@ class CreateAccountActivity : AppCompatActivity() {
                     withContext(Dispatchers.Main) {
                         binding.btnCreateAccount.isEnabled = true
                         binding.btnCreateAccount.text = "CRIAR CONTA"
-                        Toast.makeText(this@CreateAccountActivity, AuthErrorHelper.getErrorMessage(e), Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@CreateAccountActivity, AuthErrorHelper.getErrorMessage(e, AuthErrorHelper.Context.REGISTER), Toast.LENGTH_LONG).show()
                     }
                 }
             }

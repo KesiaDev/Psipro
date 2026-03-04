@@ -104,6 +104,7 @@ export class AuthService {
         email: user.email,
         name: user.name,
         fullName: user.name,
+        clinicId: user.clinicId ?? undefined,
       },
     };
   }
@@ -175,6 +176,24 @@ export class AuthService {
       },
     });
 
+    // Criar ClinicUser para GET /clinics retornar a clínica do usuário
+    await this.prisma.clinicUser.upsert({
+      where: {
+        clinicId_userId: { clinicId: clinic.id, userId: user.id },
+      },
+      create: {
+        clinicId: clinic.id,
+        userId: user.id,
+        role: 'owner',
+        status: 'active',
+        canViewAllPatients: true,
+        canEditAllPatients: true,
+        canViewFinancial: true,
+        canManageUsers: true,
+      },
+      update: { role: 'owner', status: 'active' },
+    });
+
     const payload = { email: user.email, sub: user.id };
     const accessToken = this.jwtService.sign(payload, { expiresIn: ACCESS_TOKEN_EXPIRY });
     const refreshToken = await this.refreshTokenService.createRefreshToken(
@@ -191,6 +210,7 @@ export class AuthService {
         email: user.email,
         name: user.name,
         fullName: user.name,
+        clinicId: clinic.id,
       },
     };
   }

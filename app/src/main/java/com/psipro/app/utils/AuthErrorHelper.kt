@@ -10,7 +10,10 @@ import retrofit2.HttpException
 object AuthErrorHelper {
     private const val TAG = "AuthError"
 
-    fun getErrorMessage(exception: Exception?): String {
+    /** Contexto: login (padrão) ou register — mensagens de 404 variam */
+    enum class Context { LOGIN, REGISTER }
+
+    fun getErrorMessage(exception: Exception?, context: Context = Context.LOGIN): String {
         if (exception == null) {
             return "Erro desconhecido. Tente novamente."
         }
@@ -24,7 +27,10 @@ object AuthErrorHelper {
             return when (code) {
                 401 -> "Credenciais inválidas. Verifique seu e-mail e senha."
                 403 -> "Acesso negado."
-                404 -> "Conta não encontrada. Verifique o e-mail ou crie uma nova conta."
+                404 -> when (context) {
+                    Context.LOGIN -> "Conta não encontrada. Verifique o e-mail ou crie uma nova conta."
+                    Context.REGISTER -> "Não foi possível criar a conta. Verifique sua conexão e tente novamente."
+                }
                 409 -> body?.let { if (it.contains("cadastrado") || it.contains("already")) "Este e-mail já está cadastrado." else "Conflito: $it" } ?: "Este e-mail já está cadastrado."
                 422 -> "Dados inválidos. Verifique os campos."
                 else -> "Erro do servidor ($code). Tente novamente."
@@ -33,9 +39,9 @@ object AuthErrorHelper {
 
         // Erros genéricos
         return when {
-            exception.message?.contains("network", ignoreCase = true) == true -> 
+            exception.message?.contains("network", ignoreCase = true) == true ->
                 "Erro de conexão. Verifique sua internet e tente novamente."
-            exception.message?.contains("timeout", ignoreCase = true) == true -> 
+            exception.message?.contains("timeout", ignoreCase = true) == true ->
                 "Tempo de conexão esgotado. Tente novamente."
             else -> "Erro: ${exception.message ?: "Erro desconhecido. Tente novamente."}"
         }

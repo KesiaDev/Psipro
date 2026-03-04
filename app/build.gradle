@@ -59,16 +59,16 @@ android {
             // Exemplo: "https://psipro-web-production.up.railway.app"
             buildConfigField "String", "PSIPRO_WEB_BASE_URL", "\"https://psipro-web-production.up.railway.app\""
             // Base URL da API (produção) - mesma API usada pelo Web (com /api).
-            buildConfigField "String", "PSIPRO_API_BASE_URL", "\"https://psipro-production.up.railway.app/api\""
+            buildConfigField "String", "PSIPRO_API_BASE_URL", "\"https://psipro-backend-production.up.railway.app/api\""
         }
         debug {
             minifyEnabled false
             shrinkResources false
-            // Emulador Android: 10.0.2.2 aponta para o localhost do PC.
-            // Use para testar o frontend local rodando em http://localhost:3000
-            buildConfigField "String", "PSIPRO_WEB_BASE_URL", "\"http://10.0.2.2:3000\""
-            // API local para debug (se backend estiver rodando no PC)
-            buildConfigField "String", "PSIPRO_API_BASE_URL", "\"http://10.0.2.2:3001/api\""
+            // Web e API de produção também no debug, para testar em dispositivo físico.
+            // Em emulador + backend local: mude para http://10.0.2.2:3000 e http://10.0.2.2:3001/api
+            // e habilite usesCleartextTraffic para o application tag em debug.
+            buildConfigField "String", "PSIPRO_WEB_BASE_URL", "\"https://psipro-web-production.up.railway.app\""
+            buildConfigField "String", "PSIPRO_API_BASE_URL", "\"https://psipro-backend-production.up.railway.app/api\""
         }
     }
 
