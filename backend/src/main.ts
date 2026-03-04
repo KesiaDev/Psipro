@@ -26,27 +26,21 @@ function getMappedRoutes(expressApp: any): string[] {
   return [...new Set(routes)].sort();
 }
 
-/** Origens CORS permitidas (CORS_ORIGINS env, ex: https://app.psipro.com,https://web.psipro.com) */
-function getCorsOrigins(): string[] | boolean {
-  const raw = process.env.CORS_ORIGINS?.trim();
-  if (!raw) {
-    return process.env.NODE_ENV === 'production' ? [] : ['http://localhost:3000', 'http://localhost:5173'];
-  }
-  return raw.split(',').map((o) => o.trim()).filter(Boolean);
-}
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.use(helmet());
   app.use(loggingMiddleware);
 
-  const origins = getCorsOrigins();
   app.enableCors({
-    origin: Array.isArray(origins) && origins.length > 0 ? origins : false,
+    origin: [
+      'https://psipro-dashboard-production.up.railway.app',
+      'http://localhost:5173',
+      'http://localhost:3000',
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Authorization, x-clinic-id',
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-clinic-id'],
   });
 
   // Helmet já remove X-Powered-By por padrão (hidePoweredBy: true)
