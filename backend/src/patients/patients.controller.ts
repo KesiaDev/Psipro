@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PatientsService } from './patients.service';
+import { PatientsImportService } from './patients-import.service';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -26,7 +27,10 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 @UseGuards(JwtAuthGuard, ClinicGuard, RolesGuard)
 @Roles('admin', 'psychologist', 'assistant')
 export class PatientsController {
-  constructor(private readonly patientsService: PatientsService) {}
+  constructor(
+    private readonly patientsService: PatientsService,
+    private readonly patientsImportService: PatientsImportService,
+  ) {}
 
   @Get()
   findAll(@CurrentClinicId() clinicId: string) {
@@ -61,39 +65,45 @@ export class PatientsController {
    * POST /patients/import
    *
    * Importação de pacientes via Excel (multipart/form-data).
-   * Campos esperados:
-   * - file: arquivo .xlsx/.xls
-   * - mapping: JSON string com o mapeamento de colunas (mesmo do Web)
-   *
-   * Pacientes são associados à clínica ativa (X-Clinic-Id).
+   * Sem mapping: usa formato fixo (Nome completo, Data de nascimento, E-mail, Telefone, Gênero).
+   * Com mapping: usa mapeamento customizado (legado Web).
    */
   @Post('import')
   @UseInterceptors(FileInterceptor('file'))
   async importPatients(
     @CurrentUser() user: { sub: string },
     @CurrentClinicId() clinicId: string,
-    @UploadedFile() file: any,
+    @UploadedFile() file: { buffer: Buffer; originalname?: string } | undefined,
     @Body('mapping') mapping?: string,
   ) {
-    if (!file) {
+    if (!file?.buffer) {
       throw new BadRequestException('Arquivo não enviado');
     }
-    if (!mapping) {
-      throw new BadRequestException('Mapping não enviado');
+
+    const ext = (file.originalname || '').toLowerCase();
+    if (!ext.endsWith('.xlsx') && !ext.endsWith('.xls')) {
+      throw new BadRequestException('Arquivo deve ser .xlsx ou .xls');
     }
 
-    let parsedMapping: Record<string, string>;
-    try {
-      parsedMapping = JSON.parse(mapping);
-    } catch {
-      throw new BadRequestException('Mapping inválido');
+    if (mapping) {
+      let parsedMapping: Record<string, string>;
+      try {
+        parsedMapping = JSON.parse(mapping);
+      } catch {
+        throw new BadRequestException('Mapping inválido');
+      }
+      return this.patientsService.importFromExcel(
+        user.sub,
+        file.buffer,
+        parsedMapping,
+        clinicId,
+      );
     }
 
-    return this.patientsService.importFromExcel(
-      user.sub,
+    return this.patientsImportService.importFromExcel(
       file.buffer,
-      parsedMapping,
       clinicId,
+      user.sub,
     );
   }
 
