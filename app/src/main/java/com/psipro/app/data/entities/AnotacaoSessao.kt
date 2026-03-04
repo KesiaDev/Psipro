@@ -32,7 +32,10 @@ data class AnotacaoSessao(
     val proximoAgendamento: String = "", // Próximo agendamento sugerido
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),
-    val tipoSessaoId: Long? = null
+    val tipoSessaoId: Long? = null,
+    val backendId: String? = null,
+    val dirty: Boolean = true,
+    val lastSyncedAt: Date? = null
 ) 
 
 

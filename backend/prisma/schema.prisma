@@ -437,3 +437,15 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+// Solicitações de acesso beta
+model BetaRequest {
+  id         String   @id @default(uuid())
+  name       String
+  email      String
+  clinicName String?
+  message    String?
+  createdAt  DateTime @default(now())
+
+  @@map("beta_requests")
+}
+

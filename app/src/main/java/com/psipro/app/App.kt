@@ -16,7 +16,7 @@ import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import com.psipro.app.sync.work.PatientsSyncScheduler
+import com.psipro.app.sync.work.SyncScheduler
 
 @HiltAndroidApp
 class App : Application() {
@@ -54,10 +54,10 @@ class App : Application() {
             }
         }
 
-        // Sync quando o app volta ao foreground (global, independente da Activity atual).
+        // Sync quando o app volta ao foreground (pacientes primeiro, depois agendamentos).
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {
-                PatientsSyncScheduler.enqueue(applicationContext, "foreground")
+                SyncScheduler.enqueueBoth(applicationContext, "foreground")
             }
         })
     }

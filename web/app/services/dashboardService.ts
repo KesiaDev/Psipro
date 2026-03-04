@@ -85,11 +85,63 @@ class DashboardService {
 
   /**
    * GET /financial/summary
-   * Retorna resumo financeiro. Requer admin ou psychologist.
+   * Retorna resumo financeiro (receitaHoje, receitaMes, etc). Requer admin ou psychologist.
    */
   async getFinancialSummary(): Promise<FinancialSummary> {
     try {
       return await api.get<FinancialSummary>("/financial/summary");
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * GET /dashboard/finance-summary
+   * Retorna resumo financeiro da página Financeiro (monthlyRevenue, averagePerSession, etc).
+   */
+  async getFinanceSummary(): Promise<{
+    monthlyRevenue: number;
+    averagePerSession: number;
+    unpaidSessions: number;
+    isEmpty: boolean;
+  }> {
+    try {
+      return await api.get("/dashboard/finance-summary");
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * GET /dashboard/metrics
+   * Retorna métricas do dashboard (activePatients, sessionsThisMonth, etc).
+   */
+  async getMetrics(): Promise<{
+    activePatients: number;
+    sessionsThisMonth: number;
+    sessionsThisWeek: number;
+    monthlyRevenue: number;
+    pendingRevenue: number;
+  }> {
+    try {
+      return await api.get("/dashboard/metrics");
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * GET /dashboard/agenda-summary
+   * Retorna resumo da agenda (totalSessionsThisWeek, busiestDays, etc).
+   */
+  async getAgendaSummary(): Promise<{
+    totalSessionsThisWeek: number;
+    busiestDays: string[];
+    emptiestDays: string[];
+    isEmpty: boolean;
+  }> {
+    try {
+      return await api.get("/dashboard/agenda-summary");
     } catch (error) {
       throw this.handleError(error);
     }

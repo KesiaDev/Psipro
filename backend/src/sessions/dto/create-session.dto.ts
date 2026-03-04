@@ -4,6 +4,10 @@ export class CreateSessionDto {
   @IsString()
   patientId: string;
 
+  @IsOptional()
+  @IsString()
+  professionalId?: string; // userId do profissional; se omitido, usa o usuário autenticado
+
   @IsDateString()
   date: string;
 

@@ -50,17 +50,26 @@ interface CobrancaSessaoDao {
     @Delete
     suspend fun delete(cobranca: CobrancaSessao)
 
-    @Query("UPDATE cobrancas_sessao SET status = :status, dataPagamento = :dataPagamento WHERE id = :cobrancaId")
+    @Query("UPDATE cobrancas_sessao SET status = :status, dataPagamento = :dataPagamento, dirty = 1 WHERE id = :cobrancaId")
     suspend fun marcarComoPago(cobrancaId: Long, status: StatusPagamento, dataPagamento: Date?)
 
-    @Query("UPDATE cobrancas_sessao SET status = :status, dataPagamento = null WHERE id = :cobrancaId")
+    @Query("UPDATE cobrancas_sessao SET status = :status, dataPagamento = null, dirty = 1 WHERE id = :cobrancaId")
     suspend fun desmarcarComoPago(cobrancaId: Long, status: StatusPagamento)
 
-    @Query("UPDATE cobrancas_sessao SET valor = :valor, observacoes = :observacoes WHERE id = :cobrancaId")
+    @Query("UPDATE cobrancas_sessao SET valor = :valor, observacoes = :observacoes, dirty = 1 WHERE id = :cobrancaId")
     suspend fun editarCobranca(cobrancaId: Long, valor: Double, observacoes: String)
 
     @Query("DELETE FROM cobrancas_sessao WHERE anotacaoSessaoId = :anotacaoSessaoId")
     suspend fun deleteByAnotacaoSessaoId(anotacaoSessaoId: Long)
+
+    @Query("SELECT * FROM cobrancas_sessao WHERE dirty = 1")
+    suspend fun getDirtyPayments(): List<CobrancaSessao>
+
+    @Query("SELECT * FROM cobrancas_sessao WHERE backendId = :backendId LIMIT 1")
+    suspend fun getByBackendId(backendId: String): CobrancaSessao?
+
+    @Query("UPDATE cobrancas_sessao SET dirty = 0, lastSyncedAt = :syncedAt WHERE backendId IN (:backendIds)")
+    suspend fun markSyncedByBackendId(backendIds: List<String>, syncedAt: Date)
 } 
 
 

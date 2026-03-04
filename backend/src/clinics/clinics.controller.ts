@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -46,6 +47,15 @@ export class ClinicsController {
     @Body() updateClinicDto: UpdateClinicDto,
   ) {
     return this.clinicsService.update(id, req.user.id, updateClinicDto);
+  }
+
+  @Patch(':id/status')
+  updateStatus(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() body: { status: string },
+  ) {
+    return this.clinicsService.update(id, req.user.id, { status: body?.status });
   }
 
   @Delete(':id')

@@ -46,14 +46,37 @@ class BackendSessionStore @Inject constructor(
         prefs.edit().putString(KEY_LAST_PATIENTS_SYNC_AT, iso).apply()
     }
 
+    fun getLastAppointmentsSyncAtIso(): String? = prefs.getString(KEY_LAST_APPOINTMENTS_SYNC_AT, null)
+    fun setLastAppointmentsSyncAtIso(iso: String?) {
+        prefs.edit().putString(KEY_LAST_APPOINTMENTS_SYNC_AT, iso).apply()
+    }
+
+    fun getLastSessionsSyncAtIso(): String? = prefs.getString(KEY_LAST_SESSIONS_SYNC_AT, null)
+    fun setLastSessionsSyncAtIso(iso: String?) {
+        prefs.edit().putString(KEY_LAST_SESSIONS_SYNC_AT, iso).apply()
+    }
+
+    fun getLastPaymentsSyncAtIso(): String? = prefs.getString(KEY_LAST_PAYMENTS_SYNC_AT, null)
+    fun setLastPaymentsSyncAtIso(iso: String?) {
+        prefs.edit().putString(KEY_LAST_PAYMENTS_SYNC_AT, iso).apply()
+    }
+
     fun clear() {
         tokenManager.clearTokens()
-        prefs.edit().remove(KEY_LAST_PATIENTS_SYNC_AT).apply()
+        prefs.edit()
+            .remove(KEY_LAST_PATIENTS_SYNC_AT)
+            .remove(KEY_LAST_APPOINTMENTS_SYNC_AT)
+            .remove(KEY_LAST_SESSIONS_SYNC_AT)
+            .remove(KEY_LAST_PAYMENTS_SYNC_AT)
+            .apply()
     }
 
     companion object {
         private const val PREFS_NAME = "psipro_backend_session"
         private const val KEY_LAST_PATIENTS_SYNC_AT = "patients_last_sync_at"
+        private const val KEY_LAST_APPOINTMENTS_SYNC_AT = "appointments_last_sync_at"
+        private const val KEY_LAST_SESSIONS_SYNC_AT = "sessions_last_sync_at"
+        private const val KEY_LAST_PAYMENTS_SYNC_AT = "payments_last_sync_at"
     }
 }
 

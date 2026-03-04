@@ -280,6 +280,63 @@ export class AuthService {
   }
 
   /**
+   * Atualiza perfil do usuário (nome, email, phone, license).
+   */
+  async updateProfile(userId: string, data: { name?: string; email?: string; phone?: string; license?: string }) {
+    const updateData: Record<string, unknown> = {};
+    if (data.name != null) updateData.name = data.name;
+    if (data.email != null) updateData.email = data.email;
+    if (data.phone != null) updateData.phone = data.phone;
+    if (data.license != null) updateData.license = data.license;
+
+    if (Object.keys(updateData).length === 0) {
+      return this.validateToken(userId);
+    }
+
+    if (data.email) {
+      const existing = await this.prisma.user.findFirst({
+        where: { email: data.email, id: { not: userId } },
+      });
+      if (existing) {
+        throw new ConflictException('Email já está em uso');
+      }
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+    });
+
+    return this.validateToken(userId);
+  }
+
+  /**
+   * Altera senha do usuário.
+   */
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { password: true },
+    });
+    if (!user) {
+      throw new UnauthorizedException('Usuário não encontrado');
+    }
+
+    const isValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isValid) {
+      throw new UnauthorizedException('Senha atual incorreta');
+    }
+
+    const hashed = await bcrypt.hash(newPassword, BCRYPT_SALT_ROUNDS);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashed },
+    });
+
+    return { success: true };
+  }
+
+  /**
    * Endpoint de handoff (SSO) Android -> Web.
    * - Não cria token novo
    * - Não altera claims

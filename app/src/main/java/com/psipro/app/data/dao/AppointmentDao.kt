@@ -29,7 +29,7 @@ interface AppointmentDao {
     @Delete
     suspend fun deleteAppointment(appointment: Appointment)
 
-    @Query("UPDATE appointments SET status = :status WHERE id = :appointmentId")
+    @Query("UPDATE appointments SET status = :status, dirty = 1 WHERE id = :appointmentId")
     suspend fun updateAppointmentStatus(appointmentId: Long, status: AppointmentStatus)
 
     @Query("""
@@ -113,6 +113,15 @@ interface AppointmentDao {
 
     @Query("SELECT * FROM appointments WHERE recurrenceSeriesId = :seriesId ORDER BY date ASC, startTime ASC")
     fun getAppointmentsBySeriesId(seriesId: Long): Flow<List<Appointment>>
+
+    @Query("SELECT * FROM appointments WHERE dirty = 1")
+    suspend fun getDirtyAppointments(): List<Appointment>
+
+    @Query("SELECT * FROM appointments WHERE backendId = :backendId LIMIT 1")
+    suspend fun getAppointmentByBackendId(backendId: String): Appointment?
+
+    @Query("UPDATE appointments SET dirty = 0, lastSyncedAt = :syncedAt WHERE backendId IN (:backendIds)")
+    suspend fun markAppointmentsSyncedByBackendId(backendIds: List<String>, syncedAt: Date)
 
     @Query("""
         UPDATE appointments SET 

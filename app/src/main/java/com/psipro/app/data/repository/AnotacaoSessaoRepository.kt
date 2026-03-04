@@ -12,8 +12,8 @@ class AnotacaoSessaoRepository @Inject constructor(
     suspend fun getByPatientAndSession(patientId: Long, numeroSessao: Int): AnotacaoSessao? = dao.getByPatientAndSession(patientId, numeroSessao)
     suspend fun getById(id: Long): AnotacaoSessao? = dao.getById(id)
     suspend fun getMaxSessionNumber(patientId: Long): Int? = dao.getMaxSessionNumber(patientId)
-    suspend fun insert(anotacao: AnotacaoSessao): Long = dao.insert(anotacao)
-    suspend fun update(anotacao: AnotacaoSessao) = dao.update(anotacao)
+    suspend fun insert(anotacao: AnotacaoSessao): Long = dao.insert(anotacao.copy(dirty = true))
+    suspend fun update(anotacao: AnotacaoSessao) = dao.update(anotacao.copy(dirty = true))
     suspend fun delete(anotacao: AnotacaoSessao) = dao.delete(anotacao)
     suspend fun deleteById(id: Long) = dao.deleteById(id)
 } 

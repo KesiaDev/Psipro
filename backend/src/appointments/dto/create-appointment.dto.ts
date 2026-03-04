@@ -4,6 +4,10 @@ export class CreateAppointmentDto {
   @IsString()
   patientId: string;
 
+  @IsOptional()
+  @IsString()
+  professionalId?: string; // userId do profissional; se omitido, usa o usuário autenticado
+
   @IsDateString()
   scheduledAt: string;
 

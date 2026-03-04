@@ -5,6 +5,7 @@ import com.psipro.app.App
 import com.psipro.app.MainActivity
 import com.psipro.app.sync.BackendAuthManager
 import com.psipro.app.sync.BackendSessionStore
+import dagger.Lazy
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -16,10 +17,11 @@ private const val HEADER_IS_RETRY = "X-Psipro-Retry"
  * Interceptor que trata 401: tenta refresh, retenta a requisição uma única vez,
  * ou limpa tokens e redireciona para LoginActivity.
  * Evita múltiplos refreshes simultâneos com lock.
+ * Usa Lazy para quebrar ciclo BackendAuthManager <-> BackendApiService.
  */
 class RefreshInterceptor @Inject constructor(
     private val sessionStore: BackendSessionStore,
-    private val authManager: BackendAuthManager
+    private val authManager: Lazy<BackendAuthManager>
 ) : Interceptor {
 
     private val lock = Object()
@@ -33,28 +35,29 @@ class RefreshInterceptor @Inject constructor(
 
         if (response.code != 401) return response
 
+        val auth = authManager.get()
         if (path.endsWith("/auth/refresh")) {
-            runBlocking { authManager.logout() }
+            runBlocking { auth.logout() }
             redirectToLogin()
             return response
         }
 
         if (isRetry) {
-            runBlocking { authManager.logout() }
+            runBlocking { auth.logout() }
             redirectToLogin()
             return response
         }
 
         synchronized(lock) {
-            val success = runBlocking { authManager.refreshToken() }
+            val success = runBlocking { auth.refreshToken() }
             if (!success) {
-                runBlocking { authManager.logout() }
+                runBlocking { auth.logout() }
                 redirectToLogin()
                 return response
             }
             val token = sessionStore.getAccessToken()
             if (token.isNullOrBlank()) {
-                runBlocking { authManager.logout() }
+                runBlocking { auth.logout() }
                 redirectToLogin()
                 return response
             }

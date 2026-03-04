@@ -64,7 +64,7 @@ import androidx.room.migration.Migration
 
 @Database(
     entities = [User::class, Patient::class, Appointment::class, PatientNote::class, PatientMessage::class, PatientReport::class, FinancialRecord::class, Prontuario::class, AuditLog::class, WhatsAppConversation::class, AnamneseModel::class, AnamneseCampo::class, AnamnesePreenchida::class, HistoricoFamiliar::class, HistoricoMedico::class, VidaEmocional::class, ObservacoesClinicas::class, AnotacaoSessao::class, CobrancaSessao::class, TipoSessao::class, CobrancaAgendamento::class, Autoavaliacao::class, Documento::class, Arquivo::class, Notification::class],
-    version = 26,
+    version = 28,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class, com.psipro.app.data.converters.AnamneseGroupConverter::class, com.psipro.app.data.converters.TipoDocumentoConverter::class, com.psipro.app.data.converters.CategoriaArquivoConverter::class, com.psipro.app.data.converters.TipoArquivoConverter::class)
@@ -302,6 +302,72 @@ abstract class AppDatabase : RoomDatabase() {
                                 database.execSQL("CREATE INDEX IF NOT EXISTS index_patients_uuid ON patients(uuid)")
                             } catch (e: Exception) {
                                 android.util.Log.w("Migration", "Erro ao criar índice patients.uuid: ${e.message}")
+                            }
+                        }
+                    },
+                    object : Migration(26, 27) {
+                        override fun migrate(database: SupportSQLiteDatabase) {
+                            // Migration 26->27: Campos de sincronização de agendamentos
+                            try {
+                                database.execSQL("ALTER TABLE appointments ADD COLUMN backendId TEXT")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "appointments.backendId já existe ou erro: ${e.message}")
+                            }
+                            try {
+                                database.execSQL("ALTER TABLE appointments ADD COLUMN dirty INTEGER NOT NULL DEFAULT 1")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "appointments.dirty já existe ou erro: ${e.message}")
+                            }
+                            try {
+                                database.execSQL("ALTER TABLE appointments ADD COLUMN lastSyncedAt INTEGER")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "appointments.lastSyncedAt já existe ou erro: ${e.message}")
+                            }
+                            try {
+                                database.execSQL("CREATE INDEX IF NOT EXISTS index_appointments_backendId ON appointments(backendId)")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "Erro ao criar índice appointments.backendId: ${e.message}")
+                            }
+                        }
+                    },
+                    object : Migration(27, 28) {
+                        override fun migrate(database: SupportSQLiteDatabase) {
+                            // Migration 27->28: Campos de sincronização de sessões e pagamentos
+                            try {
+                                database.execSQL("ALTER TABLE anotacoes_sessao ADD COLUMN backendId TEXT")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "anotacoes_sessao.backendId: ${e.message}")
+                            }
+                            try {
+                                database.execSQL("ALTER TABLE anotacoes_sessao ADD COLUMN dirty INTEGER NOT NULL DEFAULT 1")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "anotacoes_sessao.dirty: ${e.message}")
+                            }
+                            try {
+                                database.execSQL("ALTER TABLE anotacoes_sessao ADD COLUMN lastSyncedAt INTEGER")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "anotacoes_sessao.lastSyncedAt: ${e.message}")
+                            }
+                            try {
+                                database.execSQL("ALTER TABLE cobrancas_sessao ADD COLUMN backendId TEXT")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "cobrancas_sessao.backendId: ${e.message}")
+                            }
+                            try {
+                                database.execSQL("ALTER TABLE cobrancas_sessao ADD COLUMN dirty INTEGER NOT NULL DEFAULT 1")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "cobrancas_sessao.dirty: ${e.message}")
+                            }
+                            try {
+                                database.execSQL("ALTER TABLE cobrancas_sessao ADD COLUMN lastSyncedAt INTEGER")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "cobrancas_sessao.lastSyncedAt: ${e.message}")
+                            }
+                            try {
+                                database.execSQL("CREATE INDEX IF NOT EXISTS index_anotacoes_sessao_backendId ON anotacoes_sessao(backendId)")
+                                database.execSQL("CREATE INDEX IF NOT EXISTS index_cobrancas_sessao_backendId ON cobrancas_sessao(backendId)")
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "index: ${e.message}")
                             }
                         }
                     }

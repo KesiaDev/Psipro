@@ -19,6 +19,7 @@ import com.psipro.app.data.dao.CobrancaAgendamentoDao
 import com.psipro.app.data.dao.AutoavaliacaoDao
 import com.psipro.app.data.dao.DocumentoDao
 import com.psipro.app.data.dao.ArquivoDao
+import com.psipro.app.sync.SyncAppointmentsManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,8 +33,11 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideAppointmentRepository(dao: AppointmentDao): AppointmentRepository {
-        return AppointmentRepository(dao)
+    fun provideAppointmentRepository(
+        dao: AppointmentDao,
+        syncManager: SyncAppointmentsManager
+    ): AppointmentRepository {
+        return AppointmentRepository(dao, syncManager)
     }
 
     @Provides

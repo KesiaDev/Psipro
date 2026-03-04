@@ -102,6 +102,16 @@ export class SessionsService {
   }
 
   async create(userId: string, createSessionDto: CreateSessionDto, clinicId: string) {
+    const effectiveUserId = createSessionDto.professionalId || userId;
+    if (createSessionDto.professionalId) {
+      const membership = await this.prisma.clinicUser.findUnique({
+        where: { clinicId_userId: { clinicId, userId: createSessionDto.professionalId } },
+      });
+      if (!membership || membership.status !== 'active') {
+        throw new ForbiddenException('Profissional não encontrado na clínica');
+      }
+    }
+
     const patient = await this.prisma.patient.findFirst({
       where: whereNotDeleted('patient', { id: createSessionDto.patientId, clinicId }),
     });
@@ -110,10 +120,11 @@ export class SessionsService {
       throw new ForbiddenException('Paciente não encontrado ou não pertence à clínica');
     }
 
+    const { professionalId: _, ...sessionData } = createSessionDto;
     return this.prisma.session.create({
       data: {
-        ...createSessionDto,
-        userId,
+        ...sessionData,
+        userId: effectiveUserId,
         date: new Date(createSessionDto.date),
         source: createSessionDto.source || 'app',
       },

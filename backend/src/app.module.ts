@@ -7,6 +7,8 @@ import { AuditModule } from './audit/audit.module';
 import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
 import { ClinicsModule } from './clinics/clinics.module';
+import { ProfessionalsModule } from './professionals/professionals.module';
+import { UsersModule } from './users/users.module';
 import { PatientsModule } from './patients/patients.module';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { SessionsModule } from './sessions/sessions.module';
@@ -18,6 +20,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ReportsModule } from './reports/reports.module';
 import { SyncModule } from './sync/sync.module';
+import { BetaModule } from './beta/beta.module';
 
 /**
  * PsiPro Backend
@@ -38,6 +41,8 @@ import { SyncModule } from './sync/sync.module';
     CommonModule,
     AuthModule,
     ClinicsModule,
+    ProfessionalsModule,
+    UsersModule,
     PatientsModule,
     AppointmentsModule,
     SessionsModule,
@@ -48,6 +53,7 @@ import { SyncModule } from './sync/sync.module';
     DashboardModule,
     ReportsModule,
     SyncModule,
+    BetaModule,
   ],
 })
 export class AppModule {}

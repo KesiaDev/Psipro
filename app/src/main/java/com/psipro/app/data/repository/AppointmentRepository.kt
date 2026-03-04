@@ -3,6 +3,7 @@ package com.psipro.app.data.repository
 import com.psipro.app.data.dao.AppointmentDao
 import com.psipro.app.data.entities.Appointment
 import com.psipro.app.data.entities.AppointmentStatus
+import com.psipro.app.sync.SyncAppointmentsManager
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
 import javax.inject.Inject
@@ -10,7 +11,8 @@ import javax.inject.Singleton
 
 @Singleton
 class AppointmentRepository @Inject constructor(
-    private val appointmentDao: AppointmentDao
+    private val appointmentDao: AppointmentDao,
+    private val syncAppointmentsManager: SyncAppointmentsManager
 ) {
     fun getAllAppointments(): Flow<List<Appointment>> = appointmentDao.getAllAppointments()
 
@@ -20,11 +22,11 @@ class AppointmentRepository @Inject constructor(
     fun getAppointmentsBetweenDates(startDate: Date, endDate: Date): Flow<List<Appointment>> =
         appointmentDao.getAppointmentsBetweenDates(startDate, endDate)
 
-    suspend fun insertAppointment(appointment: Appointment): Long = 
-        appointmentDao.insertAppointment(appointment)
+    suspend fun insertAppointment(appointment: Appointment): Long =
+        appointmentDao.insertAppointment(appointment.copy(dirty = true))
 
-    suspend fun updateAppointment(appointment: Appointment) = 
-        appointmentDao.updateAppointment(appointment)
+    suspend fun updateAppointment(appointment: Appointment) =
+        appointmentDao.updateAppointment(appointment.copy(dirty = true))
 
     suspend fun deleteAppointment(appointment: Appointment) = 
         appointmentDao.deleteAppointment(appointment)
@@ -77,6 +79,15 @@ class AppointmentRepository @Inject constructor(
     ) = appointmentDao.updateConfirmation(appointmentId, isConfirmed, confirmationDate, absenceReason)
 
     suspend fun getAppointmentById(id: Long): Appointment? = appointmentDao.getAppointmentById(id)
+
+    /** Sincroniza agendamentos: push (locais dirty) + pull (backend). */
+    suspend fun syncAppointments() = syncAppointmentsManager.sync("repository")
+
+    /** Envia agendamentos locais dirty para o backend. */
+    suspend fun pushAppointments() = syncAppointmentsManager.pushAppointments()
+
+    /** Busca agendamentos atualizados do backend. */
+    suspend fun pullAppointments() = syncAppointmentsManager.pullAppointments()
 } 
 
 

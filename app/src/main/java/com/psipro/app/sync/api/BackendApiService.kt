@@ -36,5 +36,41 @@ interface BackendApiService {
         @Query("clinicId") clinicId: String,
         @Query("updatedAfter") updatedAfter: String? = null
     ): Response<List<RemotePatient>>
+
+    @GET("sync/appointments")
+    suspend fun getAppointments(
+        @Query("clinicId") clinicId: String,
+        @Query("updatedAfter") updatedAfter: String? = null
+    ): Response<List<RemoteAppointment>>
+
+    @POST("sync/appointments")
+    suspend fun syncAppointments(
+        @Query("clinicId") clinicId: String,
+        @Body body: SyncAppointmentsRequest
+    ): Response<List<RemoteAppointment>>
+
+    @GET("sync/sessions")
+    suspend fun getSessions(
+        @Query("clinicId") clinicId: String,
+        @Query("updatedAfter") updatedAfter: String? = null
+    ): Response<List<RemoteSession>>
+
+    @POST("sync/sessions")
+    suspend fun syncSessions(
+        @Query("clinicId") clinicId: String,
+        @Body body: SyncSessionsRequest
+    ): Response<List<RemoteSession>>
+
+    @GET("sync/payments")
+    suspend fun getPayments(
+        @Query("clinicId") clinicId: String,
+        @Query("updatedAfter") updatedAfter: String? = null
+    ): Response<List<RemotePayment>>
+
+    @POST("sync/payments")
+    suspend fun syncPayments(
+        @Query("clinicId") clinicId: String,
+        @Body body: SyncPaymentsRequest
+    ): Response<List<RemotePayment>>
 }
 

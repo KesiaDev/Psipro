@@ -1,10 +1,26 @@
 import { Module } from '@nestjs/common';
 import { SyncController } from './sync.controller';
+import { SyncAppointmentsController } from './sync-appointments.controller';
+import { SyncSessionsController } from './sync-sessions.controller';
+import { SyncPaymentsController } from './sync-payments.controller';
 import { SyncService } from './sync.service';
+import { SyncAppointmentsService } from './sync-appointments.service';
+import { SyncSessionsService } from './sync-sessions.service';
+import { SyncPaymentsService } from './sync-payments.service';
 
 @Module({
-  controllers: [SyncController],
-  providers: [SyncService],
+  controllers: [
+    SyncController,
+    SyncAppointmentsController,
+    SyncSessionsController,
+    SyncPaymentsController,
+  ],
+  providers: [
+    SyncService,
+    SyncAppointmentsService,
+    SyncSessionsService,
+    SyncPaymentsService,
+  ],
 })
 export class SyncModule {}
 

@@ -50,7 +50,10 @@ data class CobrancaSessao(
     val pixCopiaCola: String = "",
     val tipoSessaoId: Long? = null,
     val createdAt: Date = Date(),
-    val updatedAt: Date = Date()
+    val updatedAt: Date = Date(),
+    val backendId: String? = null,
+    val dirty: Boolean = true,
+    val lastSyncedAt: Date? = null
 )
 
 // Classe para relatórios com nome do paciente

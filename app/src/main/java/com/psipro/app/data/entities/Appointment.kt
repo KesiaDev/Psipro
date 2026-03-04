@@ -73,6 +73,12 @@ data class Appointment(
     val status: AppointmentStatus = AppointmentStatus.CONFIRMADO,
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),
+    /** ID do backend (UUID) para sincronização Android <-> Web. */
+    val backendId: String? = null,
+    /** Marca que o registro tem mudanças locais pendentes de envio. */
+    val dirty: Boolean = true,
+    /** Última vez que o backend confirmou/persistiu este agendamento. */
+    val lastSyncedAt: Date? = null,
     // Valor da sessão
     val sessionValue: Double = 0.0,
     // Recorrência

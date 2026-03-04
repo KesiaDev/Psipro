@@ -25,7 +25,6 @@ import com.psipro.app.databinding.ActivityDashboardBinding
 import com.psipro.app.ui.NotificationsActivity
 import com.psipro.app.ui.viewmodels.NotificationViewModel
 import com.psipro.app.utils.WebNavigator
-import com.psipro.app.sync.work.PatientsSyncScheduler
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import androidx.lifecycle.lifecycleScope
@@ -124,7 +123,7 @@ class DashboardActivity : AppCompatActivity() {
                     WebNavigator.openDashboard(this)
                 }
                 R.id.nav_sync_patients -> {
-                    PatientsSyncScheduler.enqueue(this, "manual")
+                    com.psipro.app.sync.work.SyncScheduler.enqueueBoth(this, "manual")
                     android.widget.Toast.makeText(this, "Sincronização iniciada", android.widget.Toast.LENGTH_SHORT).show()
                 }
                 R.id.nav_configuracoes -> navController.navigate(R.id.nav_configuracoes)
@@ -193,7 +192,7 @@ class DashboardActivity : AppCompatActivity() {
         super.onResume()
         updateDrawerHeader()
         // Sync leve ao voltar ao foreground (não bloqueia offline)
-        PatientsSyncScheduler.enqueue(this, "foreground")
+        com.psipro.app.sync.work.SyncScheduler.enqueueBoth(this, "foreground")
     }
 
     fun updateDrawerHeader() {

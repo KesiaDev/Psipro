@@ -56,6 +56,16 @@ export class AppointmentsService {
   }
 
   async create(userId: string, dto: CreateAppointmentDto, clinicId: string) {
+    const effectiveUserId = dto.professionalId || userId;
+    if (dto.professionalId) {
+      const membership = await this.prisma.clinicUser.findUnique({
+        where: { clinicId_userId: { clinicId, userId: dto.professionalId } },
+      });
+      if (!membership || membership.status !== 'active') {
+        throw new NotFoundException('Profissional não encontrado na clínica');
+      }
+    }
+
     const patient = await this.prisma.patient.findFirst({
       where: whereNotDeleted('patient', { id: dto.patientId, clinicId }),
     });
@@ -64,11 +74,11 @@ export class AppointmentsService {
     const scheduledAt = new Date(dto.scheduledAt);
     const duration = dto.duration ?? 60;
 
-    await this.checkScheduleConflict(userId, clinicId, scheduledAt, duration);
+    await this.checkScheduleConflict(effectiveUserId, clinicId, scheduledAt, duration);
 
     const created = await this.prisma.appointment.create({
       data: {
-        userId,
+        userId: effectiveUserId,
         patientId: dto.patientId,
         clinicId,
         scheduledAt,
@@ -84,7 +94,7 @@ export class AppointmentsService {
     });
 
     this.auditService.log({
-      userId,
+      userId: effectiveUserId,
       clinicId,
       action: 'appointment_creation',
       entity: 'Appointment',

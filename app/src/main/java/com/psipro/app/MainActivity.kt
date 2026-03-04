@@ -143,7 +143,7 @@ class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
 
                         if (ok) {
                             backendAuth.ensureClinicId()
-                            com.psipro.app.sync.work.PatientsSyncScheduler.enqueue(applicationContext, "login")
+                            com.psipro.app.sync.work.SyncScheduler.enqueueBoth(applicationContext, "login")
                             val prefs = getSharedPreferences("settings", MODE_PRIVATE)
                             prefs.edit()
                                 .putString("current_user_email", email)

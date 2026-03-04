@@ -116,3 +116,75 @@ data class RemotePatient(
     val updatedAt: String? = null
 )
 
+data class SyncAppointmentsRequest(
+    val appointments: List<SyncAppointmentPayload>
+)
+
+data class SyncAppointmentPayload(
+    val id: String,
+    val patientId: String,
+    val professionalId: String,
+    val scheduledAt: String,
+    val duration: Int,
+    val updatedAt: String,
+    val type: String? = null,
+    val notes: String? = null,
+    val status: String? = null
+)
+
+data class RemoteAppointment(
+    val id: String,
+    val clinicId: String? = null,
+    val patientId: String,
+    val professionalId: String,
+    val scheduledAt: String,
+    val duration: Int,
+    val type: String? = null,
+    val notes: String? = null,
+    val status: String? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null
+)
+
+data class SyncSessionsRequest(val sessions: List<SyncSessionPayload>)
+data class SyncSessionPayload(
+    val id: String,
+    val patientId: String,
+    val professionalId: String,
+    val date: String,
+    val duration: Int,
+    val updatedAt: String,
+    val notes: String? = null,
+    val status: String? = null
+)
+data class RemoteSession(
+    val id: String,
+    val patientId: String,
+    val professionalId: String,
+    val date: String,
+    val duration: Int,
+    val notes: String? = null,
+    val status: String? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null
+)
+
+data class SyncPaymentsRequest(val payments: List<SyncPaymentPayload>)
+data class SyncPaymentPayload(
+    val id: String,
+    val sessionId: String,
+    val amount: Double,
+    val updatedAt: String,
+    val status: String? = null,
+    val paidAt: String? = null
+)
+data class RemotePayment(
+    val id: String,
+    val sessionId: String? = null,
+    val amount: Double,
+    val status: String? = null,
+    val paidAt: String? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null
+)
+

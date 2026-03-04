@@ -31,9 +31,9 @@ class CobrancaSessaoRepository @Inject constructor(
     
     suspend fun getCountPendentes(): Int = dao.getCountPendentes()
     
-    suspend fun insert(cobranca: CobrancaSessao): Long = dao.insert(cobranca)
-    
-    suspend fun update(cobranca: CobrancaSessao) = dao.update(cobranca)
+    suspend fun insert(cobranca: CobrancaSessao): Long = dao.insert(cobranca.copy(dirty = true))
+
+    suspend fun update(cobranca: CobrancaSessao) = dao.update(cobranca.copy(dirty = true))
     
     suspend fun delete(cobranca: CobrancaSessao) = dao.delete(cobranca)
     
