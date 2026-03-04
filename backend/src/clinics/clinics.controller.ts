@@ -81,6 +81,11 @@ export class ClinicsController {
     return this.clinicsService.removeUser(clinicId, targetUserId, req.user.id);
   }
 
+  @Get(':clinicId/professionals')
+  getProfessionals(@Request() req, @Param('clinicId') clinicId: string) {
+    return this.clinicsService.getProfessionals(clinicId, req.user.id);
+  }
+
   @Get(':id/stats')
   getStats(@Request() req, @Param('id') id: string) {
     return this.clinicsService.getClinicStats(id, req.user.id);

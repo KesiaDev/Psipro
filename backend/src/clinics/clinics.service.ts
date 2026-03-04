@@ -355,6 +355,32 @@ export class ClinicsService {
     });
   }
 
+  async getProfessionals(clinicId: string, userId: string) {
+    const clinicUser = await this.prisma.clinicUser.findUnique({
+      where: {
+        clinicId_userId: { clinicId, userId },
+      },
+    });
+    if (!clinicUser) {
+      throw new NotFoundException('Clínica não encontrada');
+    }
+
+    const clinicUsers = await this.prisma.clinicUser.findMany({
+      where: { clinicId, status: 'active' },
+      include: { user: true },
+      orderBy: { joinedAt: 'desc' },
+    });
+
+    return clinicUsers.map((cu) => ({
+      id: cu.user.id,
+      name: cu.user.name,
+      email: cu.user.email,
+      role: cu.role,
+      status: cu.status,
+      joinedAt: cu.joinedAt,
+    }));
+  }
+
   async getClinicStats(clinicId: string, userId: string) {
     // Verificar acesso
     const clinicUser = await this.prisma.clinicUser.findUnique({
