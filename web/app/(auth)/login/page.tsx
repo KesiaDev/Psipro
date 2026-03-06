@@ -1,16 +1,33 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
+import { getApiBaseUrl } from "../../services/api";
+
+const API_BASE_URL = getApiBaseUrl();
+
+type HandoffResponse = {
+  token?: string;
+  user?: {
+    id?: string;
+    email?: string;
+    fullName?: string;
+    name?: string;
+    clinicId?: string | null;
+  };
+};
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, isAuthenticated, loading: authLoading } = useAuth();
   const { showError } = useToast();
-  
+  const handoffRan = useRef(false);
+  const [handoffLoading, setHandoffLoading] = useState(true);
+  const [showLoginForm, setShowLoginForm] = useState(false);
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -18,10 +35,62 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
 
-  // Redirecionar se já estiver autenticado
+  // Handoff: se houver token na URL (vindo do app), trocar por sessão e redirecionar
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      // Verificar se há returnUrl nos query params
+    if (typeof window === "undefined" || handoffRan.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token")?.trim();
+    const returnUrl = params.get("returnUrl")?.trim();
+    if (!token) {
+      setHandoffLoading(false);
+      setShowLoginForm(true);
+      return;
+    }
+    handoffRan.current = true;
+    const run = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/handoff`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
+        if (!response.ok) {
+          window.history.replaceState({}, "", "/login");
+          setHandoffLoading(false);
+          setShowLoginForm(true);
+          return;
+        }
+        const result = (await response.json()) as HandoffResponse;
+        const finalToken = result?.token ?? token;
+        localStorage.setItem("psipro_token", finalToken);
+        const clinicId = result?.user?.clinicId;
+        if (clinicId != null && String(clinicId).length > 0) {
+          localStorage.setItem("psipro_current_clinic_id", String(clinicId));
+        }
+        if (result?.user?.id && result?.user?.email) {
+          const fullName = result.user.fullName || result.user.name || result.user.email;
+          localStorage.setItem("psipro_user", JSON.stringify({
+            id: result.user.id,
+            email: result.user.email,
+            fullName,
+          }));
+        }
+        const safePath = returnUrl && returnUrl.startsWith("/") && !returnUrl.startsWith("//")
+          ? returnUrl
+          : "/dashboard";
+        window.location.replace(safePath);
+      } catch {
+        window.history.replaceState({}, "", "/login");
+        setHandoffLoading(false);
+        setShowLoginForm(true);
+      }
+    };
+    void run();
+  }, []);
+
+  // Redirecionar se já estiver autenticado (e não estiver em handoff)
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && !handoffRan.current) {
       const params = new URLSearchParams(window.location.search);
       const returnUrl = params.get("returnUrl") || "/dashboard";
       router.push(returnUrl);
@@ -86,10 +155,12 @@ export default function LoginPage() {
     }
   };
 
-  if (authLoading) {
+  if (authLoading || (handoffLoading && !showLoginForm)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-psipro-background">
-        <div className="text-psipro-text-secondary">Carregando...</div>
+        <div className="text-psipro-text-secondary">
+          {handoffLoading && !showLoginForm ? "Conectando sua sessão..." : "Carregando..."}
+        </div>
       </div>
     );
   }

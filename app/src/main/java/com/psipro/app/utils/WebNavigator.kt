@@ -4,19 +4,30 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import com.psipro.app.BuildConfig
 import com.psipro.app.sync.di.SyncEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 
 /**
  * Ponto central para abrir a plataforma Web do PsiPro via navegador externo (SSO).
  * Usa accessToken do backend (JWT) para handoff.
+ * URL configurável em BuildConfig.PSIPRO_WEB_BASE_URL (build.gradle).
  */
 object WebNavigator {
 
-    private const val BASE_URL = "https://triumphant-perception-production-8792.up.railway.app"
+    private val BASE_URL: String get() = BuildConfig.PSIPRO_WEB_BASE_URL
 
     fun openDashboard(context: Context) {
         openWithSso(context, "/dashboard")
+    }
+
+    /** Abre a ficha do paciente no dashboard web. */
+    fun openPatientOnWeb(context: Context, patientId: Long) {
+        openWithSso(context, "/patients/$patientId")
+    }
+
+    fun openFinancialOnWeb(context: Context) {
+        openWithSso(context, "/financial")
     }
 
     private fun openWithSso(context: Context, returnPath: String) {
@@ -27,15 +38,17 @@ object WebNavigator {
             )
             val token = entryPoint.sessionStore().getAccessToken()
             if (token.isNullOrBlank()) {
-                openUrl(context, "$BASE_URL/login")
+                openUrl(context, "${BASE_URL.trim().trimEnd('/')}/login")
                 return
             }
 
+            // Usar /login com token e returnUrl (a rota /handoff retorna 404 em produção)
+            val base = BASE_URL.trim().trimEnd('/')
             val handoffUrl =
-                "$BASE_URL/handoff?token=${Uri.encode(token)}&returnUrl=${Uri.encode(returnPath)}"
+                "$base/login?token=${Uri.encode(token)}&returnUrl=${Uri.encode(returnPath)}"
             openUrl(context, handoffUrl)
         } catch (e: Exception) {
-            openUrl(context, "$BASE_URL/login")
+            openUrl(context, "${BASE_URL.trim().trimEnd('/')}/login")
         }
     }
 

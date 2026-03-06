@@ -6,7 +6,8 @@ export const APPOINTMENT_CONFLICT_MESSAGE =
 
 /** Verifica se o erro é de conflito de agenda (409). */
 export function isAppointmentConflictError(e: unknown): boolean {
-  return e && typeof e === 'object' && 'status' in e && (e as ApiError).status === 409;
+  if (!e || typeof e !== 'object' || !('status' in e)) return false;
+  return (e as ApiError).status === 409;
 }
 
 export interface Appointment {
