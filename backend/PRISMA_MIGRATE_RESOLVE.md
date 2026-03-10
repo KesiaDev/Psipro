@@ -1,12 +1,19 @@
 # Resolver migração Prisma P3009 falha
 
-Se o deploy falhar com `P3009: migrate found failed migrations`, o script `start:prod` já tenta executar `prisma migrate resolve --rolled-back` automaticamente antes de `migrate deploy`.
+O script `migrate:resolve-deploy` executa `prisma migrate resolve --rolled-back` antes de `migrate deploy`. O `start:prod` usa esse script.
 
-Se ainda falhar, execute manualmente no seu ambiente (com `DATABASE_URL` do Railway):
+Se o deploy ainda falhar, execute **manualmente** com a `DATABASE_URL` do Postgres no Railway:
 
 ```bash
+cd backend
 npx prisma migrate resolve --rolled-back 20260303100000_add_anamnese
 npx prisma migrate deploy
+```
+
+**Via Railway CLI:**
+```bash
+railway run npx prisma migrate resolve --rolled-back 20260303100000_add_anamnese
+railway run npx prisma migrate deploy
 ```
 
 Documentação: https://pris.ly/d/migrate-resolve
