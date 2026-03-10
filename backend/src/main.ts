@@ -29,17 +29,32 @@ function getMappedRoutes(expressApp: any): string[] {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+    }),
+  );
   app.use(loggingMiddleware);
 
+  const corsOrigins = [
+    'https://psipro-dashboard-production.up.railway.app',
+    'http://psipro-dashboard-production.up.railway.app',
+    /^https:\/\/.*\.railway\.app$/,
+    /^https:\/\/.*\.up\.railway\.app$/,
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ];
   app.enableCors({
-    origin: [
-      'https://psipro-dashboard-production.up.railway.app',
-      'http://localhost:5173',
-      'http://localhost:3000',
-    ],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const allowed = corsOrigins.some((o) =>
+        typeof o === 'string' ? o === origin : (o as RegExp).test(origin),
+      );
+      return callback(null, allowed);
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization, x-clinic-id',
+    allowedHeaders: 'Content-Type, Authorization, X-Clinic-Id, x-clinic-id',
     credentials: true,
   });
 
