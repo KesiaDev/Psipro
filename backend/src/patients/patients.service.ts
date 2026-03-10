@@ -94,7 +94,7 @@ export class PatientsService {
     const source = createPatientDto.source || 'web';
     const origin = source === 'app' ? 'ANDROID' : 'WEB';
 
-    const { full_name: _fn, ...dto } = createPatientDto;
+    const { full_name: _fn, nome: _n, ...dto } = createPatientDto;
 
     const formattedBirthDate = dto.birthDate
       ? new Date(`${dto.birthDate}T00:00:00.000Z`)

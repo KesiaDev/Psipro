@@ -57,10 +57,10 @@ export default function PacientesPage() {
     setCreating(true);
     try {
       const payload = {
-        name: values.name.trim(),
-        phone: values.phone.trim() || undefined,
-        email: values.email.trim() || undefined,
-        cpf: values.cpf.trim() || undefined,
+        name: (values.name ?? '').trim(),
+        phone: (values.phone ?? '').trim() || undefined,
+        email: (values.email ?? '').trim() || undefined,
+        cpf: (values.cpf ?? '').trim() || undefined,
         birthDate: values.birthDate || undefined,
         status: "Ativo",
         source: "web",
