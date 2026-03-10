@@ -1,9 +1,12 @@
 package com.psipro.app.sync.api
 
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Query
 
 interface BackendApiService {
@@ -24,6 +27,9 @@ interface BackendApiService {
 
     @GET("auth/me")
     suspend fun me(): Response<BackendMeResponse>
+
+    @GET("clinics")
+    suspend fun getClinics(): Response<List<RemoteClinic>>
 
     @POST("sync/patients")
     suspend fun syncPatients(
@@ -72,5 +78,28 @@ interface BackendApiService {
         @Query("clinicId") clinicId: String,
         @Body body: SyncPaymentsRequest
     ): Response<List<RemotePayment>>
+
+    @GET("sync/documents")
+    suspend fun getDocuments(
+        @Query("clinicId") clinicId: String,
+        @Query("patientId") patientId: String? = null,
+        @Query("updatedAfter") updatedAfter: String? = null
+    ): Response<List<RemoteDocument>>
+
+    @POST("sync/documents")
+    suspend fun syncDocuments(
+        @Query("clinicId") clinicId: String,
+        @Body body: SyncDocumentsRequest
+    ): Response<List<RemoteDocument>>
+
+    @Multipart
+    @POST("voice/transcribe")
+    suspend fun transcribe(@Part file: MultipartBody.Part): Response<TranscribeResponse>
+
+    @POST("sessions")
+    suspend fun createSession(@Body body: CreateSessionRequest): Response<SessionResponse>
+
+    @POST("sessions/voice-note")
+    suspend fun voiceNote(@Body body: VoiceNoteRequest): Response<SessionResponse>
 }
 

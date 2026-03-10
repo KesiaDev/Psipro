@@ -42,6 +42,16 @@ enum UserRole {
   ASSISTANT
 }
 
+// Tipo de profissional de saúde mental
+enum ProfessionalType {
+  psychologist
+  therapist
+  psychoanalyst
+  counselor
+  coach
+  other
+}
+
 // Clínica / Organização
 model Clinic {
   id          String   @id @default(uuid())
@@ -65,6 +75,7 @@ model Clinic {
   financialRecords FinancialRecord[]
   payments         Payment[]
   subscriptions    Subscription[]
+  anamneseModels   AnamneseModel[]
 
   @@map("clinics")
 }
@@ -113,6 +124,9 @@ model User {
   
   // Papel na clínica principal
   role      UserRole @default(OWNER)
+  
+  // Tipo de profissional (null = psicólogo para compatibilidade)
+  professionalType ProfessionalType?
   
   // Se for psicólogo autônomo (sem clínica) - legado, preferir planType da Clinic
   isIndependent Boolean @default(true)
@@ -198,12 +212,70 @@ model Patient {
   sessions    Session[]
   payments    Payment[]
   documents   Document[]
+  anamnesePreenchidas AnamnesePreenchida[]
 
   @@index([clinicId])
   @@index([deletedAt])
   @@index([userId])
   @@index([syncHash])
   @@map("patients")
+}
+
+// Modelo de anamnese (template)
+model AnamneseModel {
+  id        String   @id @default(uuid())
+  clinicId  String?  // Clínica dona do modelo (null = modelo global/seed)
+  userId    String?  // Psicólogo dono (se independente)
+  nome      String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clinic    Clinic?  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  campos    AnamneseCampo[]
+  preenchidas AnamnesePreenchida[]
+
+  @@index([clinicId])
+  @@index([userId])
+  @@map("anamnese_models")
+}
+
+// Campo do modelo de anamnese
+model AnamneseCampo {
+  id         String  @id @default(uuid())
+  modeloId   String
+  tipo       String  // TEXTO_CURTO, TEXTO_LONGO, DATA, SELECAO_UNICA, MULTIPLA_ESCOLHA, TITULO
+  label      String
+  opcoes     String? // JSON para opções de seleção
+  obrigatorio Boolean @default(false)
+  ordem      Int     @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  modelo    AnamneseModel @relation(fields: [modeloId], references: [id], onDelete: Cascade)
+
+  @@index([modeloId])
+  @@map("anamnese_campos")
+}
+
+// Anamnese preenchida por paciente
+model AnamnesePreenchida {
+  id             String   @id @default(uuid())
+  patientId      String
+  modeloId       String
+  respostas      Json     // campoId -> resposta
+  assinaturaPath String?
+  data           DateTime
+  versao         Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  patient  Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  modelo   AnamneseModel @relation(fields: [modeloId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([modeloId])
+  @@map("anamnese_preenchidas")
 }
 
 // Agendamento / Consulta
@@ -255,7 +327,15 @@ model Session {
   duration      Int      @default(60)
   status        String   @default("realizada") // realizada | falta | cancelada
   notes         String?  // Anotações da sessão
-  
+
+  // Inteligência Clínica (transcrição + insights IA)
+  transcript    String?  // Transcrição de voz da sessão
+  summary       String?  // Resumo clínico gerado por IA
+  themes        Json?    // Principais temas discutidos
+  emotions      Json?    // Emoções predominantes
+  actionItems   Json?    // Tarefas/encaminhamentos terapêuticos
+  riskFlags     Json?    // Sinais de alerta emocional
+
   // Sincronização
   source        String   @default("app")
   syncHash      String?
@@ -354,6 +434,7 @@ model Document {
   fileSize    Int?
   mimeType    String?
   status      String   @default("Ativo")
+  content     Json?    // Conteúdo HTML/JSON do app (conteudo, assinaturas)
   
   // Sincronização
   source      String   @default("app")

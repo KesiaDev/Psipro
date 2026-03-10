@@ -5,12 +5,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -18,6 +22,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.psipro.app.data.entities.AppointmentStatus
+import com.psipro.app.ui.components.PsiproCard
+import com.psipro.app.ui.theme.psipro.PsiproSpacing
 import com.psipro.app.ui.viewmodels.home.HomeViewModel
 
 
@@ -30,7 +36,6 @@ fun HomeScreen(
     onNavigateToAppointment: (Long) -> Unit,
     onNavigateToSessionNote: (Long) -> Unit,
     onNavigateToWhatsApp: (String) -> Unit,
-    onNavigateToFinancial: () -> Unit,
     onNavigateToSchedule: () -> Unit,
     onConfirmAppointmentRealized: (Long) -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
@@ -44,8 +49,8 @@ fun HomeScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+            .padding(PsiproSpacing.screenPadding),
+        verticalArrangement = Arrangement.spacedBy(PsiproSpacing.md)
     ) {
         /* HEADER */
         item {
@@ -113,11 +118,7 @@ fun HomeScreen(
 
         /* AÇÕES RÁPIDAS */
         item {
-            QuickActionsRow(
-                onNewAppointment = onNavigateToSchedule,
-                onNewPatient = {},
-                onFinancial = onNavigateToFinancial
-            )
+            QuickActionsRow(onNewAppointment = onNavigateToSchedule)
         }
     }
 }
@@ -128,19 +129,37 @@ fun HomeScreen(
 
 @Composable
 fun HomeHeader(greeting: String, currentDate: String) {
-    Column {
-        Text(greeting, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text(currentDate, style = MaterialTheme.typography.bodyMedium)
+    Column(modifier = Modifier.padding(vertical = PsiproSpacing.sm)) {
+        Text(
+            greeting,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            currentDate,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
 @Composable
 fun MainStateCard(title: String, message: String) {
-    Card {
-        Column(Modifier.padding(16.dp)) {
-            Text(title, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(8.dp))
-            Text(message)
+    PsiproCard {
+        Column {
+            Text(
+                title,
+                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(Modifier.height(PsiproSpacing.xs))
+            Text(
+                message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -150,13 +169,25 @@ fun NextAppointmentCard(
     appointment: AppointmentUi,
     onNavigate: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.clickable(onClick = onNavigate)
-    ) {
-        Column(Modifier.padding(16.dp)) {
-            Text("Próxima sessão", style = MaterialTheme.typography.labelMedium)
-            Text(appointment.patientName, fontWeight = FontWeight.Bold)
-            Text(appointment.time)
+    PsiproCard(onClick = onNavigate) {
+        Column {
+            Text(
+                "Próxima sessão",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(Modifier.height(PsiproSpacing.xs))
+            Text(
+                appointment.patientName,
+                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                appointment.time,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -166,14 +197,30 @@ fun AppointmentCard(
     appointment: AppointmentUi,
     onConfirmRealized: () -> Unit
 ) {
-    Card {
-        Column(Modifier.padding(16.dp)) {
-            Text(appointment.patientName, fontWeight = FontWeight.Bold)
-            Text(appointment.time)
-
+    PsiproCard(
+        modifier = Modifier.semantics {
+            contentDescription = "Sessão do paciente ${appointment.patientName} às ${appointment.time}. ${if (appointment.status == AppointmentStatus.CONFIRMADO) "Confirmada. Botão para marcar como realizada." else "Status: ${appointment.status}"}"
+        }
+    ) {
+        Column {
+            Text(
+                appointment.patientName,
+                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                appointment.time,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             if (appointment.status == AppointmentStatus.CONFIRMADO) {
-                Spacer(Modifier.height(8.dp))
-                Button(onClick = onConfirmRealized) {
+                Spacer(Modifier.height(PsiproSpacing.md))
+                Button(
+                    onClick = onConfirmRealized,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
                     Text("Marcar como realizada")
                 }
             }
@@ -183,43 +230,66 @@ fun AppointmentCard(
 
 @Composable
 fun SummaryCardsRow(summary: HomeSummary) {
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(PsiproSpacing.sm)) {
         item { SummaryCard("Hoje", summary.todaySessionsCount.toString(), Icons.Default.Event) }
         item { SummaryCard("Pendentes", summary.sessionsWithoutNoteCount.toString(), Icons.Default.Note) }
-        item { SummaryCard("A receber", summary.pendingPaymentsCount.toString(), Icons.Default.AttachMoney) }
     }
 }
 
 @Composable
 fun SummaryCard(title: String, value: String, icon: ImageVector) {
-    Card(modifier = Modifier.width(120.dp)) {
-        Column(Modifier.padding(12.dp)) {
-            Icon(icon, contentDescription = title)
-            Text(value, fontWeight = FontWeight.Bold)
-            Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    PsiproCard(modifier = Modifier.width(130.dp)) {
+        Column {
+            Icon(
+                icon,
+                contentDescription = title,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(Modifier.height(PsiproSpacing.xs))
+            Text(
+                value,
+                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                title,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
 
 @Composable
-fun QuickActionsRow(
-    onNewAppointment: () -> Unit,
-    onNewPatient: () -> Unit,
-    onFinancial: () -> Unit
-) {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Button(onClick = onNewAppointment) { Text("Nova sessão") }
-        Button(onClick = onFinancial) { Text("Financeiro") }
+fun QuickActionsRow(onNewAppointment: () -> Unit) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(PsiproSpacing.sm),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Button(
+            onClick = onNewAppointment,
+            modifier = Modifier.weight(1f),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(Icons.Default.Event, contentDescription = "Nova sessão", modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Nova sessão")
+        }
     }
 }
 
 @Composable
 fun ErrorCard(message: String) {
-    Card(colors = CardDefaults.cardColors(containerColor = Color.Red.copy(alpha = 0.1f))) {
+    PsiproCard {
         Text(
             text = message,
-            modifier = Modifier.padding(16.dp),
-            color = Color.Red
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error
         )
     }
 }

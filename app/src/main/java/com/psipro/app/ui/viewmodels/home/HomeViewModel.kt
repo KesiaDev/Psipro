@@ -111,11 +111,11 @@ class HomeViewModel @Inject constructor(
                             )
                         }
 
-                    // Criar resumo melhorado
+                    // Criar resumo melhorado (financeiro só na plataforma web)
                     val summary = HomeSummary(
                         todaySessionsCount = todayAppointments.size,
                         sessionsWithoutNoteCount = sessionsWithoutNote.size,
-                        pendingPaymentsCount = (pendingPayments.size + overduePayments.size),
+                        pendingPaymentsCount = 0,
                         recentAbsencesCount = missedAppointments.filter { 
                             // Faltas dos últimos 7 dias
                             val daysDiff = (Date().time - it.date.time) / (1000 * 60 * 60 * 24)

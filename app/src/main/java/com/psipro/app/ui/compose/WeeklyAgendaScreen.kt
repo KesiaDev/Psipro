@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DateRange
@@ -22,11 +23,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.psipro.app.R
@@ -53,23 +56,22 @@ import androidx.compose.ui.geometry.Offset
 
 val hourBoxHeight = 70.dp
 val thinLine = 0.8.dp
-val daysOfWeek = listOf("SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM")
+val daysOfWeek = listOf("Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom")
 val dayFontSize = 12.sp
-val bronzeGold: Color @Composable get() = colorResource(id = R.color.bronze_gold)
-val agendaColor: Color @Composable get() = colorResource(id = R.color.bronze_gold)
+val agendaColor: Color @Composable get() = MaterialTheme.colorScheme.primary
 val thinLineColor: Color @Composable get() {
-    return agendaColor.copy(alpha = 0.12f)
+    return MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeeklyAgendaScreen(
     appointments: List<Appointment>,
+    appointmentViewModel: AppointmentViewModel,
     preselectedPatient: Patient? = null,
     tipoConsulta: String? = null
 ) {
     val scheduleViewModel: ScheduleViewModel = viewModel()
-    val appointmentViewModel: AppointmentViewModel = viewModel()
     val patients by scheduleViewModel.patients.collectAsState()
 
     val showAppointmentForm = remember { mutableStateOf(false) }
@@ -100,7 +102,7 @@ fun WeeklyAgendaScreen(
 
     var focusedDate by remember { mutableStateOf(LocalDate.now()) }
     var viewMode by remember { mutableStateOf("Semana") }
-    val hours = (8..22).toList()
+    val hours = (8..20).toList()
     val today = LocalDate.now()
     val menuOptions = listOf("Mês", "Semana", "4 dias", "Dia")
 
@@ -108,20 +110,55 @@ fun WeeklyAgendaScreen(
     var expanded by remember { mutableStateOf(false) }
 
     val weekStart = focusedDate.with(DayOfWeek.MONDAY)
+    val weekDaysCount = when (viewMode) {
+        "Semana" -> 7  // Seg-Dom: inclui sábado e domingo para agendamentos aparecerem
+        "4 dias" -> 4
+        else -> 7
+    }
+    val weekEnd = weekStart.plusDays((weekDaysCount - 1).toLong())
+    val rangeStart = when (viewMode) {
+        "Semana", "4 dias" -> if (viewMode == "4 dias") focusedDate else weekStart
+        else -> focusedDate
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        TopAppBar(
-            title = { Text("Agenda") },
-            actions = {
+        // Header estilo web: título + subtitle
+        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = stringResource(R.string.schedule_professional),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = when (viewMode) {
+                            "Semana" -> "Semana de ${rangeStart.dayOfMonth} a ${weekEnd.dayOfMonth} de ${rangeStart.month.getDisplayName(java.time.format.TextStyle.FULL_STANDALONE, Locale("pt", "BR"))}, ${rangeStart.year}"
+                            "4 dias" -> "${rangeStart.format(DateTimeFormatter.ofPattern("d"))} a ${weekEnd.format(DateTimeFormatter.ofPattern("d MMM", Locale("pt", "BR")))}"
+                            "Dia" -> focusedDate.format(DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM", Locale("pt", "BR"))).replaceFirstChar { it.uppercase() }
+                            "Mês" -> currentMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale("pt", "BR"))).replaceFirstChar { it.uppercase() }
+                            else -> ""
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
                 Box {
                     IconButton(onClick = { expanded = true }) {
                         Icon(
                             Icons.Filled.DateRange,
-                            contentDescription = "Selecionar visualização"
+                            contentDescription = "Visualização",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     DropdownMenu(
@@ -138,7 +175,7 @@ fun WeeklyAgendaScreen(
                                 },
                                 onClick = {
                                     viewMode = option
-                                    focusedDate = LocalDate.now() // Reset focus to today when changing view
+                                    focusedDate = LocalDate.now()
                                     expanded = false
                                 },
                                 leadingIcon = {
@@ -155,20 +192,16 @@ fun WeeklyAgendaScreen(
                         }
                     }
                 }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background,
-                titleContentColor = agendaColor,
-                actionIconContentColor = agendaColor
-            )
-        )
+            }
+        }
 
+        // Navegação + botão Novo Agendamento (estilo web)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             val (navText, prevDate, nextDate) = when (viewMode) {
                 "Semana" -> Triple(
@@ -194,23 +227,46 @@ fun WeeklyAgendaScreen(
                 else -> Triple(viewMode, focusedDate, focusedDate)
             }
 
-            IconButton(onClick = {
-                if (viewMode == "Mês") currentMonth = prevDate else focusedDate = prevDate
-            }) {
-                Icon(Icons.Filled.ChevronLeft, contentDescription = "Anterior", tint = agendaColor)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                IconButton(onClick = {
+                    if (viewMode == "Mês") currentMonth = prevDate else focusedDate = prevDate
+                }) {
+                    Icon(Icons.Filled.ChevronLeft, contentDescription = "Anterior", tint = MaterialTheme.colorScheme.primary)
+                }
+                TextButton(
+                    onClick = {
+                        focusedDate = LocalDate.now()
+                        if (viewMode == "Mês") currentMonth = LocalDate.now().withDayOfMonth(1)
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("Hoje", fontWeight = FontWeight.Medium)
+                }
+                IconButton(onClick = {
+                    if (viewMode == "Mês") currentMonth = nextDate else focusedDate = nextDate
+                }) {
+                    Icon(Icons.Filled.ChevronRight, contentDescription = "Próximo", tint = MaterialTheme.colorScheme.primary)
+                }
             }
-            Text(
-                text = navText,
-                color = agendaColor,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Center
-            )
-            IconButton(onClick = {
-                if (viewMode == "Mês") currentMonth = nextDate else focusedDate = nextDate
-            }) {
-                Icon(Icons.Filled.ChevronRight, contentDescription = "Próximo", tint = agendaColor)
+            FilledTonalButton(
+                onClick = {
+                    selectedDateForForm.value = LocalDate.now()
+                    selectedHourForForm.value = 9
+                    editingAppointment.value = null
+                    showAppointmentForm.value = true
+                },
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = "Novo agendamento", modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Novo Agendamento", style = MaterialTheme.typography.labelLarge)
             }
         }
 
@@ -220,27 +276,62 @@ fun WeeklyAgendaScreen(
                 .fillMaxWidth()
                 .weight(1f)
         ) {
-            // Cabeçalho fixo dos dias da semana (apenas para visualizações de múltiplos dias)
+            // Grid em Card (estilo web)
             if (viewMode in listOf("Semana", "4 dias")) {
-                WeekHeader(startDate = when (viewMode) {
-                    "Semana" -> weekStart
-                    "4 dias" -> focusedDate
-                    else -> focusedDate
-                })
-            }
-            
-            // Conteúdo rolável
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                when (viewMode) {
-                    "Mês" -> MonthView(appointments, currentMonth, onAppointmentClicked)
-                    "Semana" -> WeekViewContent(weekStart, hours, appointments, today, onTimeSlotClicked, onAppointmentClicked)
-                    "4 dias" -> FourDayViewContent(focusedDate, hours, appointments, today, onTimeSlotClicked, onAppointmentClicked)
-                    "Dia" -> DayView(focusedDate, hours, appointments, today, onTimeSlotClicked, onAppointmentClicked)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(horizontal = 20.dp, vertical = 0.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        WeekHeader(
+                            startDate = when (viewMode) {
+                                "Semana" -> weekStart
+                                else -> focusedDate
+                            },
+                            numDays = weekDaysCount,
+                            today = today
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            when (viewMode) {
+                                "Semana" -> WeekViewContent(weekStart, weekDaysCount, hours, appointments, today, onTimeSlotClicked, onAppointmentClicked)
+                                "4 dias" -> FourDayViewContent(focusedDate, hours, appointments, today, onTimeSlotClicked, onAppointmentClicked)
+                                else -> {}
+                            }
+                        }
+                    }
+                }
+            } else {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(horizontal = 20.dp, vertical = 0.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(16.dp)
+                    ) {
+                        when (viewMode) {
+                            "Mês" -> MonthView(appointments, currentMonth, onAppointmentClicked)
+                            "Dia" -> DayView(focusedDate, hours, appointments, today, onTimeSlotClicked, onAppointmentClicked)
+                            else -> {}
+                        }
+                    }
                 }
             }
         }
@@ -265,7 +356,8 @@ fun WeeklyAgendaScreen(
                         "Reconsulta" -> 1
                         "Pessoal" -> 2
                         else -> 0 // "Consulta" ou null
-                    }
+                    },
+                    onAppointmentCreated = { date -> focusedDate = date }
                 )
             }
         }
@@ -282,58 +374,105 @@ fun DayView(
     onAppointmentClick: (Appointment) -> Unit
 ) {
     val firstHour = hours.minOrNull() ?: 8
+    val lineColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f)
+    val isToday = date == today
 
-    Box(modifier = Modifier.padding(horizontal = 8.dp)) {
-        Column {
-            hours.forEachIndexed { index, hour ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(hourBoxHeight)
-                        .border(thinLine, thinLineColor)
-                        .clickable { onTimeSlotClick(date, hour) },
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "%02d:00".format(hour),
-                        color = agendaColor,
-                        fontSize = 10.sp,
-                        modifier = Modifier
-                            .width(64.dp)
-                            .padding(end = 2.dp),
-                        textAlign = TextAlign.End
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // Header do dia (estilo WeekHeader)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 12.dp)
+                .zIndex(1f)
+        ) {
+            Spacer(modifier = Modifier.width(48.dp))
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(
+                        if (isToday) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                     )
-                }
-                
-                // Adicionar linha divisória horizontal após cada horário (exceto o último)
-                if (index < hours.size - 1) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(1.dp)
-                            .background(thinLineColor.copy(alpha = 0.5f))
-                    )
-                }
+                    .padding(vertical = 12.dp, horizontal = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = daysOfWeek[date.dayOfWeek.value - 1],
+                    fontSize = 12.sp,
+                    color = if (isToday) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = if (isToday) FontWeight.SemiBold else FontWeight.Medium
+                )
+                Text(
+                    text = date.dayOfMonth.toString(),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isToday) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+                Text(
+                    text = date.format(DateTimeFormatter.ofPattern("MMMM", Locale("pt", "BR"))).replaceFirstChar { it.uppercase() },
+                    fontSize = 11.sp,
+                    color = if (isToday) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
             }
         }
 
-        val appointmentsOnThisDay = appointments.filter {
-            it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == date
-        }
-
-        appointmentsOnThisDay.forEach { appointment ->
-            val cardModifier = Modifier
-                .zIndex(1f)
-                .clickable {
-                    android.util.Log.d("AgendaDebug", "Clicou no agendamento: ${appointment.title}")
-                    onAppointmentClick(appointment)
+        Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                hours.forEach { hour ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(hourBoxHeight)
+                            .drawBehind {
+                                drawLine(
+                                    color = lineColor,
+                                    start = Offset(0f, size.height - 1.dp.toPx()),
+                                    end = Offset(size.width, size.height - 1.dp.toPx()),
+                                    strokeWidth = 1f
+                                )
+                            }
+                            .clickable { onTimeSlotClick(date, hour) },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "%02d:00".format(hour),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            fontSize = 11.sp,
+                            modifier = Modifier
+                                .width(48.dp)
+                                .padding(end = 2.dp),
+                            textAlign = TextAlign.End
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
-            AppointmentCard(
-                appointment = appointment,
-                firstHour = firstHour,
-                modifier = cardModifier,
-                isDayView = true
-            )
+            }
+
+            val appointmentsOnThisDay = appointments.filter {
+                it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == date
+            }
+
+            appointmentsOnThisDay.forEach { appointment ->
+                val cardModifier = Modifier
+                    .zIndex(1f)
+                    .clickable {
+                        android.util.Log.d("AgendaDebug", "Clicou no agendamento: ${appointment.title}")
+                        onAppointmentClick(appointment)
+                    }
+                AppointmentCard(
+                    appointment = appointment,
+                    firstHour = firstHour,
+                    modifier = cardModifier,
+                    isDayView = true
+                )
+            }
         }
     }
 }
@@ -359,44 +498,52 @@ fun FourDayView(
 }
 
 @Composable
-fun WeekHeader(startDate: LocalDate) {
-    val days = remember(startDate) { 
-        (0 until 7).map { startDate.plusDays(it.toLong()) } 
+fun WeekHeader(
+    startDate: LocalDate,
+    numDays: Int = 5,
+    today: LocalDate = LocalDate.now()
+) {
+    val days = remember(startDate, numDays) { 
+        (0 until numDays).map { startDate.plusDays(it.toLong()) } 
     }
-    
-    // Detectar se está no modo escuro
-    val isDarkTheme = isSystemInDarkTheme()
     
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            .background(
-                if (isDarkTheme) Color.Transparent else MaterialTheme.colorScheme.surface
-            )
+            .padding(horizontal = 12.dp, vertical = 12.dp)
             .zIndex(1f)
     ) {
         // Espaço para alinhar com a coluna das horas
         Spacer(modifier = Modifier.width(48.dp))
         
-        // Cabeçalhos dos dias
         days.forEach { date ->
+            val isToday = date == today
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(
+                        if (isToday) MaterialTheme.colorScheme.primary
+                        else Color.Transparent
+                    )
+                    .padding(vertical = 8.dp, horizontal = 4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = daysOfWeek[date.dayOfWeek.value - 1],
-                    fontSize = dayFontSize,
-                    color = if (date == LocalDate.now()) MaterialTheme.colorScheme.primary else agendaColor,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 2.dp)
+                    fontSize = 11.sp,
+                    color = if (isToday) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = if (isToday) FontWeight.SemiBold else FontWeight.Medium
                 )
                 Text(
                     text = date.dayOfMonth.toString(),
-                    fontSize = 10.sp,
-                    color = if (date == LocalDate.now()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isToday) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(top = 2.dp)
                 )
             }
         }
@@ -406,6 +553,7 @@ fun WeekHeader(startDate: LocalDate) {
 @Composable
 fun WeekViewContent(
     startDate: LocalDate,
+    numDays: Int,
     hours: List<Int>,
     appointments: List<Appointment>,
     today: LocalDate,
@@ -413,7 +561,7 @@ fun WeekViewContent(
     onAppointmentClick: (Appointment) -> Unit
 ) {
     AgendaViewContent(
-        numDays = 7,
+        numDays = numDays,
         startDate = startDate,
         hours = hours,
         appointments = appointments,
@@ -450,30 +598,41 @@ fun AppointmentCard(
     modifier: Modifier,
     isDayView: Boolean = false,
     widthFraction: Float = 1f,
-    horizontalOffset: Float = 0f
+    horizontalOffset: Float = 0f,
+    /** Hora da linha atual (usado em Semana/4 dias). Quando informado, o offset é relativo à linha. */
+    rowStartHour: Int? = null
 ) {
     val startTime = parseTime(appointment.startTime)
     val endTime = parseTime(appointment.endTime)
 
-    val minutesFromTop = ((startTime.hour - firstHour) * 60 + startTime.minute).toFloat()
+    val baseHour = rowStartHour ?: firstHour
+    val minutesFromTop = ((startTime.hour - baseHour) * 60 + startTime.minute).toFloat()
     val durationInMinutes = ((endTime.hour * 60 + endTime.minute) - (startTime.hour * 60 + startTime.minute)).toFloat()
     val clampedDuration = durationInMinutes.coerceAtLeast(15f)
 
     val cardOffsetY = hourBoxHeight * (minutesFromTop / 60f)
     val cardHeight = hourBoxHeight * (clampedDuration / 60f) - 2.dp
 
+    val titleText = if (appointment.type == AppointmentType.PESSOAL) {
+        appointment.title ?: "Compromisso Pessoal"
+    } else {
+        appointment.patientName ?: "Paciente"
+    }
+    val appointmentDesc = "Agendamento: $titleText das ${appointment.startTime} às ${appointment.endTime}. Toque para ver detalhes."
     val cardModifier = if (isDayView) {
         modifier
             .fillMaxWidth()
             .height(cardHeight)
             .offset(x = 70.dp, y = cardOffsetY)
             .padding(horizontal = 2.dp)
+            .semantics { contentDescription = appointmentDesc }
     } else {
         modifier
             .fillMaxWidth(fraction = widthFraction)
             .height(cardHeight)
             .offset(y = cardOffsetY)
             .padding(start = (100 * horizontalOffset).dp * widthFraction)
+            .semantics { contentDescription = appointmentDesc }
     }
 
     // Usar sempre a cor salva em colorHex
@@ -486,12 +645,6 @@ fun AppointmentCard(
             containerColor = cardColor
         ),
     ) {
-        val title = if (appointment.type == AppointmentType.PESSOAL) {
-            appointment.title ?: "Compromisso Pessoal"
-        } else {
-            appointment.patientName ?: "Paciente"
-        }
-
         // Ajusta o tamanho da fonte e maxLines com base na visualização e duração
         val (dynamicFontSize, maxLines) = if (isDayView) {
             Pair(
@@ -510,7 +663,7 @@ fun AppointmentCard(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = title,
+                text = titleText,
                 color = MaterialTheme.colorScheme.onBackground,
                 fontSize = dynamicFontSize,
                 maxLines = maxLines,
@@ -544,6 +697,7 @@ private fun AgendaViewContent(
         (0 until numDays).map { startDate.plusDays(it.toLong()) } 
     }
     val firstHour = remember(hours) { hours.minOrNull() ?: 8 }
+    val lineColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f)
 
     // Otimizar: pré-calcular appointments por data
     // Filtrar appointments apenas para os dias visíveis e converter corretamente
@@ -573,32 +727,32 @@ private fun AgendaViewContent(
                 }
             }
     }
-    
-    // Log para debug
-    LaunchedEffect(appointmentsByDate, days) {
-        android.util.Log.d("AgendaDebug", "AgendaViewContent - Appointments por data: ${appointmentsByDate.mapKeys { it.key.toString() }}")
-        android.util.Log.d("AgendaDebug", "AgendaViewContent - Dias visíveis: ${days.map { it.toString() }}")
-        android.util.Log.d("AgendaDebug", "AgendaViewContent - Total de appointments recebidos: ${appointments.size}")
-        android.util.Log.d("AgendaDebug", "AgendaViewContent - Appointments filtrados: ${appointmentsByDate.values.flatten().size}")
-    }
 
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 0.dp)
     ) {
-        // Conteúdo da agenda sem o cabeçalho dos dias
         hours.forEach { hour ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(hourBoxHeight)
-                    .border(thinLine, thinLineColor),
+                    .drawBehind {
+                        drawLine(
+                            color = lineColor,
+                            start = Offset(0f, size.height - 1.dp.toPx()),
+                            end = Offset(size.width, size.height - 1.dp.toPx()),
+                            strokeWidth = 1f
+                        )
+                    },
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Coluna das horas
+                // Coluna das horas (cinza suave como na web)
                 Text(
                     "%02d:00".format(hour),
-                    color = agendaColor,
-                    fontSize = 10.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    fontSize = 11.sp,
                     modifier = Modifier
                         .width(48.dp)
                         .padding(end = 2.dp),
@@ -623,7 +777,8 @@ private fun AgendaViewContent(
                                 firstHour = firstHour,
                                 modifier = Modifier.zIndex(1f),
                                 widthFraction = 1f / numDays,
-                                horizontalOffset = days.indexOf(date).toFloat()
+                                horizontalOffset = 0f, // Uma célula por dia; offset só para sobreposição no mesmo dia
+                                rowStartHour = hour
                             )
                         }
                     }
@@ -696,13 +851,12 @@ fun MonthView(
     currentMonth: LocalDate,
     onAppointmentClick: (Appointment) -> Unit
 ) {
-    val context = LocalContext.current
+    val today = LocalDate.now()
     val daysInMonth = remember(currentMonth) { currentMonth.lengthOfMonth() }
     val firstDayOfMonth = remember(currentMonth) { currentMonth.withDayOfMonth(1) }
     val startDayOfWeek = remember(firstDayOfMonth) { firstDayOfMonth.dayOfWeek.value }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
 
-    // Otimizar: pré-calcular appointments por data
     val appointmentsByDate = remember(appointments) {
         appointments.groupBy { 
             it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() 
@@ -715,104 +869,174 @@ fun MonthView(
         } ?: emptyList()
     }
 
-    Column(modifier = Modifier.padding(8.dp)) {
-        // Calendário
-        Column {
-            // Header
-            Row(modifier = Modifier.fillMaxWidth()) {
-                daysOfWeek.forEach { day ->
-                    Text(
-                        text = day,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.weight(1f),
-                        color = agendaColor
-                    )
-                }
-            }
-            // Dias
-            (0 until (daysInMonth + startDayOfWeek - 1) / 7 + 1).forEach { week ->
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    (0..6).forEach { day ->
-                        val dayOfMonth = week * 7 + day - startDayOfWeek + 2
-                        if (dayOfMonth > 0 && dayOfMonth <= daysInMonth) {
-                            val date = currentMonth.withDayOfMonth(dayOfMonth)
-                            val appointmentsOnDay = remember(date, appointmentsByDate) {
-                                appointmentsByDate[date]?.size ?: 0
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .aspectRatio(1f)
-                                    .padding(2.dp)
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                                    .border(
-                                        width = 2.dp,
-                                        color = when {
-                                            date == selectedDate -> MaterialTheme.colorScheme.primary
-                                            date == LocalDate.now() -> agendaColor
-                                            else -> Color.Transparent
-                                        },
-                                        shape = RoundedCornerShape(4.dp)
-                                    )
-                                    .clickable { selectedDate = date },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = dayOfMonth.toString())
-                                if (appointmentsOnDay > 0) {
-                                    Box(
-                                        modifier = Modifier
-                                            .align(Alignment.BottomCenter)
-                                            .padding(bottom = 4.dp)
-                                            .size(6.dp)
-                                            .background(agendaColor, CircleShape)
-                                    )
-                                }
-                            }
-                        } else {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
-                    }
-                }
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // Header dos dias da semana (estilo WeekHeader)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
+        ) {
+            daysOfWeek.forEach { day ->
+                Text(
+                    text = day,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f),
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
 
-        // Lista de agendamentos para o dia selecionado
+        // Grid do calendário
+        (0 until (daysInMonth + startDayOfWeek - 1) / 7 + 1).forEach { week ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                (0..6).forEach { day ->
+                    val dayOfMonth = week * 7 + day - startDayOfWeek + 2
+                    if (dayOfMonth > 0 && dayOfMonth <= daysInMonth) {
+                        val date = currentMonth.withDayOfMonth(dayOfMonth)
+                        val appointmentsOnDay = remember(date, appointmentsByDate) {
+                            appointmentsByDate[date]?.size ?: 0
+                        }
+                        val isToday = date == today
+                        val isSelected = date == selectedDate
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .aspectRatio(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    when {
+                                        isSelected -> MaterialTheme.colorScheme.primary
+                                        isToday -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                                        else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                                    }
+                                )
+                                .clickable { selectedDate = date },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = dayOfMonth.toString(),
+                                    fontSize = 14.sp,
+                                    fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Medium,
+                                    color = when {
+                                        isSelected -> MaterialTheme.colorScheme.onPrimary
+                                        isToday -> MaterialTheme.colorScheme.onPrimaryContainer
+                                        else -> MaterialTheme.colorScheme.onSurface
+                                    }
+                                )
+                                if (appointmentsOnDay > 0) {
+                                    Row(
+                                        modifier = Modifier.padding(top = 2.dp),
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        repeat(minOf(appointmentsOnDay, 3)) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .padding(horizontal = 1.dp)
+                                                    .size(4.dp)
+                                                    .background(
+                                                        if (isSelected) MaterialTheme.colorScheme.onPrimary
+                                                        else agendaColor,
+                                                        CircleShape
+                                                    )
+                                            )
+                                        }
+                                        if (appointmentsOnDay > 3) {
+                                            Text(
+                                                text = "+${appointmentsOnDay - 3}",
+                                                fontSize = 8.sp,
+                                                color = when {
+                                                    isSelected -> MaterialTheme.colorScheme.onPrimary
+                                                    isToday -> MaterialTheme.colorScheme.onPrimaryContainer
+                                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+        }
+
+        // Lista de agendamentos do dia selecionado (cards modernos)
         if (selectedDate != null) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             Text(
-                text = "Agendamentos para ${selectedDate?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}",
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                modifier = Modifier.padding(bottom = 8.dp),
-                color = agendaColor
+                text = "Agendamentos de ${selectedDate?.format(DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM", Locale("pt", "BR")))?.replaceFirstChar { it.uppercase() } ?: ""}",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(bottom = 12.dp)
             )
             if (appointmentsForSelectedDay.isEmpty()) {
-                Text("Nenhum agendamento para este dia.")
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                ) {
+                    Text(
+                        text = "Nenhum agendamento para este dia.",
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             } else {
-                LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
+                LazyColumn(
+                    modifier = Modifier.heightIn(max = 280.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     items(appointmentsForSelectedDay) { appointment ->
+                        val cardColor = Color(android.graphics.Color.parseColor(appointment.colorHex)).copy(alpha = 0.25f)
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 4.dp)
                                 .clickable { onAppointmentClick(appointment) },
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = cardColor),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                         ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(12.dp),
+                                    .padding(16.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Column {
-                                    Text(text = appointment.patientName ?: "Paciente", fontWeight = FontWeight.Bold)
-                                    Text(text = "Horário: ${appointment.startTime} - ${appointment.endTime}", fontSize = 14.sp)
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = appointment.patientName ?: "Paciente",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "${appointment.startTime} - ${appointment.endTime}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
-                                Icon(Icons.Filled.ChevronRight, contentDescription = "Ver detalhes")
+                                Icon(
+                                    Icons.Filled.ChevronRight,
+                                    contentDescription = "Ver detalhes",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     }

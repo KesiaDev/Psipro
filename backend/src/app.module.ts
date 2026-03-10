@@ -20,7 +20,9 @@ import { PrismaModule } from './prisma/prisma.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ReportsModule } from './reports/reports.module';
 import { SyncModule } from './sync/sync.module';
+import { AnamneseModule } from './anamnese/anamnese.module';
 import { BetaModule } from './beta/beta.module';
+import { VoiceModule } from './voice/voice.module';
 
 /**
  * PsiPro Backend
@@ -53,7 +55,9 @@ import { BetaModule } from './beta/beta.module';
     DashboardModule,
     ReportsModule,
     SyncModule,
+    AnamneseModule,
     BetaModule,
+    VoiceModule,
   ],
 })
 export class AppModule {}

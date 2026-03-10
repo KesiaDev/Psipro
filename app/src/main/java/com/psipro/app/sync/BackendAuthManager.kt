@@ -21,21 +21,28 @@ class BackendAuthManager @Inject constructor(
             if (!resp.isSuccessful || resp.body() == null) {
                 Log.w(TAG, "Backend login failed: http=${resp.code()}")
                 false
-            } else {
-                val body = resp.body()!!
-                store.setAccessToken(body.effectiveAccessToken())
-                body.refreshToken?.let { store.setRefreshToken(it) }
-                Log.i(TAG, "Backend login ok")
-                true
-            }
+    } else {
+        val body = resp.body()!!
+        store.setAccessToken(body.effectiveAccessToken())
+        body.refreshToken?.let { store.setRefreshToken(it) }
+        body.user.professionalType?.let { store.setProfessionalType(it) }
+        body.user.clinicId?.let { store.setClinicId(it) }
+        Log.i(TAG, "Backend login ok clinicId=${body.user.clinicId}")
+        true
+    }
         } catch (e: Exception) {
             Log.e(TAG, "Backend login exception", e)
             false
         }
     }
 
-    suspend fun register(email: String, password: String, fullName: String): Boolean {
-        val resp = api.register(BackendRegisterRequest(email = email, password = password, fullName = fullName))
+    suspend fun register(email: String, password: String, fullName: String, professionalType: String? = null): Boolean {
+        val resp = api.register(BackendRegisterRequest(
+            email = email,
+            password = password,
+            fullName = fullName,
+            professionalType = professionalType
+        ))
         if (!resp.isSuccessful || resp.body() == null) {
             Log.w(TAG, "Backend register failed: http=${resp.code()} body=${resp.errorBody()?.string()}")
             throw retrofit2.HttpException(resp)
@@ -43,6 +50,7 @@ class BackendAuthManager @Inject constructor(
         val body = resp.body()!!
         store.setAccessToken(body.effectiveAccessToken())
         body.refreshToken?.let { store.setRefreshToken(it) }
+        body.user.professionalType?.let { store.setProfessionalType(it) }
         Log.i(TAG, "Backend register ok")
         return true
     }
@@ -118,6 +126,7 @@ class BackendAuthManager @Inject constructor(
             } else {
                 val me = resp.body()!!
                 store.setClinicId(me.clinicId)
+                me.professionalType?.let { store.setProfessionalType(it) }
                 me.clinicId
             }
         } catch (e: Exception) {

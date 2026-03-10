@@ -14,6 +14,7 @@ import com.psipro.app.ui.compose.WeeklyAgendaScreen
 import com.psipro.app.viewmodel.AppointmentViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import com.psipro.app.data.entities.Patient
+import com.psipro.app.sync.work.SyncScheduler
 import com.psipro.app.ui.schedule.ScheduleViewModel
 
 @AndroidEntryPoint
@@ -21,6 +22,12 @@ class ScheduleFragment : Fragment() {
 
     private val appointmentViewModel: AppointmentViewModel by viewModels()
     private val scheduleViewModel: ScheduleViewModel by viewModels()
+
+    override fun onResume() {
+        super.onResume()
+        // Sincroniza pacientes e agendamentos ao abrir a Agenda (web → app)
+        SyncScheduler.enqueueBoth(requireContext(), "agenda_screen")
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,6 +55,7 @@ class ScheduleFragment : Fragment() {
                 PsiproTheme {
                     WeeklyAgendaScreen(
                         appointments = appointments,
+                        appointmentViewModel = appointmentViewModel,
                         preselectedPatient = preSelectedPatient,
                         tipoConsulta = tipoConsulta
                     )

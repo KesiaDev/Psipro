@@ -21,7 +21,8 @@ data class BackendLoginResponse(
 data class BackendRegisterRequest(
     val email: String,
     val password: String,
-    val fullName: String
+    val fullName: String,
+    val professionalType: String? = null
 )
 
 data class BackendRefreshRequest(
@@ -58,7 +59,16 @@ data class BackendUserBasic(
     val id: String,
     val email: String,
     val name: String? = null,
-    val fullName: String? = null
+    val fullName: String? = null,
+    val professionalType: String? = null,
+    val clinicId: String? = null
+)
+
+data class RemoteClinic(
+    val id: String,
+    val name: String,
+    val status: String? = null,
+    val plan: String? = null
 )
 
 data class BackendMeResponse(
@@ -66,7 +76,8 @@ data class BackendMeResponse(
     val email: String,
     val role: String,
     val clinicId: String?,
-    val name: String?
+    val name: String?,
+    val professionalType: String? = null
 )
 
 data class SyncPatientsRequest(
@@ -132,6 +143,13 @@ data class SyncAppointmentPayload(
     val status: String? = null
 )
 
+/** Paciente incluído no agendamento para criar localmente se não existir */
+data class RemoteAppointmentPatient(
+    val id: String,
+    val name: String,
+    val phone: String? = null
+)
+
 data class RemoteAppointment(
     val id: String,
     val clinicId: String? = null,
@@ -143,7 +161,9 @@ data class RemoteAppointment(
     val notes: String? = null,
     val status: String? = null,
     val createdAt: String? = null,
-    val updatedAt: String? = null
+    val updatedAt: String? = null,
+    /** Incluído pelo backend para permitir criar paciente local ao puxar agendamento */
+    val patient: RemoteAppointmentPatient? = null
 )
 
 data class SyncSessionsRequest(val sessions: List<SyncSessionPayload>)
@@ -186,5 +206,65 @@ data class RemotePayment(
     val paidAt: String? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null
+)
+
+data class SyncDocumentsRequest(val documents: List<SyncDocumentPayload>)
+data class SyncDocumentPayload(
+    val id: String? = null,
+    val patientId: String,
+    val name: String,
+    val type: String,
+    val fileUrl: String? = null,
+    val content: Map<String, Any?>? = null,
+    val updatedAt: String,
+    val source: String? = "app",
+    val status: String? = "Ativo"
+)
+data class RemoteDocument(
+    val id: String,
+    val userId: String? = null,
+    val patientId: String? = null,
+    val name: String,
+    val type: String,
+    val fileUrl: String? = null,
+    val content: Map<String, Any?>? = null,
+    val status: String? = null,
+    val source: String? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null
+)
+
+data class TranscribeResponse(
+    val transcript: String
+)
+
+/** Requisição para criar sessão no backend */
+data class CreateSessionRequest(
+    val patientId: String,
+    val date: String,
+    val duration: Int = 60,
+    val status: String = "realizada",
+    val notes: String? = null,
+    val source: String = "app"
+)
+
+/** Sessão retornada pelo backend (create ou voice-note) */
+data class SessionResponse(
+    val id: String,
+    val patientId: String,
+    val date: String,
+    val notes: String? = null,
+    val transcript: String? = null,
+    val summary: String? = null,
+    val themes: List<String>? = null,
+    val emotions: List<String>? = null,
+    val actionItems: List<String>? = null,
+    val riskFlags: List<String>? = null
+)
+
+/** Payload para voice-note (transcript + insights) */
+data class VoiceNoteRequest(
+    val sessionId: String,
+    val transcript: String
 )
 

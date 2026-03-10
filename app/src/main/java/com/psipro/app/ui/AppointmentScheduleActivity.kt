@@ -43,8 +43,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import android.content.Context
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.psipro.app.utils.MessageTemplateManager
-import com.psipro.app.data.repository.FinancialRecordRepository
-import com.psipro.app.data.entities.FinancialRecord
 import com.psipro.app.notification.AgendamentoAlarmManager
 import com.psipro.app.notification.AgendamentoNotificationService
 import com.psipro.app.ui.viewmodels.NotificationViewModel
@@ -60,7 +58,6 @@ class AppointmentScheduleActivity : SecureActivity() {
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     private var selectedDate = Calendar.getInstance()
     private var selectedPatient: Patient? = null
-    @Inject lateinit var financialRecordRepository: FinancialRecordRepository
     @Inject lateinit var agendamentoAlarmManager: AgendamentoAlarmManager
     @Inject lateinit var agendamentoNotificationService: AgendamentoNotificationService
     private lateinit var notificationViewModel: NotificationViewModel
@@ -636,7 +633,7 @@ class AppointmentScheduleActivity : SecureActivity() {
         
         // Obter nome do psicólogo das SharedPreferences
         val sharedPrefs = getSharedPreferences("user_preferences", Context.MODE_PRIVATE)
-        val psicologoNome = sharedPrefs.getString("psicologo_nome", "Psicólogo") ?: "Psicólogo"
+        val psicologoNome = sharedPrefs.getString("profile_name", "Profissional") ?: "Profissional"
         
         val templates = listOf(
             "Olá $patientName! Aqui é $psicologoNome. Confirmei sua $tipoConsulta para $data às $hora. Aguardo você!",

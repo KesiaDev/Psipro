@@ -1,6 +1,7 @@
 package com.psipro.app.auth
 
 import android.content.Context
+import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -13,6 +14,7 @@ import kotlin.concurrent.write
 /**
  * Gerencia accessToken, refreshToken e activeClinicId de forma segura.
  * Usa EncryptedSharedPreferences. Thread-safe.
+ * Fallback para SharedPreferences normal se o Keystore falhar (ex: após reinstalação).
  */
 @Singleton
 class TokenManager @Inject constructor(
@@ -20,16 +22,21 @@ class TokenManager @Inject constructor(
 ) {
     private val lock = ReentrantReadWriteLock()
     private val prefs by lazy {
-        val masterKey = MasterKey.Builder(context)
-            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-            .build()
-        EncryptedSharedPreferences.create(
-            context,
-            PREFS_NAME,
-            masterKey,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
+        try {
+            val masterKey = MasterKey.Builder(context)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+            EncryptedSharedPreferences.create(
+                context,
+                PREFS_NAME,
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        } catch (e: Exception) {
+            Log.w("TokenManager", "Erro ao criar EncryptedSharedPreferences, usando SharedPreferences normal", e)
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        }
     }
 
     fun saveTokens(accessToken: String, refreshToken: String) {
@@ -74,6 +81,12 @@ class TokenManager @Inject constructor(
     }
 
     fun getActiveClinic(): String? = lock.read { prefs.getString(KEY_ACTIVE_CLINIC, null) }
+
+    fun clearActiveClinic() {
+        lock.write {
+            prefs.edit().remove(KEY_ACTIVE_CLINIC).apply()
+        }
+    }
 
     companion object {
         private const val PREFS_NAME = "psipro_tokens"

@@ -35,25 +35,25 @@
         <item name="android:insetBottom">0dp</item>
     </style>
 
-    <!-- Login Input Style -->
+    <!-- Login Input Style - Moderno -->
     <style name="LoginInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-        <item name="boxCornerRadiusTopStart">16dp</item>
-        <item name="boxCornerRadiusTopEnd">16dp</item>
-        <item name="boxCornerRadiusBottomStart">16dp</item>
-        <item name="boxCornerRadiusBottomEnd">16dp</item>
-        <item name="boxStrokeColor">@color/bronze_gold</item>
+        <item name="boxCornerRadiusTopStart">20dp</item>
+        <item name="boxCornerRadiusTopEnd">20dp</item>
+        <item name="boxCornerRadiusBottomStart">20dp</item>
+        <item name="boxCornerRadiusBottomEnd">20dp</item>
+        <item name="boxStrokeColor">@color/input_stroke_color</item>
         <item name="hintTextColor">@color/text_gray</item>
         <item name="android:background">@color/surface_white</item>
         <item name="boxStrokeWidth">1.5dp</item>
         <item name="boxStrokeWidthFocused">2dp</item>
-        <item name="android:elevation">2dp</item>
-        <item name="android:layout_marginStart">4dp</item>
-        <item name="android:layout_marginEnd">4dp</item>
-        <item name="android:minHeight">52dp</item>
-        <item name="android:layout_height">52dp</item>
+        <item name="android:elevation">0dp</item>
+        <item name="android:layout_marginStart">0dp</item>
+        <item name="android:layout_marginEnd">0dp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:layout_height">56dp</item>
         <item name="boxBackgroundColor">@color/surface_white</item>
         <item name="hintEnabled">true</item>
-        <item name="hintAnimationEnabled">false</item>
+        <item name="hintAnimationEnabled">true</item>
     </style>
 
     <style name="LoginInputEditText" parent="Widget.MaterialComponents.TextInputEditText.OutlinedBox">

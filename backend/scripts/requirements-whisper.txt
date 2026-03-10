@@ -1,0 +1,4 @@
+# Dependências para whisper_transcriber.py
+# Instale com: pip install -r requirements-whisper.txt
+openai-whisper>=20231117
+torch>=2.0.0

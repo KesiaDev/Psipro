@@ -17,6 +17,14 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/** Resultado do sync para feedback ao usuário. */
+data class SyncPatientsResult(
+    val success: Boolean,
+    val message: String,
+    val pushCount: Int = 0,
+    val pullCount: Int = 0
+)
+
 @Singleton
 class SyncPatientsManager @Inject constructor(
     private val api: BackendApiService,
@@ -25,60 +33,103 @@ class SyncPatientsManager @Inject constructor(
     private val patientDao: PatientDao
 ) {
     suspend fun sync(reason: String) {
-        withContext(Dispatchers.IO) {
-            try {
-                if (!auth.isBackendAuthenticated()) {
-                    Log.w(TAG, "SYNC_SKIP_NO_BACKEND_TOKEN reason=$reason")
-                    return@withContext
-                }
+        syncWithResult(reason)
+    }
 
-                val clinicId = auth.ensureClinicId()
-                if (clinicId.isNullOrBlank()) {
-                    Log.w(TAG, "SYNC_SKIP_NO_CLINIC reason=$reason")
-                    return@withContext
-                }
-
-                Log.i(TAG, "SYNC_PATIENTS_START reason=$reason clinicId=$clinicId")
-
-                // 1) Push: enviar pacientes locais "dirty"
-                val dirty = ensureUuidsPersisted(patientDao.getDirtyPatients())
-                if (dirty.isNotEmpty()) {
-                    val payload = dirty.map { it.toSyncPayload(clinicId) }
-                    val resp = api.syncPatients(clinicId = clinicId, body = SyncPatientsRequest(payload))
-                    if (resp.isSuccessful && resp.body() != null) {
-                        applyRemotePatients(resp.body()!!, clinicId, applyOverDirty = true)
-                        // Marcar como sincronizados (não apaga nada; só metadado)
-                        val uuids = dirty.mapNotNull { it.uuid }.distinct()
-                        if (uuids.isNotEmpty()) {
-                            patientDao.markPatientsSyncedByUuid(uuids, Date())
-                        }
-                        Log.i(TAG, "SYNC_PUSH_OK count=${dirty.size}")
-                    } else {
-                        Log.e(TAG, "SYNC_PUSH_FAIL http=${resp.code()} count=${dirty.size}")
-                    }
-                } else {
-                    Log.d(TAG, "SYNC_PUSH_SKIP no dirty patients")
-                }
-
-                // 2) Pull: buscar pacientes do backend atualizados após o último sync
-                val updatedAfter = store.getLastPatientsSyncAtIso()
-                val pullResp = api.getPatients(clinicId = clinicId, updatedAfter = updatedAfter)
-                if (pullResp.isSuccessful && pullResp.body() != null) {
-                    val remote = pullResp.body()!!
-                    // Importante: não sobrescrever mudanças locais pendentes.
-                    applyRemotePatients(remote, clinicId, applyOverDirty = false)
-                    // Atualizar watermark do sync (preferir a maior updatedAt retornada pelo servidor)
-                    store.setLastPatientsSyncAtIso(computeNextWatermarkIso(remote) ?: nowIsoUtc())
-                    Log.i(TAG, "SYNC_PULL_OK count=${remote.size} updatedAfter=${updatedAfter ?: "null"}")
-                } else {
-                    Log.e(TAG, "SYNC_PULL_FAIL http=${pullResp.code()} updatedAfter=${updatedAfter ?: "null"}")
-                }
-
-                Log.i(TAG, "SYNC_PATIENTS_END reason=$reason")
-            } catch (e: Exception) {
-                Log.e(TAG, "SYNC_PATIENTS_ERROR reason=$reason", e)
+    /** Executa sync e retorna resultado para exibir feedback ao usuário. */
+    suspend fun syncWithResult(reason: String): SyncPatientsResult = withContext(Dispatchers.IO) {
+        try {
+            if (!auth.isBackendAuthenticated()) {
+                Log.w(TAG, "SYNC_SKIP_NO_BACKEND_TOKEN reason=$reason")
+                return@withContext SyncPatientsResult(false, "Faça login novamente para sincronizar.")
             }
+
+            val clinicId = auth.ensureClinicId()
+            if (clinicId.isNullOrBlank()) {
+                Log.w(TAG, "SYNC_SKIP_NO_CLINIC reason=$reason")
+                return@withContext SyncPatientsResult(false, "Clínica não identificada. Faça login novamente.")
+            }
+
+            Log.i(TAG, "SYNC_PATIENTS_START reason=$reason clinicId=$clinicId")
+            var pushCount = 0
+            var pullCount = 0
+            var effectiveClinicId = clinicId
+
+            // 1) Push: enviar pacientes locais "dirty"
+            val dirty = ensureUuidsPersisted(patientDao.getDirtyPatients())
+            if (dirty.isNotEmpty()) {
+                val cid = effectiveClinicId
+                var pushResp = api.syncPatients(clinicId = cid, body = SyncPatientsRequest(dirty.map { it.toSyncPayload(cid) }))
+                // Se 403 "não pertence à clínica": clinicId em cache pode estar errado. Limpar e buscar de /auth/me.
+                if (!pushResp.isSuccessful && pushResp.code() == 403) {
+                    val errBody = pushResp.errorBody()?.string() ?: ""
+                    if (errBody.contains("pertence") || errBody.contains("clinica") || errBody.contains("clínica")) {
+                        Log.w(TAG, "SYNC_PUSH_403 clinicId inválido, buscando clinicId correto...")
+                        store.clearClinicId()
+                        val freshClinicId = auth.ensureClinicId()
+                        if (!freshClinicId.isNullOrBlank()) {
+                            effectiveClinicId = freshClinicId
+                            val cidRetry = freshClinicId
+                            pushResp = api.syncPatients(clinicId = cidRetry, body = SyncPatientsRequest(dirty.map { it.toSyncPayload(cidRetry) }))
+                            Log.i(TAG, "SYNC_PUSH_RETRY clinicId=$cidRetry")
+                        }
+                    }
+                }
+                if (pushResp.isSuccessful && pushResp.body() != null) {
+                    applyRemotePatients(pushResp.body()!!, effectiveClinicId, applyOverDirty = true)
+                    val uuids = dirty.mapNotNull { it.uuid }.distinct()
+                    if (uuids.isNotEmpty()) {
+                        patientDao.markPatientsSyncedByUuid(uuids, Date())
+                    }
+                    pushCount = dirty.size
+                    Log.i(TAG, "SYNC_PUSH_OK count=$pushCount")
+                } else {
+                    val errBody = pushResp.errorBody()?.string() ?: ""
+                    Log.e(TAG, "SYNC_PUSH_FAIL http=${pushResp.code()} count=${dirty.size} body=$errBody")
+                    val msg = parseErrorMessage(pushResp.code(), errBody)
+                    return@withContext SyncPatientsResult(false, "Erro ao enviar: $msg")
+                }
+            } else {
+                Log.d(TAG, "SYNC_PUSH_SKIP no dirty patients")
+            }
+
+            // 2) Pull: buscar pacientes do backend
+            val updatedAfter = store.getLastPatientsSyncAtIso()
+            val pullResp = api.getPatients(clinicId = effectiveClinicId, updatedAfter = updatedAfter)
+            if (pullResp.isSuccessful && pullResp.body() != null) {
+                val remote = pullResp.body()!!
+                applyRemotePatients(remote, effectiveClinicId, applyOverDirty = false)
+                store.setLastPatientsSyncAtIso(computeNextWatermarkIso(remote) ?: nowIsoUtc())
+                pullCount = remote.size
+                Log.i(TAG, "SYNC_PULL_OK count=$pullCount updatedAfter=${updatedAfter ?: "null"}")
+            } else {
+                val errBody = pullResp.errorBody()?.string() ?: ""
+                Log.e(TAG, "SYNC_PULL_FAIL http=${pullResp.code()} body=$errBody")
+                val msg = parseErrorMessage(pullResp.code(), errBody)
+                return@withContext SyncPatientsResult(false, "Erro ao buscar: $msg")
+            }
+
+            Log.i(TAG, "SYNC_PATIENTS_END reason=$reason")
+            val msg = when {
+                pushCount > 0 && pullCount > 0 -> "Sincronizado: $pushCount enviados, $pullCount recebidos"
+                pushCount > 0 -> "Sincronizado: $pushCount paciente(s) enviado(s)"
+                pullCount > 0 -> "Sincronizado: $pullCount paciente(s) recebido(s)"
+                else -> "Sincronização concluída"
+            }
+            SyncPatientsResult(true, msg, pushCount, pullCount)
+        } catch (e: Exception) {
+            Log.e(TAG, "SYNC_PATIENTS_ERROR reason=$reason", e)
+            SyncPatientsResult(false, "Erro: ${e.message ?: "Verifique sua conexão"}")
         }
+    }
+
+    private fun parseErrorMessage(code: Int, body: String): String {
+        if (body.contains("x-clinic-id")) return "clínica não identificada"
+        if (code == 401) return "sessão expirada"
+        if (code == 403) return "sem permissão"
+        if (code == 400) return "dados inválidos"
+        if (body.length > 100) return "erro $code"
+        return body.ifBlank { "erro $code" }
     }
 
     private suspend fun applyRemotePatients(

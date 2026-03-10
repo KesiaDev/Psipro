@@ -37,7 +37,11 @@ class ApiClient {
 
   private getActiveClinicId(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('active_clinic_id');
+    // active_clinic_id = login normal; psipro_current_clinic_id = handoff do app
+    return (
+      localStorage.getItem('active_clinic_id') ||
+      localStorage.getItem('psipro_current_clinic_id')
+    );
   }
 
   private async request<T>(

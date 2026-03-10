@@ -1,4 +1,13 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
+
+export enum ProfessionalType {
+  psychologist = 'psychologist',
+  therapist = 'therapist',
+  psychoanalyst = 'psychoanalyst',
+  counselor = 'counselor',
+  coach = 'coach',
+  other = 'other',
+}
 
 export class RegisterDto {
   @IsEmail()
@@ -11,5 +20,9 @@ export class RegisterDto {
   @IsString()
   @MinLength(2)
   fullName: string;
+
+  @IsOptional()
+  @IsEnum(ProfessionalType)
+  professionalType?: ProfessionalType;
 }
 

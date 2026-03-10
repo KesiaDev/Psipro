@@ -2,10 +2,12 @@ package com.psipro.app
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.psipro.app.databinding.ActivityCreateAccountBinding
 import com.psipro.app.utils.AuthErrorHelper
+import com.psipro.app.utils.ProfessionalTypeHelper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,6 +22,8 @@ class CreateAccountActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCreateAccountBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        setupProfessionalTypeDropdown()
 
         binding.btnCreateAccount.setOnClickListener {
             val name = binding.editName.text.toString().trim()
@@ -53,6 +57,11 @@ class CreateAccountActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            val professionalTypeDisplay = binding.professionalTypeDropdown.text.toString().trim()
+            val professionalType = if (professionalTypeDisplay.isNotEmpty()) {
+                ProfessionalTypeHelper.toBackendValue(professionalTypeDisplay)
+            } else null
+
             binding.btnCreateAccount.isEnabled = false
             binding.btnCreateAccount.text = "Criando conta..."
 
@@ -63,14 +72,18 @@ class CreateAccountActivity : AppCompatActivity() {
                         com.psipro.app.sync.di.SyncEntryPoint::class.java
                     )
                     val backendAuth = entryPoint.backendAuthManager()
-                    backendAuth.register(email, password, name)
+                    backendAuth.register(email, password, name, professionalType)
 
                     withContext(Dispatchers.Main) {
                         binding.btnCreateAccount.isEnabled = true
                         binding.btnCreateAccount.text = "CRIAR CONTA"
                         backendAuth.ensureClinicId()
                         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
-                        prefs.edit().putString("profile_name", name).putString("profile_email", email).apply()
+                        prefs.edit()
+                            .putString("profile_name", name)
+                            .putString("profile_email", email)
+                            .putString("profile_professional_type", professionalType ?: "psychologist")
+                            .apply()
                         Toast.makeText(this@CreateAccountActivity, "Conta criada com sucesso!", Toast.LENGTH_SHORT).show()
                         val resultIntent = Intent()
                         resultIntent.putExtra("email", email)
@@ -87,5 +100,12 @@ class CreateAccountActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun setupProfessionalTypeDropdown() {
+        val options = ProfessionalTypeHelper.getDropdownOptions()
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, options)
+        binding.professionalTypeDropdown.setAdapter(adapter)
+        binding.professionalTypeDropdown.setText(options.first(), false)
     }
 }

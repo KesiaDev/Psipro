@@ -50,6 +50,15 @@ interface DocumentoDao {
     
     @Query("UPDATE documentos SET compartilhado = :compartilhado WHERE id = :id")
     suspend fun marcarCompartilhado(id: Long, compartilhado: Boolean)
+
+    @Query("SELECT * FROM documentos WHERE dirty = 1")
+    suspend fun getDirtyDocumentos(): List<Documento>
+
+    @Query("SELECT * FROM documentos WHERE backendId = :backendId LIMIT 1")
+    suspend fun getByBackendId(backendId: String): Documento?
+
+    @Query("UPDATE documentos SET dirty = 0, lastSyncedAt = :syncedAt WHERE backendId IN (:backendIds)")
+    suspend fun markDocumentosSyncedByBackendId(backendIds: List<String>, syncedAt: java.util.Date)
 } 
 
 

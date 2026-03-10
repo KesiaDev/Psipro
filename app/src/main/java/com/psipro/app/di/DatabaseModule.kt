@@ -22,7 +22,33 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import androidx.room.migration.Migration
 import javax.inject.Singleton
+
+private val MIGRATION_28_29 = object : Migration(28, 29) {
+    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+    try {
+        database.execSQL("ALTER TABLE documentos ADD COLUMN backendId TEXT")
+    } catch (e: Exception) {
+        android.util.Log.w("Migration", "documentos.backendId: ${e.message}")
+    }
+    try {
+        database.execSQL("ALTER TABLE documentos ADD COLUMN dirty INTEGER NOT NULL DEFAULT 1")
+    } catch (e: Exception) {
+        android.util.Log.w("Migration", "documentos.dirty: ${e.message}")
+    }
+    try {
+        database.execSQL("ALTER TABLE documentos ADD COLUMN lastSyncedAt INTEGER")
+    } catch (e: Exception) {
+        android.util.Log.w("Migration", "documentos.lastSyncedAt: ${e.message}")
+    }
+    try {
+        database.execSQL("CREATE INDEX IF NOT EXISTS index_documentos_backendId ON documentos(backendId)")
+    } catch (e: Exception) {
+        android.util.Log.w("Migration", "index documentos.backendId: ${e.message}")
+    }
+    }
+}
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -37,7 +63,7 @@ object DatabaseModule {
             context,
             com.psipro.app.data.AppDatabase::class.java,
             "app_pisc_database"
-        ).fallbackToDestructiveMigration()
+        ).addMigrations(MIGRATION_28_29).fallbackToDestructiveMigration()
          .build()
     }
 

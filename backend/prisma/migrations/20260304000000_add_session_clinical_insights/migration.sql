@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "transcript" TEXT;
+ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "summary" TEXT;
+ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "themes" JSONB;
+ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "emotions" JSONB;
+ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "actionItems" JSONB;
+ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "riskFlags" JSONB;

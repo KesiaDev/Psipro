@@ -1,11 +1,16 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { VoiceService } from '../voice/voice.service';
 import { whereNotDeleted } from '../prisma/soft-delete.helper';
 import { CreateSessionDto } from './dto/create-session.dto';
+import { UpdateSessionDto } from './dto/update-session.dto';
 
 @Injectable()
 export class SessionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private voiceService: VoiceService,
+  ) {}
 
   private startOfMonth(): Date {
     const now = new Date();
@@ -86,6 +91,82 @@ export class SessionsService {
     });
   }
 
+  async findOne(id: string, userId: string, clinicId: string) {
+    const clinicUser = await this.prisma.clinicUser.findUnique({
+      where: { clinicId_userId: { clinicId, userId } },
+      select: { canViewAllPatients: true, role: true },
+    });
+    if (!clinicUser) throw new NotFoundException('Clínica não encontrada ou sem acesso');
+
+    const where: any = { id, patient: { clinicId } };
+    if (!clinicUser.canViewAllPatients && !['owner', 'admin'].includes(clinicUser.role)) {
+      where.userId = userId;
+    }
+
+    const session = await this.prisma.session.findFirst({
+      where: whereNotDeleted('session', where),
+      include: {
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            clinicId: true,
+          },
+        },
+      },
+    });
+    if (!session) {
+      throw new NotFoundException('Sessão não encontrada');
+    }
+    return session;
+  }
+
+  async update(
+    id: string,
+    userId: string,
+    clinicId: string,
+    updateSessionDto: UpdateSessionDto,
+  ) {
+    const session = await this.findOne(id, userId, clinicId);
+    const effectiveUserId = updateSessionDto.professionalId || session.userId;
+    if (updateSessionDto.professionalId) {
+      const membership = await this.prisma.clinicUser.findUnique({
+        where: { clinicId_userId: { clinicId, userId: updateSessionDto.professionalId } },
+      });
+      if (!membership || membership.status !== 'active') {
+        throw new ForbiddenException('Profissional não encontrado na clínica');
+      }
+    }
+
+    const data: any = {};
+    if (updateSessionDto.patientId !== undefined) {
+      const patient = await this.prisma.patient.findFirst({
+        where: whereNotDeleted('patient', { id: updateSessionDto.patientId, clinicId }),
+      });
+      if (!patient) {
+        throw new ForbiddenException('Paciente não encontrado ou não pertence à clínica');
+      }
+      data.patientId = updateSessionDto.patientId;
+    }
+    if (updateSessionDto.date !== undefined) data.date = new Date(updateSessionDto.date);
+    if (updateSessionDto.duration !== undefined) data.duration = updateSessionDto.duration;
+    if (updateSessionDto.notes !== undefined) data.notes = updateSessionDto.notes;
+    if (updateSessionDto.professionalId !== undefined) data.userId = effectiveUserId;
+
+    return this.prisma.session.update({
+      where: { id },
+      data,
+      include: {
+        patient: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+  }
+
   async findByPatient(patientId: string, userId: string, clinicId: string) {
     const patient = await this.prisma.patient.findFirst({
       where: whereNotDeleted('patient', { id: patientId, clinicId }),
@@ -137,6 +218,69 @@ export class SessionsService {
         },
       },
     });
+  }
+
+  async updateVoiceNote(
+    sessionId: string,
+    transcript: string,
+    userId: string,
+    clinicId: string,
+  ) {
+    const session = await this.prisma.session.findFirst({
+      where: whereNotDeleted('session', { id: sessionId }),
+      include: { patient: { select: { clinicId: true } } },
+    });
+    if (!session) {
+      throw new NotFoundException('Sessão não encontrada');
+    }
+    const patientClinicId = session.patient?.clinicId;
+    if (patientClinicId && patientClinicId !== clinicId) {
+      throw new ForbiddenException('Sessão não pertence à clínica');
+    }
+
+    const transcriptText = transcript.trim();
+
+    try {
+      const insights = await this.voiceService.generateInsights(transcriptText);
+      return this.prisma.session.update({
+        where: { id: sessionId },
+        data: {
+          transcript: transcriptText,
+          summary: insights.summary || null,
+          themes: insights.themes.length ? insights.themes : null,
+          emotions: insights.emotions.length ? insights.emotions : null,
+          actionItems: insights.actionItems.length ? insights.actionItems : null,
+          riskFlags: insights.riskFlags.length ? insights.riskFlags : null,
+        },
+      });
+    } catch (err) {
+      // Salva transcript mesmo se insights falharem (ex: sem OPENAI_API_KEY)
+      console.warn('[Sessions] Insights failed for session', sessionId, err);
+      return this.prisma.session.update({
+        where: { id: sessionId },
+        data: { transcript: transcriptText },
+      });
+    }
+  }
+
+  async delete(id: string, clinicId: string) {
+    const session = await this.prisma.session.findFirst({
+      where: whereNotDeleted('session', { id }),
+      include: { patient: { select: { clinicId: true } } },
+    });
+    if (!session) {
+      throw new NotFoundException('Sessão não encontrada');
+    }
+    const patientClinicId = session.patient?.clinicId;
+    if (patientClinicId && patientClinicId !== clinicId) {
+      throw new NotFoundException('Sessão não encontrada');
+    }
+
+    await this.prisma.session.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+    return { success: true };
   }
 }
 

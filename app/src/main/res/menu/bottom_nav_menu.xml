@@ -11,8 +11,4 @@
         android:id="@+id/navigation_patients"
         android:icon="@drawable/ic_people"
         android:title="Pacientes"/>
-    <item
-        android:id="@+id/nav_financeiro"
-        android:icon="@drawable/ic_attach_money"
-        android:title="Financeiro"/>
 </menu> 

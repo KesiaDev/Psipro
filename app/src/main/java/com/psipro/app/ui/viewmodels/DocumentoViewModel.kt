@@ -66,7 +66,7 @@ class DocumentoViewModel @Inject constructor(
     
     fun getPsychologistData(): Pair<String, String> {
         val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-        val nome = prefs.getString("profile_name", "Psicólogo(a)") ?: "Psicólogo(a)"
+        val nome = prefs.getString("profile_name", "Profissional") ?: "Profissional"
         val crp = prefs.getString("profile_crp", "CRP") ?: "CRP"
         return Pair(nome, crp)
     }
@@ -159,7 +159,8 @@ class DocumentoViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val documentoAtualizado = documento.copy(
-                    dataModificacao = Date()
+                    dataModificacao = Date(),
+                    dirty = true
                 )
                 repository.update(documentoAtualizado)
                 _error.value = null
@@ -210,7 +211,8 @@ class DocumentoViewModel @Inject constructor(
                 
                 val documentoAtualizado = documento.copy(
                     conteudo = novoConteudo,
-                    dataModificacao = Date()
+                    dataModificacao = Date(),
+                    dirty = true
                 )
                 
                 repository.update(documentoAtualizado)

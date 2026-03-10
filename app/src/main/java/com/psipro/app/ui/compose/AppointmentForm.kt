@@ -53,7 +53,8 @@ fun AppointmentForm(
     viewModel: AppointmentViewModel,
     existingAppointment: Appointment? = null,
     preselectedPatient: Patient? = null,
-    initialEventTypeIndex: Int = 0
+    initialEventTypeIndex: Int = 0,
+    onAppointmentCreated: ((LocalDate) -> Unit)? = null
 ) {
     val isEditing = existingAppointment != null
 
@@ -164,6 +165,7 @@ fun AppointmentForm(
         "#FF9800"  // Laranja
     )
 
+    val context = LocalContext.current
     val bronzeGold = colorResource(id = R.color.bronze_gold)
     val bronzeDark = colorResource(id = R.color.bronze_gold_dark)
     val customTextFieldColors = TextFieldDefaults.outlinedTextFieldColors(
@@ -280,7 +282,7 @@ fun AppointmentForm(
                     DatePickerDialog(
                         context,
                         { _, year, month, dayOfMonth ->
-                            selectedDate = "$dayOfMonth/${month + 1}/$year"
+                            selectedDate = String.format("%02d/%02d/%d", dayOfMonth, month + 1, year)
                             showDatePicker = false
                         },
                         calendar.get(Calendar.YEAR),
@@ -362,11 +364,24 @@ fun AppointmentForm(
 
                 Button(
                     onClick = {
+                        if (selectedDate.isBlank()) {
+                            android.widget.Toast.makeText(context, "Selecione uma data", android.widget.Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                        if (startTime.isBlank() || endTime.isBlank()) {
+                            android.widget.Toast.makeText(context, "Selecione o horário de início e término", android.widget.Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                        val parsedDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(selectedDate)
+                        if (parsedDate == null) {
+                            android.widget.Toast.makeText(context, "Data inválida", android.widget.Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
                         val newOrUpdatedAppointment = Appointment(
                             id = if(isEditing) existingAppointment!!.id else 0,
-                            title = if(title.isBlank() && selectedPatient != null) selectedPatient!!.name else title,
+                            title = if(title.isBlank() && selectedPatient != null) selectedPatient!!.name else title.ifBlank { "Consulta" },
                             description = description,
-                            date = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(selectedDate) ?: Date(),
+                            date = parsedDate,
                             startTime = startTime,
                             endTime = endTime,
                             patientId = selectedPatient?.id,
@@ -383,9 +398,19 @@ fun AppointmentForm(
 
                         viewModel.addAppointment(
                             appointment = newOrUpdatedAppointment,
-                            onSuccess = { onDismiss() },
-                            onConflict = { /* TODO: handle conflict */ },
-                            onError = { /* TODO: handle error */ }
+                            onSuccess = {
+                                android.widget.Toast.makeText(context, "Agendamento confirmado!", android.widget.Toast.LENGTH_SHORT).show()
+                                parsedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().let { date ->
+                                    onAppointmentCreated?.invoke(date)
+                                }
+                                onDismiss()
+                            },
+                            onConflict = {
+                                android.widget.Toast.makeText(context, "Já existe uma consulta neste horário", android.widget.Toast.LENGTH_LONG).show()
+                            },
+                            onError = { e ->
+                                android.widget.Toast.makeText(context, "Erro: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                            }
                         )
                     },
                     modifier = Modifier

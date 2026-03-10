@@ -24,22 +24,10 @@
         tools:layout="@layout/fragment_patients" />
 
     <fragment
-        android:id="@+id/nav_financeiro"
-        android:name="com.psipro.app.ui.fragments.FinanceiroFragment"
-        android:label="Financeiro"
-        tools:layout="@layout/fragment_financeiro" />
-
-    <fragment
         android:id="@+id/nav_notificacoes"
         android:name="com.psipro.app.ui.fragments.NotificacoesFragment"
         android:label="Notificações"
         tools:layout="@layout/fragment_notificacoes" />
-
-    <fragment
-        android:id="@+id/nav_autoavaliacao"
-        android:name="com.psipro.app.ui.fragments.AutoavaliacaoFragment"
-        android:label="Autoavaliação"
-        tools:layout="@layout/fragment_autoavaliacao" />
 
     <fragment
         android:id="@+id/nav_configuracoes"
@@ -52,11 +40,5 @@
         android:name="com.psipro.app.ui.fragments.SuporteFragment"
         android:label="Suporte"
         tools:layout="@layout/fragment_suporte" />
-
-    <fragment
-        android:id="@+id/nav_aniversariantes"
-        android:name="com.psipro.app.ui.fragments.BirthdayFragment"
-        android:label="Aniversariantes"
-        tools:layout="@layout/fragment_birthday" />
 
 </navigation> 

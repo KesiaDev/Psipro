@@ -70,45 +70,6 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Relatório Financeiro"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Exporte relatórios financeiros e cobranças"
-                android:textSize="14sp"
-                android:layout_marginBottom="16dp" />
-
-            <Button
-                android:id="@+id/btnExportFinanceiro"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Exportar Financeiro"
-                android:layout_marginBottom="8dp" />
-
-        </LinearLayout>
-
-    </com.google.android.material.card.MaterialCardView>
-
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        app:cardElevation="4dp"
-        app:cardCornerRadius="8dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
                 android:text="Relatório de Consultas"
                 android:textSize="18sp"
                 android:textStyle="bold"

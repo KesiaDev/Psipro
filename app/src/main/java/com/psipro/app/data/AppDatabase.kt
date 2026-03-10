@@ -64,7 +64,7 @@ import androidx.room.migration.Migration
 
 @Database(
     entities = [User::class, Patient::class, Appointment::class, PatientNote::class, PatientMessage::class, PatientReport::class, FinancialRecord::class, Prontuario::class, AuditLog::class, WhatsAppConversation::class, AnamneseModel::class, AnamneseCampo::class, AnamnesePreenchida::class, HistoricoFamiliar::class, HistoricoMedico::class, VidaEmocional::class, ObservacoesClinicas::class, AnotacaoSessao::class, CobrancaSessao::class, TipoSessao::class, CobrancaAgendamento::class, Autoavaliacao::class, Documento::class, Arquivo::class, Notification::class],
-    version = 28,
+    version = 29,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class, com.psipro.app.data.converters.AnamneseGroupConverter::class, com.psipro.app.data.converters.TipoDocumentoConverter::class, com.psipro.app.data.converters.CategoriaArquivoConverter::class, com.psipro.app.data.converters.TipoArquivoConverter::class)
@@ -370,8 +370,51 @@ abstract class AppDatabase : RoomDatabase() {
                                 android.util.Log.w("Migration", "index: ${e.message}")
                             }
                         }
+                    },
+                    object : Migration(28, 29) {
+                        override fun migrate(database: SupportSQLiteDatabase) {
+                            // Recriar tabela documentos com colunas de sync (backendId, dirty, lastSyncedAt)
+                            database.execSQL("""
+                                CREATE TABLE IF NOT EXISTS documentos_new (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                    patientId INTEGER NOT NULL,
+                                    backendId TEXT,
+                                    dirty INTEGER NOT NULL DEFAULT 1,
+                                    titulo TEXT NOT NULL,
+                                    tipo TEXT NOT NULL,
+                                    conteudo TEXT NOT NULL,
+                                    conteudoOriginal TEXT NOT NULL,
+                                    dataCriacao INTEGER NOT NULL,
+                                    dataModificacao INTEGER NOT NULL,
+                                    assinaturaPaciente TEXT NOT NULL,
+                                    assinaturaProfissional TEXT NOT NULL,
+                                    dataAssinaturaPaciente INTEGER,
+                                    dataAssinaturaProfissional INTEGER,
+                                    caminhoPDF TEXT NOT NULL,
+                                    compartilhado INTEGER NOT NULL,
+                                    observacoes TEXT NOT NULL,
+                                    lastSyncedAt INTEGER,
+                                    FOREIGN KEY (patientId) REFERENCES patients (id) ON DELETE CASCADE
+                                )
+                            """)
+                            database.execSQL("""
+                                INSERT INTO documentos_new (id, patientId, titulo, tipo, conteudo, conteudoOriginal,
+                                    dataCriacao, dataModificacao, assinaturaPaciente, assinaturaProfissional,
+                                    dataAssinaturaPaciente, dataAssinaturaProfissional, caminhoPDF, compartilhado, observacoes)
+                                SELECT id, patientId, titulo, tipo, conteudo, conteudoOriginal,
+                                    dataCriacao, dataModificacao, assinaturaPaciente, assinaturaProfissional,
+                                    dataAssinaturaPaciente, dataAssinaturaProfissional, caminhoPDF, compartilhado, observacoes
+                                FROM documentos
+                            """)
+                            database.execSQL("DROP TABLE documentos")
+                            database.execSQL("ALTER TABLE documentos_new RENAME TO documentos")
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_documentos_patientId ON documentos(patientId)")
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_documentos_backendId ON documentos(backendId)")
+                        }
                     }
                 )
+                .fallbackToDestructiveMigration()
+                .fallbackToDestructiveMigrationFrom(28) // Se migração 28→29 falhar, recria o banco
                 .build()
                 INSTANCE = instance
                 instance

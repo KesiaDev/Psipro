@@ -6,6 +6,37 @@
     <color name="accent_bronze">#D2691E</color>
     <color name="bronze_gold">#B8860B</color>
     <color name="bronze_gold_dark">#8B6914</color>
+    <!-- PsiPro Design System -->
+    <color name="psipro_primary">#C89B3C</color>
+    <color name="psipro_primary_dark">#A67C2E</color>
+    <!-- Modo Claro (Web) -->
+    <color name="psipro_background_light">#FAFAFA</color>
+    <color name="psipro_surface_light">#FFFFFF</color>
+    <color name="psipro_text_primary_light">#0F0F10</color>
+    <color name="psipro_text_secondary_light">#525252</color>
+    <color name="psipro_border_light">#E5E5E5</color>
+    <!-- Borda dos inputs - visível mas suave (linha fraca) -->
+    <color name="input_stroke_default">#B8B8B8</color>
+    <color name="psipro_divider_light">#E5E5E5</color>
+    <!-- Drawer/BottomNav - adaptam ao tema -->
+    <color name="drawer_item_text_unselected">@color/psipro_text_primary_light</color>
+    <color name="drawer_item_bg_selected">#F5EDE0</color>
+    <color name="button_create_account_bg">#F8F4EE</color>
+    <!-- Botão Criar conta - creme que harmoniza com o dourado -->
+    <color name="psipro_cream">#F8F4EE</color>
+    <!-- Modo Alto Contraste (baixa visão) -->
+    <color name="high_contrast_bg_light">#FFFFFF</color>
+    <color name="high_contrast_bg_dark">#000000</color>
+    <color name="high_contrast_text_light">#000000</color>
+    <color name="high_contrast_text_dark">#FFFFFF</color>
+    <color name="high_contrast_primary">#8B6914</color>
+    <color name="high_contrast_primary_dark">#FFD54F</color>
+    <color name="high_contrast_outline">#000000</color>
+    <color name="high_contrast_outline_dark">#FFFFFF</color>
+    <!-- Modo Escuro -->
+    <color name="psipro_background_dark">#0F0F10</color>
+    <color name="psipro_surface_dark">#1A1A1D</color>
+    <color name="divider_psipro">#2E2E31</color>
 
     <!-- Cores de Texto -->
     <color name="text_black">#212529</color>

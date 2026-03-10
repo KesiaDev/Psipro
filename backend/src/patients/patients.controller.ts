@@ -14,6 +14,8 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PatientsService } from './patients.service';
 import { PatientsImportService } from './patients-import.service';
+import { PatientPatternsService } from './patient-patterns.service';
+import { EmotionalEvolutionService } from './emotional-evolution.service';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -30,6 +32,8 @@ export class PatientsController {
   constructor(
     private readonly patientsService: PatientsService,
     private readonly patientsImportService: PatientsImportService,
+    private readonly patientPatternsService: PatientPatternsService,
+    private readonly emotionalEvolutionService: EmotionalEvolutionService,
   ) {}
 
   @Get()
@@ -45,6 +49,22 @@ export class PatientsController {
   @Get('recent')
   getRecent(@CurrentClinicId() clinicId: string) {
     return this.patientsService.getRecent(clinicId);
+  }
+
+  @Get(':id/patterns')
+  getPatterns(
+    @Param('id') id: string,
+    @CurrentClinicId() clinicId: string,
+  ) {
+    return this.patientPatternsService.getPatterns(id, clinicId);
+  }
+
+  @Get(':id/emotional-evolution')
+  getEmotionalEvolution(
+    @Param('id') id: string,
+    @CurrentClinicId() clinicId: string,
+  ) {
+    return this.emotionalEvolutionService.getEmotionalEvolution(id, clinicId);
   }
 
   @Get(':id')

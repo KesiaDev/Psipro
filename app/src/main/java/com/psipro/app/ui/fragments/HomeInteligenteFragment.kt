@@ -10,7 +10,6 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.psipro.app.R
 import com.psipro.app.ui.compose.PsiproTheme
-import com.psipro.app.ui.screens.FinanceiroDashboardActivity
 import com.psipro.app.ui.screens.NovaSessaoActivity
 import com.psipro.app.ui.screens.home.HomeScreen
 import com.psipro.app.ui.AppointmentDetailActivity
@@ -48,17 +47,11 @@ class HomeInteligenteFragment : Fragment() {
                             startActivity(intent)
                         },
                         onNavigateToWhatsApp = { phoneNumber ->
-                            // Abrir app de telefone para contato
                             val tel = phoneNumber.replace(Regex("[^0-9+]"), "")
                             if (tel.isNotEmpty()) {
                                 val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$tel"))
                                 startActivity(intent)
                             }
-                        },
-                        onNavigateToFinancial = {
-                            // Navegar para financeiro
-                            val intent = Intent(requireContext(), FinanceiroDashboardActivity::class.java)
-                            startActivity(intent)
                         },
                         onNavigateToSchedule = {
                             // Navegar para agenda

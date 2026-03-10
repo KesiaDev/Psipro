@@ -15,22 +15,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.psipro.app.ui.viewmodels.CobrancaSessaoViewModel
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MenuPrincipalScreen(
     onPacientesClick: () -> Unit,
     onAgendamentosClick: () -> Unit,
     onAnamneseClick: () -> Unit,
-    onFinanceiroClick: () -> Unit,
     onRelatoriosClick: () -> Unit,
-    onConfiguracoesClick: () -> Unit,
-    viewModel: CobrancaSessaoViewModel = hiltViewModel()
+    onConfiguracoesClick: () -> Unit
 ) {
-    val resumoFinanceiro by viewModel.resumoFinanceiro.collectAsState()
-    
     val menuItems = listOf(
         MenuItem(
             titulo = "Pacientes",
@@ -49,13 +42,6 @@ fun MenuPrincipalScreen(
             icone = Icons.Default.Assignment,
             cor = MaterialTheme.colorScheme.primary,
             onClick = onAnamneseClick
-        ),
-        MenuItem(
-            titulo = "Financeiro",
-            icone = Icons.Default.AccountBalanceWallet,
-            cor = MaterialTheme.colorScheme.primary,
-            onClick = onFinanceiroClick,
-            badge = resumoFinanceiro.countPendentes + resumoFinanceiro.countVencidas
         ),
         MenuItem(
             titulo = "Relatórios",
@@ -87,43 +73,6 @@ fun MenuPrincipalScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Resumo financeiro rápido
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Resumo Financeiro",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        ResumoItem(
-                            label = "A Receber",
-                            value = "R$ ${String.format("%.2f", resumoFinanceiro.totalAReceber)}",
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        ResumoItem(
-                            label = "Vencidas",
-                            value = resumoFinanceiro.countVencidas.toString(),
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        ResumoItem(
-                            label = "Pendentes",
-                            value = resumoFinanceiro.countPendentes.toString(),
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                    }
-                }
-            }
-
             // Grid de menu
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),

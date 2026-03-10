@@ -66,6 +66,7 @@ export default function LoginPage() {
         const clinicId = result?.user?.clinicId;
         if (clinicId != null && String(clinicId).length > 0) {
           localStorage.setItem("psipro_current_clinic_id", String(clinicId));
+          localStorage.setItem("active_clinic_id", String(clinicId));
         }
         if (result?.user?.id && result?.user?.email) {
           const fullName = result.user.fullName || result.user.name || result.user.email;
@@ -210,9 +211,14 @@ export default function LoginPage() {
 
             {/* Senha */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-psipro-text mb-2">
-                Senha <span className="text-psipro-error">*</span>
-              </label>
+              <div className="flex justify-between items-center mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-psipro-text">
+                  Senha <span className="text-psipro-error">*</span>
+                </label>
+                <Link href="/forgot-password" className="text-sm text-psipro-primary hover:text-psipro-primary-dark">
+                  Esqueci minha senha
+                </Link>
+              </div>
               <input
                 type="password"
                 id="password"

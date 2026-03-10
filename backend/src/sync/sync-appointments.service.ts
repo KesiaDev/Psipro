@@ -35,9 +35,16 @@ export class SyncAppointmentsService {
         status: true,
         createdAt: true,
         updatedAt: true,
+        patient: {
+          select: { id: true, name: true, phone: true },
+        },
       },
     });
-    return rows.map(({ userId, ...r }) => ({ ...r, professionalId: userId }));
+    return rows.map(({ userId, patient, ...r }) => ({
+      ...r,
+      professionalId: userId,
+      patient: patient ? { id: patient.id, name: patient.name, phone: patient.phone ?? '' } : null,
+    }));
   }
 
   /**

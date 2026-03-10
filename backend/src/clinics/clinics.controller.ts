@@ -26,16 +26,19 @@ export class ClinicsController {
   constructor(private readonly clinicsService: ClinicsService) {}
 
   @Post()
+  @Roles('admin')
   create(@Request() req, @Body() createClinicDto: CreateClinicDto) {
     return this.clinicsService.create(req.user.id, createClinicDto);
   }
 
   @Get()
+  @Roles('admin', 'psychologist')
   findAll(@Request() req) {
     return this.clinicsService.findAll(req.user.id);
   }
 
   @Get(':id')
+  @Roles('admin', 'psychologist')
   findOne(@Request() req, @Param('id') id: string) {
     return this.clinicsService.findOne(id, req.user.id);
   }
@@ -50,6 +53,7 @@ export class ClinicsController {
   }
 
   @Patch(':id/status')
+  @Roles('admin')
   updateStatus(
     @Request() req,
     @Param('id') id: string,
@@ -59,6 +63,7 @@ export class ClinicsController {
   }
 
   @Delete(':id')
+  @Roles('admin')
   delete(@Request() req, @Param('id') id: string) {
     return this.clinicsService.delete(id, req.user.id);
   }
@@ -73,6 +78,7 @@ export class ClinicsController {
   }
 
   @Put(':id/users/:userId')
+  @Roles('admin')
   updateUser(
     @Request() req,
     @Param('id') clinicId: string,
@@ -83,6 +89,7 @@ export class ClinicsController {
   }
 
   @Delete(':id/users/:userId')
+  @Roles('admin')
   removeUser(
     @Request() req,
     @Param('id') clinicId: string,
@@ -92,11 +99,13 @@ export class ClinicsController {
   }
 
   @Get(':clinicId/professionals')
+  @Roles('admin')
   getProfessionals(@Request() req, @Param('clinicId') clinicId: string) {
     return this.clinicsService.getProfessionals(clinicId, req.user.id);
   }
 
   @Get(':id/stats')
+  @Roles('admin')
   getStats(@Request() req, @Param('id') id: string) {
     return this.clinicsService.getClinicStats(id, req.user.id);
   }

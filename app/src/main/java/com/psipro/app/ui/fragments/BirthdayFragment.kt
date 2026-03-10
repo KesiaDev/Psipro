@@ -62,12 +62,12 @@ class BirthdayFragment : Fragment() {
 
     private fun carregarNomePsicologo() {
         val prefs = requireContext().getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
-        psicologoNome = prefs.getString("profile_name", "Psicólogo") ?: "Psicólogo"
+        psicologoNome = prefs.getString("profile_name", "Profissional") ?: "Profissional"
     }
 
     private fun getMessagesWithPsicologoName(): List<String> {
         return baseMessages.map { message ->
-            message.replace("[Psicologo]", "Psicólogo(a) $psicologoNome")
+            message.replace("[Psicologo]", "Profissional $psicologoNome")
         }
     }
 

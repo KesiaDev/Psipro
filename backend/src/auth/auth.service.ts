@@ -95,6 +95,7 @@ export class AuthService {
       request: options?.request,
     }).catch(() => {});
 
+    const professionalType = user.professionalType ?? 'psychologist';
     return {
       accessToken,
       access_token: accessToken,
@@ -104,6 +105,8 @@ export class AuthService {
         email: user.email,
         name: user.name,
         fullName: user.name,
+        role: user.role,
+        professionalType,
         clinicId: user.clinicId ?? undefined,
       },
     };
@@ -168,11 +171,13 @@ export class AuthService {
         isIndependent: true,
         clinicId: clinic.id,
         role: 'OWNER',
+        ...(registerDto.professionalType && { professionalType: registerDto.professionalType }),
       },
       select: {
         id: true,
         email: true,
         name: true,
+        professionalType: true,
       },
     });
 
@@ -201,6 +206,7 @@ export class AuthService {
       clinic.id,
     );
 
+    const professionalType = user.professionalType ?? 'psychologist';
     return {
       accessToken,
       access_token: accessToken,
@@ -210,6 +216,8 @@ export class AuthService {
         email: user.email,
         name: user.name,
         fullName: user.name,
+        role: 'OWNER',
+        professionalType,
         clinicId: clinic.id,
       },
     };
@@ -229,6 +237,7 @@ export class AuthService {
         isIndependent: true,
         clinicId: true,
         role: true,
+        professionalType: true,
       },
     });
 
@@ -258,12 +267,16 @@ export class AuthService {
         ? 'ADMIN'
         : 'USER';
 
+    // Compatibilidade: usuários antigos sem professionalType assumem psychologist
+    const professionalType = user.professionalType ?? 'psychologist';
+
     return {
       id: user.id,
-      email: user.email,
-      role,
-      clinicId,
       name: user.name,
+      role,
+      professionalType,
+      email: user.email,
+      clinicId,
     };
   }
 
@@ -356,6 +369,30 @@ export class AuthService {
     });
 
     return { success: true };
+  }
+
+  /**
+   * Recuperação de senha. Por segurança, não revela se o e-mail existe.
+   * Quando o serviço de e-mail estiver configurado, gerar token e enviar link.
+   */
+  async forgotPassword(email: string): Promise<void> {
+    const emailNorm = email.trim().toLowerCase();
+    const user = await this.prisma.user.findFirst({
+      where: { email: { equals: emailNorm, mode: 'insensitive' } },
+      select: { id: true, email: true },
+    });
+    if (user) {
+      // TODO: gerar token de reset, salvar em tabela, enviar e-mail
+      // Por ora, apenas log para auditoria
+      this.auditService.log({
+        userId: user.id,
+        clinicId: 'system',
+        action: 'forgot_password_requested',
+        entity: 'User',
+        entityId: user.id,
+        metadata: { email: user.email },
+      }).catch(() => {});
+    }
   }
 
   /**

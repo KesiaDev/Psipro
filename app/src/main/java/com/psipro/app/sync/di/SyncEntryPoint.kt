@@ -4,6 +4,7 @@ import com.psipro.app.sync.api.BackendApiService
 import com.psipro.app.sync.BackendAuthManager
 import com.psipro.app.sync.BackendSessionStore
 import com.psipro.app.sync.SyncAppointmentsManager
+import com.psipro.app.sync.SyncDocumentsManager
 import com.psipro.app.sync.SyncPaymentsManager
 import com.psipro.app.sync.SyncPatientsManager
 import com.psipro.app.sync.SyncSessionsManager
@@ -21,5 +22,6 @@ interface SyncEntryPoint {
     fun syncAppointmentsManager(): SyncAppointmentsManager
     fun syncSessionsManager(): SyncSessionsManager
     fun syncPaymentsManager(): SyncPaymentsManager
+    fun syncDocumentsManager(): SyncDocumentsManager
 }
 

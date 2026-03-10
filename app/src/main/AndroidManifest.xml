@@ -103,24 +103,12 @@
             android:exported="false"
             android:label="Dados Pessoais" />
         
-        <activity
-            android:name=".ui.screens.DocumentosActivity"
-            android:exported="false"
-            android:label="Documentos"
-            android:theme="@style/Theme.Psipro" />
-        
         <activity 
             android:name=".CreateAccountActivity"
             android:theme="@style/Theme.Psipro" />
         
         <activity 
             android:name=".ui.EditProfileActivity"
-            android:theme="@style/Theme.Psipro" />
-        
-        <activity
-            android:name=".ui.screens.FinanceiroDashboardActivity"
-            android:exported="false"
-            android:label="Dashboard Financeiro"
             android:theme="@style/Theme.Psipro" />
         
         <activity 
@@ -151,43 +139,17 @@
             android:theme="@style/Theme.Psipro"/>
         
         <activity
-            android:name=".ProntuarioListActivity"
-            android:exported="false"
-            android:label="Prontuário"
-            android:theme="@style/Theme.Psipro" />
-        
-        <activity
             android:name=".NoteEditActivity"
             android:exported="false"
             android:label="Editar Anotação"
             android:theme="@style/Theme.Psipro" />
         
         <activity
-            android:name=".AnamneseActivity"
+            android:name=".ui.screens.QuickSessionActivity"
             android:exported="false"
-            android:label="Anamnese"
+            android:label="Anotação Rápida"
             android:theme="@style/Theme.Psipro" />
-        
 
-        
-        <activity
-            android:name=".ui.screens.AnamneseActivity"
-            android:exported="false"
-            android:label="Anamnese Dinâmica"
-            android:theme="@style/Theme.Psipro" />
-        
-        <activity
-            android:name=".ui.screens.SimplifiedAnamneseActivity"
-            android:exported="false"
-            android:label="Anamnese"
-            android:theme="@style/Theme.Psipro" />
-        
-        <activity
-            android:name=".FinanceiroPacienteActivity"
-            android:exported="false"
-            android:label="Financeiro do Paciente"
-            android:theme="@style/Theme.Psipro" />
-        
         <activity
             android:name=".ui.screens.AnotacoesSessaoActivity"
             android:exported="false"
@@ -200,11 +162,6 @@
             android:label="Nova Sessão"
             android:theme="@style/Theme.Psipro" />
         
-        <activity
-            android:name=".ui.screens.ArquivosActivity"
-            android:exported="false"
-            android:label="Arquivos"
-            android:theme="@style/Theme.Psipro" />
     </application>
 
 </manifest>

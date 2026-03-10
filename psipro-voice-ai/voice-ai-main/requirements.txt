@@ -1,0 +1,8 @@
+openai>=1.0.0
+sounddevice
+numpy
+pyperclip
+python-dotenv
+pystray>=0.19
+pillow>=9.0
+pywin32

@@ -22,6 +22,7 @@ import android.widget.TextView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.CompoundButton
 import com.psipro.app.R
+import com.psipro.app.utils.ProfessionalTypeHelper
 import android.widget.CheckBox
 import android.widget.EditText
 import android.view.View
@@ -152,6 +153,14 @@ class EditProfileActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         val nome = prefs.getString("profile_name", null)
         val crp = prefs.getString("profile_crp", null)
+        val professionalType = try {
+            dagger.hilt.android.EntryPointAccessors.fromApplication(
+                applicationContext,
+                com.psipro.app.sync.di.SyncEntryPoint::class.java
+            ).sessionStore().getProfessionalType()
+        } catch (_: Exception) { null } ?: prefs.getString("profile_professional_type", null)
+        binding.profileSummaryName.text = (nome ?: "").ifBlank { "Nome" }
+        binding.profileSummaryType.text = ProfessionalTypeHelper.toDisplayLabel(professionalType)
         val endereco = prefs.getString("profile_address", null)
         val fotoPath = prefs.getString("profile_photo_path", null)
         if (!nome.isNullOrEmpty()) binding.editTextName.setText(nome)
@@ -176,7 +185,7 @@ class EditProfileActivity : AppCompatActivity() {
         binding.btnCancel.setOnClickListener { finish() }
 
         // Configurar Toolbar se existir no layout
-        setSupportActionBar(findViewById(R.id.toolbar))
+        findViewById<View>(R.id.toolbar)?.let { setSupportActionBar(it as androidx.appcompat.widget.Toolbar) }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

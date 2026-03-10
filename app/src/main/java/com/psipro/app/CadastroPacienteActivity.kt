@@ -20,6 +20,8 @@ import java.text.NumberFormat
 import java.util.Locale
 import android.widget.ArrayAdapter
 import com.psipro.app.data.entities.AnamneseGroup
+import com.psipro.app.sync.work.SyncScheduler
+import com.psipro.app.utils.AccessibilityPreferences
 import java.util.UUID
 
 @AndroidEntryPoint
@@ -30,6 +32,9 @@ class CadastroPacienteActivity : AppCompatActivity() {
     private var selectedAnamneseGroup: AnamneseGroup = AnamneseGroup.ADULTO
     
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (AccessibilityPreferences.getHighContrast(this)) {
+            setTheme(com.psipro.app.R.style.Theme_Psipro_HighContrast)
+        }
         super.onCreate(savedInstanceState)
         binding = ActivityCadastroPacienteBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -168,13 +173,21 @@ class CadastroPacienteActivity : AppCompatActivity() {
                 }
             }
         }
+
+        lifecycleScope.launch {
+            viewModel.patientSaved.collectLatest { saved ->
+                if (saved) {
+                    SyncScheduler.enqueueBoth(applicationContext, "patient_created")
+                    finish()
+                }
+            }
+        }
     }
     
     private fun setupListeners() {
         binding.salvarButton.setOnClickListener {
-            if (validateAndSavePatient()) {
-                finish()
-            }
+            validateAndSavePatient()
+            // finish() será chamado no observer de patientSaved quando o save concluir
         }
     }
     

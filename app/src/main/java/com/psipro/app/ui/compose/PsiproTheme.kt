@@ -1,35 +1,17 @@
 package com.psipro.app.ui.compose
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
+import com.psipro.app.ui.theme.psipro.PsiproTheme as NewPsiproTheme
 
 /**
- * Esquema de cores escuro premium (único tema do app).
+ * Tema PsiPro - delega para o Design System em ui.theme.psipro.
+ * Mantido para compatibilidade com telas que ainda usam este pacote.
  */
-private val PsiProDarkColorScheme = darkColorScheme(
-    primary = PsiProColors.GoldPrimary,
-    onPrimary = PsiProColors.OnPrimary,
-    secondary = PsiProColors.GoldPrimaryDark,
-    onSecondary = PsiProColors.OnPrimary,
-    background = PsiProColors.BackgroundDark,
-    onBackground = PsiProColors.OnBackground,
-    surface = PsiProColors.CardDark,
-    onSurface = PsiProColors.OnSurface,
-    outline = PsiProColors.GoldPrimary,
-    onSurfaceVariant = PsiProColors.OnSurfaceVariant,
-    surfaceVariant = Color(0xFF2D2D2D)
-)
-
 @Composable
 fun PsiproTheme(
-    useDarkTheme: Boolean = true, // Ignorado: app usa apenas tema escuro
+    useDarkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    MaterialTheme(
-        colorScheme = PsiProDarkColorScheme,
-        typography = androidx.compose.material3.Typography(),
-        content = content
-    )
+    NewPsiproTheme(useDarkTheme = useDarkTheme, content = content)
 }

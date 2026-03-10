@@ -1,30 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Tema escuro único (companion app - sem modo claro) -->
+    <!-- Tema CLARO - PsiPro Web (branco, dourado, texto escuro) -->
     <style name="Theme.Psipro" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/bronze_gold</item>
-        <item name="colorPrimaryVariant">@color/bronze_gold_dark</item>
+        <item name="colorPrimary">@color/psipro_primary</item>
+        <item name="colorPrimaryVariant">@color/psipro_primary_dark</item>
         <item name="colorOnPrimary">@color/text_black</item>
         <item name="colorSecondary">@color/secondary_bronze</item>
         <item name="colorSecondaryVariant">@color/accent_bronze</item>
         <item name="colorOnSecondary">@color/text_black</item>
-        <item name="android:windowBackground">@color/background_black</item>
-        <item name="colorSurface">@color/surface_black</item>
-        <item name="colorOnSurface">@color/text_white</item>
-        <item name="colorBackground">@color/background_black</item>
-        <item name="textColorPrimary">@color/text_white</item>
-        <item name="textColorSecondary">@color/text_hint</item>
+        <item name="android:windowBackground">@color/psipro_background_light</item>
+        <item name="colorSurface">@color/psipro_surface_light</item>
+        <item name="colorOnSurface">@color/psipro_text_primary_light</item>
+        <item name="colorOnSurfaceVariant">@color/psipro_text_secondary_light</item>
+        <item name="colorBackground">@color/psipro_background_light</item>
+        <item name="textColorPrimary">@color/psipro_text_primary_light</item>
+        <item name="textColorSecondary">@color/psipro_text_secondary_light</item>
         <item name="colorError">@color/error_red</item>
-        <item name="colorOutline">@color/bronze_gold</item>
-        <item name="dividerColor">@color/dividerColor</item>
-        <item name="android:statusBarColor">@color/surface_black</item>
-        <item name="android:navigationBarColor">@color/surface_black</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="colorOutline">@color/psipro_border_light</item>
+        <item name="dividerColor">@color/psipro_divider_light</item>
+        <item name="android:statusBarColor">@color/psipro_surface_light</item>
+        <item name="android:navigationBarColor">@color/psipro_surface_light</item>
+        <item name="android:windowLightStatusBar">true</item>
         <item name="fontFamily">@font/nunito</item>
     </style>
 
     <style name="Theme.Psipro.NoActionBar" parent="Theme.Psipro">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+    </style>
+
+    <!-- Tema alto contraste para modo baixa visão -->
+    <style name="Theme.Psipro.HighContrast" parent="Theme.Psipro">
+        <item name="android:windowBackground">@color/high_contrast_bg_light</item>
+        <item name="colorSurface">@color/high_contrast_bg_light</item>
+        <item name="colorBackground">@color/high_contrast_bg_light</item>
+        <item name="colorOnSurface">@color/high_contrast_text_light</item>
+        <item name="colorOnSurfaceVariant">@color/high_contrast_text_light</item>
+        <item name="colorOnBackground">@color/high_contrast_text_light</item>
+        <item name="textColorPrimary">@color/high_contrast_text_light</item>
+        <item name="textColorSecondary">@color/high_contrast_text_light</item>
+        <item name="colorPrimary">@color/high_contrast_primary</item>
+        <item name="colorOutline">@color/high_contrast_outline</item>
+        <item name="android:statusBarColor">@color/high_contrast_bg_light</item>
+        <item name="android:navigationBarColor">@color/high_contrast_bg_light</item>
     </style>
 </resources>

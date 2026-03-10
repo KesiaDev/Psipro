@@ -22,6 +22,10 @@ data class Documento(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val patientId: Long,
+    /** ID do documento no backend (UUID). Usado para sync app↔web. */
+    val backendId: String? = null,
+    /** Marca alterações locais pendentes de envio ao backend. */
+    val dirty: Boolean = true,
     val titulo: String,
     val tipo: TipoDocumento,
     val conteudo: String, // Conteúdo HTML/rich text
@@ -34,7 +38,9 @@ data class Documento(
     val dataAssinaturaProfissional: Date? = null,
     val caminhoPDF: String = "", // Caminho do arquivo PDF gerado
     val compartilhado: Boolean = false,
-    val observacoes: String = ""
+    val observacoes: String = "",
+    /** Última vez que o backend confirmou este documento (sync). */
+    val lastSyncedAt: Date? = null
 )
 
 enum class TipoDocumento {

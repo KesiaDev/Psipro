@@ -8,100 +8,73 @@ import android.view.ViewGroup
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import android.widget.Toast
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.psipro.app.CadastroPacienteActivity
 import com.psipro.app.DetalhePacienteActivity
-import com.psipro.app.databinding.FragmentPatientsBinding
-import com.psipro.app.adapter.PatientAdapter
-import com.psipro.app.ui.viewmodels.PatientViewModel
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
-import dagger.hilt.android.AndroidEntryPoint
-import com.google.android.material.snackbar.Snackbar
-import androidx.navigation.fragment.findNavController
 import com.psipro.app.R
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.textfield.TextInputEditText
-import android.widget.Toast
-import android.app.Activity
-import android.net.Uri
+import com.psipro.app.sync.work.SyncScheduler
+import com.psipro.app.ui.screens.patients.PatientsScreen
+import com.psipro.app.ui.theme.psipro.PsiproTheme
+import com.psipro.app.ui.viewmodels.PatientViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.navigation.fragment.findNavController
+
 @AndroidEntryPoint
 class PatientsFragment : Fragment() {
-    private var _binding: FragmentPatientsBinding? = null
-    private val binding get() = _binding!!
+
     private val patientViewModel: PatientViewModel by viewModels()
-    private lateinit var patientAdapter: PatientAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentPatientsBinding.inflate(inflater, container, false)
-        return binding.root
+        return ComposeView(requireContext()).apply {
+            setContent {
+                PsiproTheme {
+                    val patients by patientViewModel.patients.collectAsState(initial = emptyList())
+                    val searchQuery by patientViewModel.searchQuery.collectAsState(initial = "")
+
+                    PatientsScreen(
+                        patients = patients,
+                        searchQuery = searchQuery,
+                        onSearchChange = { patientViewModel.setSearchQuery(it) },
+                        onPatientClick = { patient ->
+                            startActivity(
+                                Intent(requireContext(), DetalhePacienteActivity::class.java)
+                                    .putExtra("PATIENT_ID", patient.id)
+                            )
+                        },
+                        onScheduleClick = { patient ->
+                            findNavController().navigate(R.id.navigation_schedule)
+                            requireActivity()
+                                .findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottom_navigation)
+                                ?.selectedItemId = R.id.navigation_schedule
+                        },
+                        onAddPatient = {
+                            startActivity(Intent(requireContext(), CadastroPacienteActivity::class.java))
+                        }
+                    )
+                }
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setHasOptionsMenu(true)
-        binding.addPatientFab.setOnClickListener {
-            startActivity(Intent(requireContext(), CadastroPacienteActivity::class.java))
-        }
-
-        patientAdapter = PatientAdapter(
-            onItemClick = { patient ->
-                val intent = Intent(requireContext(), DetalhePacienteActivity::class.java)
-                intent.putExtra("PATIENT_ID", patient.id)
-                startActivity(intent)
-            },
-            onScheduleClick = { patient ->
-                // Navegar para a Agenda (ScheduleFragment)
-                parentFragment?.parentFragmentManager?.let { fm ->
-                    // Tenta obter o NavController do fragmento pai
-                    val navController = findNavController()
-                    navController.navigate(R.id.navigation_schedule)
-                } ?: run {
-                    // Fallback: tenta obter o NavController da Activity
-                    requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottom_navigation)?.selectedItemId = R.id.navigation_schedule
-                }
-            },
-            onDeleteClick = { patient ->
-                androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                    .setTitle("Excluir paciente")
-                    .setMessage("Tem certeza que deseja excluir este paciente?")
-                    .setPositiveButton("Excluir") { _, _ ->
-                        patientViewModel.deletePatient(patient)
-                    }
-                    .setNegativeButton("Cancelar", null)
-                    .show()
-            }
-        )
-        binding.patientsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        binding.patientsRecyclerView.adapter = patientAdapter
-
-        // Observa a lista de pacientes
-        viewLifecycleOwner.lifecycleScope.launch {
-            patientViewModel.patients.collectLatest { patients ->
-                patientAdapter.submitList(patients)
-            }
-        }
-
-        // Busca
-        binding.searchEditText.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: android.text.Editable?) {
-                patientViewModel.setSearchQuery(s?.toString() ?: "")
-            }
-        })
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+    override fun onResume() {
+        super.onResume()
+        // Dispara sincronização ao abrir a tela Pacientes (pacientes criados na web aparecem aqui)
+        SyncScheduler.enqueueBoth(requireContext(), "patients_screen")
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

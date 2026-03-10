@@ -35,7 +35,7 @@
                 android:id="@+id/titleText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Agenda de Consultas"
+                android:text="@string/schedule_professional"
                 android:textColor="@color/bronze_gold"
                 android:textSize="24sp"
                 android:textStyle="bold"

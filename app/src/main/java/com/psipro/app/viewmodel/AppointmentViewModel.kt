@@ -109,6 +109,8 @@ class AppointmentViewModel @Inject constructor(
                     }
                     onSuccess(id)
                 }
+                // Sync para aparecer na web imediatamente
+                repository.syncAppointments()
             } catch (e: Exception) {
                 if (isConflict409(e)) onConflict() else onError(e)
             }
@@ -131,6 +133,7 @@ class AppointmentViewModel @Inject constructor(
                     notificationService.cancelAppointmentReminder(appointment.id)
                 }
                 onSuccess()
+                repository.syncAppointments()
             } catch (e: Exception) {
                 if (isConflict409(e)) onConflict() else onError(e)
             }
@@ -151,6 +154,7 @@ class AppointmentViewModel @Inject constructor(
                     notificationService.cancelAppointmentReminder(appointmentId)
                 }
                 onSuccess()
+                repository.syncAppointments()
             } catch (e: Exception) {
                 onError(e)
             }
@@ -167,6 +171,7 @@ class AppointmentViewModel @Inject constructor(
                 repository.deleteAppointment(appointment)
                 notificationService.cancelAppointmentReminder(appointment.id)
                 onSuccess()
+                repository.syncAppointments()
             } catch (e: Exception) {
                 onError(e)
             }

@@ -5,6 +5,7 @@ import com.psipro.app.data.dao.AppointmentDao
 import com.psipro.app.data.dao.PatientDao
 import com.psipro.app.data.entities.Appointment
 import com.psipro.app.data.entities.AppointmentStatus
+import com.psipro.app.data.entities.Patient
 import com.psipro.app.sync.api.BackendApiService
 import com.psipro.app.sync.api.RemoteAppointment
 import com.psipro.app.sync.api.SyncAppointmentPayload
@@ -118,22 +119,58 @@ class SyncAppointmentsManager @Inject constructor(
     }
 
     private suspend fun pullAppointments(clinicId: String) {
-        val updatedAfter = store.getLastAppointmentsSyncAtIso()
-        val pullResp = api.getAppointments(clinicId = clinicId, updatedAfter = updatedAfter)
+        var updatedAfter = store.getLastAppointmentsSyncAtIso()
+        var pullResp = api.getAppointments(clinicId = clinicId, updatedAfter = updatedAfter)
         if (!pullResp.isSuccessful || pullResp.body() == null) {
             Log.e(TAG, "APPT_PULL_FAIL http=${pullResp.code()} updatedAfter=$updatedAfter")
             return
         }
-        val remote = pullResp.body()!!
+        var remote = pullResp.body()!!
+        // Fallback: se watermark antigo fez retornar 0, forçar sync completo uma vez
+        if (remote.isEmpty() && !updatedAfter.isNullOrBlank()) {
+            Log.w(TAG, "APPT_PULL_EMPTY_WITH_WATERMARK clearing and retrying full sync")
+            store.setLastAppointmentsSyncAtIso(null)
+            updatedAfter = null
+            pullResp = api.getAppointments(clinicId = clinicId, updatedAfter = null)
+            if (pullResp.isSuccessful && pullResp.body() != null) {
+                remote = pullResp.body()!!
+            }
+        }
+        // Se recebemos 0 com updatedAfter definido, watermark pode estar errado (ex: sync anterior pulou todos)
+        if (remote.isEmpty() && !updatedAfter.isNullOrBlank()) {
+            Log.w(TAG, "APPT_PULL_EMPTY com updatedAfter - limpando watermark para forçar sync completo na próxima vez")
+            store.setLastAppointmentsSyncAtIso(null)
+            return
+        }
+        val processedUpdatedAts = mutableListOf<String>()
         for (rp in remote) {
             val existing = appointmentDao.getAppointmentByBackendId(rp.id)
             if (existing != null && existing.dirty) {
                 Log.w(TAG, "APPT_PULL_SKIP_DIRTY backendId=${rp.id}")
                 continue
             }
-            val localPatient = patientDao.getPatientByUuid(rp.patientId)
+            var localPatient = patientDao.getPatientByUuid(rp.patientId)
+            if (localPatient == null && rp.patient != null) {
+                // Paciente criado no web: criar localmente para exibir o agendamento
+                val now = Date()
+                val defaultBirthDate = java.util.Calendar.getInstance().apply { set(1900, 0, 1) }.time
+                val newPatient = Patient(
+                    uuid = rp.patientId,
+                    origin = "WEB",
+                    dirty = false,
+                    name = rp.patient.name,
+                    phone = rp.patient.phone ?: "",
+                    birthDate = defaultBirthDate,
+                    createdAt = now,
+                    updatedAt = now,
+                    lastSyncedAt = now
+                )
+                val newId = patientDao.insertPatient(newPatient)
+                localPatient = newPatient.copy(id = newId)
+                Log.i(TAG, "APPT_PULL_CREATED_PATIENT patientId=${rp.patientId} name=${rp.patient.name}")
+            }
             if (localPatient == null) {
-                Log.w(TAG, "APPT_PULL_SKIP patient ${rp.patientId} not in local db")
+                Log.w(TAG, "APPT_PULL_SKIP patient ${rp.patientId} not in local db and no patient data from backend")
                 continue
             }
             val (date, startTime, endTime) = fromScheduledAtAndDuration(rp.scheduledAt, rp.duration)
@@ -167,10 +204,13 @@ class SyncAppointmentsManager @Inject constructor(
             } else {
                 appointmentDao.updateAppointment(merged)
             }
+            rp.updatedAt?.let { processedUpdatedAts.add(it) }
         }
-        val nextWatermark = remote.mapNotNull { it.updatedAt }.maxOrNull() ?: nowIsoUtc()
-        store.setLastAppointmentsSyncAtIso(nextWatermark)
-        Log.i(TAG, "APPT_PULL_OK count=${remote.size} updatedAfter=$updatedAfter")
+        val nextWatermark = processedUpdatedAts.maxOrNull() ?: updatedAfter
+        if (processedUpdatedAts.isNotEmpty()) {
+            store.setLastAppointmentsSyncAtIso(nextWatermark)
+        }
+        Log.i(TAG, "APPT_PULL_OK count=${remote.size} processed=${processedUpdatedAts.size} updatedAfter=$updatedAfter")
     }
 
     private suspend fun getProfessionalId(): String? {

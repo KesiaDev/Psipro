@@ -55,26 +55,10 @@ class LocalInsightProvider : InsightProvider {
             )
         }
 
-        // Insight 2: Pagamentos pendentes
-        if (summary.pendingPaymentsCount > 0) {
-            insights.add(
-                HomeInsight(
-                    id = "insight_2",
-                    title = "Pagamentos pendentes",
-                    description = "${summary.pendingPaymentsCount} pagamento${if (summary.pendingPaymentsCount > 1) "s" else ""} aguardando. Vale a pena revisar.",
-                    type = InsightType.PAYMENT_TREND,
-                    icon = "ic_attach_money",
-                    actionLabel = "Ver financeiro",
-                    actionId = "view_financial"
-                )
-            )
-        }
-
-        // Insight 3: Agenda do dia
         if (summary.todaySessionsCount > 0) {
             insights.add(
                 HomeInsight(
-                    id = "insight_3",
+                    id = "insight_2",
                     title = "Seus atendimentos de hoje",
                     description = "${summary.todaySessionsCount} sessão${if (summary.todaySessionsCount > 1) "ões" else ""} agendada${if (summary.todaySessionsCount > 1) "s" else ""} para hoje.",
                     type = InsightType.ATTENDANCE_PATTERN,
@@ -85,11 +69,10 @@ class LocalInsightProvider : InsightProvider {
             )
         }
 
-        // Insight 4: Faltas recentes
         if (summary.recentAbsencesCount > 0) {
             insights.add(
                 HomeInsight(
-                    id = "insight_4",
+                    id = "insight_3",
                     title = "Faltas recentes",
                     description = "${summary.recentAbsencesCount} falta${if (summary.recentAbsencesCount > 1) "s" else ""} registrada${if (summary.recentAbsencesCount > 1) "s" else ""} recentemente. Talvez seja bom entrar em contato.",
                     type = InsightType.RECOMMENDATION,

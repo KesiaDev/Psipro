@@ -48,17 +48,10 @@ class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
         try {
             AuthManager.init(this)
 
+            // Seguir tema do sistema (modo claro ou escuro)
             androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
+                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
             )
-
-            val nightModeFlags = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-            if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    window.statusBarColor = ContextCompat.getColor(this, R.color.background_black)
-                    window.navigationBarColor = ContextCompat.getColor(this, R.color.background_black)
-                }
-            }
         } catch (e: Exception) {
             Log.e("MainActivity", "Erro na inicialização básica", e)
         }
@@ -108,7 +101,6 @@ class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
         val passwordEditText = binding.passwordEditText
         val loginButton = binding.loginButton
         val forgotPasswordButton = binding.forgotPasswordButton
-        val googleButton = binding.btnGoogleSignIn
         val createAccountButton = binding.createAccountButton
 
         loginButton.setOnClickListener {
@@ -188,10 +180,6 @@ class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
                 return@setOnClickListener
             }
             Toast.makeText(this, "Recuperação de senha disponível na plataforma web.", Toast.LENGTH_LONG).show()
-        }
-
-        googleButton.setOnClickListener {
-            Toast.makeText(this, "Login com Google em breve.", Toast.LENGTH_SHORT).show()
         }
 
         createAccountButton.setOnClickListener {

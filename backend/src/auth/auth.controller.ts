@@ -15,6 +15,7 @@ import { RefreshDto } from './dto/refresh.dto';
 import { HandoffDto } from './dto/handoff.dto';
 import { RegisterDto } from './dto/register.dto';
 import { SwitchClinicDto } from './dto/switch-clinic.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
@@ -52,6 +53,18 @@ export class AuthController {
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
+  }
+
+  /**
+   * POST /auth/forgot-password
+   * Recuperação de senha. Por segurança, sempre retorna 200 (não revela se o e-mail existe).
+   * Quando o serviço de e-mail estiver configurado, enviará o link de redefinição.
+   */
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @Post('forgot-password')
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    await this.authService.forgotPassword(dto.email);
+    return { message: 'Se o e-mail existir, você receberá instruções para redefinir a senha.' };
   }
 
   /**

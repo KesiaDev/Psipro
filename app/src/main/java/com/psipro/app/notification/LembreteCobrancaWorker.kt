@@ -9,7 +9,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.psipro.app.R
 import com.psipro.app.data.AppDatabase
-import com.psipro.app.ui.screens.FinanceiroDashboardActivity
+import com.psipro.app.DashboardActivity
 import java.util.Calendar
 
 class LembreteCobrancaWorker(
@@ -26,7 +26,7 @@ class LembreteCobrancaWorker(
             val pacientesParaNotificar = pacientes.filter { it.lembreteCobranca && it.diaCobranca == hoje }
             val notificationManager = NotificationManagerCompat.from(applicationContext)
             pacientesParaNotificar.forEachIndexed { index, paciente ->
-                val intent = Intent(applicationContext, FinanceiroDashboardActivity::class.java)
+                val intent = Intent(applicationContext, DashboardActivity::class.java)
                 val pendingIntent = PendingIntent.getActivity(
                     applicationContext,
                     1000 + index,
@@ -36,7 +36,7 @@ class LembreteCobrancaWorker(
                 val builder = NotificationCompat.Builder(applicationContext, "cobranca_channel")
                     .setSmallIcon(R.drawable.ic_error)
                     .setContentTitle("Cobrança pendente: ${paciente.name}")
-                    .setContentText("Toque para abrir o financeiro")
+                    .setContentText("Toque para abrir o app")
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setAutoCancel(true)
                     .setContentIntent(pendingIntent)

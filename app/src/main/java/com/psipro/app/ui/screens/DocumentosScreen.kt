@@ -72,7 +72,7 @@ fun DocumentosScreen(
         val nomePaciente = patientData?.name ?: "Nome do Paciente"
         val cpfPaciente = patientData?.cpf ?: "CPF não informado"
         val dataNascimento = patientData?.birthDate?.let { dateFormatter.format(it) } ?: "Data não informada"
-        val nomePsicologo = psychologistData ?: "Psicólogo(a)"
+        val nomePsicologo = psychologistData ?: "Profissional"
         val crpPsicologo = psychologistCRP ?: "CRP"
         val local = psychologistLocation ?: "Local não informado"
         
@@ -392,7 +392,7 @@ fun DocumentosScreen(
                         val nomePaciente = patientData?.name ?: "Nome do Paciente"
                         val cpfPaciente = patientData?.cpf ?: "CPF não informado"
                         val dataNascimento = patientData?.birthDate?.let { dateFormatter.format(it) } ?: "Data não informada"
-                        val nomePsicologo = psychologistData ?: "Psicólogo(a)"
+                        val nomePsicologo = psychologistData ?: "Profissional"
                         val crpPsicologo = psychologistCRP ?: "CRP"
                         val local = psychologistLocation ?: "Local não informado"
                         

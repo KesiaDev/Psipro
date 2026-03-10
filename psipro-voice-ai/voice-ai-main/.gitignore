@@ -1,0 +1,35 @@
+# Build artifacts
+dist/
+build/
+__pycache__/
+
+# Version info temporarios (gerados por version_info.py)
+version_voiceai.txt
+version_voiceagent.txt
+version_cache.ini
+
+# Config com API key (sensível)
+config.json
+voice_agent_config.json
+.env
+
+# Logs
+*.log
+
+# Python
+*.pyc
+*.pyo
+
+# Archives
+*.zip
+
+# IDE
+.vscode/
+.idea/
+.claude/
+
+# Windows artifacts
+nul
+
+# Atalhos Windows (gerados localmente)
+*.lnk

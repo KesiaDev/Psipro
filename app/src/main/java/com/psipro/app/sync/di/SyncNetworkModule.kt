@@ -46,16 +46,16 @@ object SyncNetworkModule {
             .addInterceptor(refreshInterceptor)
             .addInterceptor(logging)
             .connectTimeout(20, TimeUnit.SECONDS)
-            .readTimeout(20, TimeUnit.SECONDS)
-            .writeTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(90, TimeUnit.SECONDS)
+            .writeTimeout(90, TimeUnit.SECONDS)
             .build()
     }
 
     @Provides
     @Singleton
     fun provideRetrofit(gson: Gson, client: OkHttpClient): Retrofit {
-        // Garantir barra no final para Retrofit
-        val base = BuildConfig.PSIPRO_API_BASE_URL.let { if (it.endsWith("/")) it else "$it/" }
+        // Garantir barra no final e sem espaços (evita 404 por URL malformada)
+        val base = BuildConfig.PSIPRO_API_BASE_URL.trim().let { if (it.endsWith("/")) it else "$it/" }
         return Retrofit.Builder()
             .baseUrl(base)
             .client(client)

@@ -52,6 +52,27 @@
             </com.google.android.material.card.MaterialCardView>
         </FrameLayout>
 
+        <!-- Resumo: Nome + Tipo de profissional -->
+        <TextView
+            android:id="@+id/profileSummaryName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nome"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:gravity="center"/>
+        <TextView
+            android:id="@+id/profileSummaryType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Psicólogo"
+            android:textColor="?attr/textColorSecondary"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:layout_marginBottom="16dp"/>
+
         <!-- Seção: Dados Pessoais -->
         <TextView
             android:layout_width="match_parent"
