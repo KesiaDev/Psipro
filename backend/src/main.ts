@@ -1,7 +1,3 @@
-/** Polyfill: Node 18 não expõe crypto global; @nestjs/schedule usa crypto.randomUUID() */
-import crypto from 'node:crypto';
-if (!globalThis.crypto) (globalThis as any).crypto = crypto;
-
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
