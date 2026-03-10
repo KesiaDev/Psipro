@@ -94,17 +94,19 @@ export class PatientsService {
     const source = createPatientDto.source || 'web';
     const origin = source === 'app' ? 'ANDROID' : 'WEB';
 
-    const formattedBirthDate = createPatientDto.birthDate
-      ? new Date(`${createPatientDto.birthDate}T00:00:00.000Z`)
+    const { full_name: _fn, ...dto } = createPatientDto;
+
+    const formattedBirthDate = dto.birthDate
+      ? new Date(`${dto.birthDate}T00:00:00.000Z`)
       : null;
 
     const patient = await this.prisma.patient.create({
       data: {
-        ...createPatientDto,
+        ...dto,
         birthDate: formattedBirthDate,
         clinicId,
         clinicOwnerId: userId,
-        sharedWith: createPatientDto.sharedWith || [],
+        sharedWith: dto.sharedWith || [],
         source,
         origin,
       },
