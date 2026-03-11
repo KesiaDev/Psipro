@@ -135,6 +135,7 @@ class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
 
                         if (ok) {
                             backendAuth.ensureClinicId()
+                            entryPoint.sessionStore().clearSyncWatermarks()
                             com.psipro.app.sync.work.SyncScheduler.enqueueBoth(applicationContext, "login")
                             val prefs = getSharedPreferences("settings", MODE_PRIVATE)
                             prefs.edit()

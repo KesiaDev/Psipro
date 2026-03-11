@@ -238,27 +238,17 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun runSyncWithFeedback() {
-        android.widget.Toast.makeText(this, "Sincronizando...", android.widget.Toast.LENGTH_SHORT).show()
-        lifecycleScope.launch {
-            try {
-                val entryPoint = EntryPointAccessors.fromApplication(
-                    applicationContext,
-                    SyncEntryPoint::class.java
-                )
-                val result = withContext(Dispatchers.IO) {
-                    entryPoint.syncPatientsManager().syncWithResult("manual")
-                }
-                val msg = if (result.success) result.message else "Erro: ${result.message}"
-                android.widget.Toast.makeText(this@DashboardActivity, msg, android.widget.Toast.LENGTH_LONG).show()
-            } catch (e: Exception) {
-                android.util.Log.e("DashboardActivity", "Sync error", e)
-                android.widget.Toast.makeText(
-                    this@DashboardActivity,
-                    "Erro ao sincronizar: ${e.message}",
-                    android.widget.Toast.LENGTH_LONG
-                ).show()
-            }
-        }
+        val entryPoint = EntryPointAccessors.fromApplication(
+            applicationContext,
+            SyncEntryPoint::class.java
+        )
+        entryPoint.sessionStore().clearSyncWatermarks()
+        com.psipro.app.sync.work.SyncScheduler.enqueueBoth(this, "manual")
+        android.widget.Toast.makeText(
+            this,
+            "Sincronizando pacientes, agenda e sessões... Aguarde alguns segundos.",
+            android.widget.Toast.LENGTH_LONG
+        ).show()
     }
 
     private fun handleVoiceCommand(action: VoiceAction) {

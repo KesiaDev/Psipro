@@ -93,15 +93,15 @@ class SyncPatientsManager @Inject constructor(
                 Log.d(TAG, "SYNC_PUSH_SKIP no dirty patients")
             }
 
-            // 2) Pull: buscar pacientes do backend
-            val updatedAfter = store.getLastPatientsSyncAtIso()
-            val pullResp = api.getPatients(clinicId = effectiveClinicId, updatedAfter = updatedAfter)
+            // 2) Pull: buscar lista completa do backend (necessário para reconciliar exclusões feitas no web)
+            val pullResp = api.getPatients(clinicId = effectiveClinicId, updatedAfter = null)
             if (pullResp.isSuccessful && pullResp.body() != null) {
                 val remote = pullResp.body()!!
                 applyRemotePatients(remote, effectiveClinicId, applyOverDirty = false)
+                reconcileDeleted(remote)
                 store.setLastPatientsSyncAtIso(computeNextWatermarkIso(remote) ?: nowIsoUtc())
                 pullCount = remote.size
-                Log.i(TAG, "SYNC_PULL_OK count=$pullCount updatedAfter=${updatedAfter ?: "null"}")
+                Log.i(TAG, "SYNC_PULL_OK count=$pullCount (full list, reconciled)")
             } else {
                 val errBody = pullResp.errorBody()?.string() ?: ""
                 Log.e(TAG, "SYNC_PULL_FAIL http=${pullResp.code()} body=$errBody")
@@ -132,13 +132,23 @@ class SyncPatientsManager @Inject constructor(
         return body.ifBlank { "erro $code" }
     }
 
+    /** Remove do banco local os pacientes que foram excluídos no backend (não estão na lista remota). */
+    private suspend fun reconcileDeleted(remotePatients: List<RemotePatient>) {
+        val keepUuids = remotePatients.mapNotNull { it.id }
+        if (keepUuids.isEmpty()) {
+            patientDao.deleteAllSyncedPatients()
+            Log.i(TAG, "SYNC_RECONCILE all patients deleted on backend, removed local copies")
+        } else {
+            patientDao.deleteByUuidsNotIn(keepUuids)
+        }
+    }
+
     private suspend fun applyRemotePatients(
         remotePatients: List<RemotePatient>,
         clinicId: String,
         applyOverDirty: Boolean
     ) {
         for (rp in remotePatients) {
-            // Nunca apagar local: apenas upsert.
             val uuid = rp.id
             val existing = patientDao.getPatientByUuid(uuid)
             if (!applyOverDirty && existing?.dirty == true) {

@@ -255,15 +255,32 @@ export class PatientsService {
       throw new NotFoundException('Paciente não encontrado');
     }
 
+    const data: Record<string, unknown> = {
+      lastSyncedAt: new Date(),
+    };
+    if (updatePatientDto.name !== undefined) data.name = updatePatientDto.name;
+    if (updatePatientDto.cpf !== undefined) data.cpf = updatePatientDto.cpf;
+    if (updatePatientDto.phone !== undefined) data.phone = updatePatientDto.phone;
+    if (updatePatientDto.email !== undefined) data.email = updatePatientDto.email;
+    if (updatePatientDto.birthDate !== undefined && updatePatientDto.birthDate !== '') {
+      const d = new Date(updatePatientDto.birthDate);
+      if (!isNaN(d.getTime())) data.birthDate = d;
+    }
+    if (updatePatientDto.address !== undefined) data.address = updatePatientDto.address;
+    if (updatePatientDto.emergencyContact !== undefined)
+      data.emergencyContact = updatePatientDto.emergencyContact;
+    if (updatePatientDto.observations !== undefined)
+      data.observations = updatePatientDto.observations;
+    if (updatePatientDto.status !== undefined) data.status = updatePatientDto.status;
+    if (updatePatientDto.type !== undefined) data.type = updatePatientDto.type;
+    if (updatePatientDto.sharedWith !== undefined) data.sharedWith = updatePatientDto.sharedWith;
+    if (updatePatientDto.source) {
+      (data as any).origin = updatePatientDto.source === 'app' ? 'ANDROID' : 'WEB';
+    }
+
     const updated = await this.prisma.patient.update({
       where: { id },
-      data: {
-        ...updatePatientDto,
-        ...(updatePatientDto.source
-          ? { origin: updatePatientDto.source === 'app' ? 'ANDROID' : 'WEB' }
-          : {}),
-        lastSyncedAt: new Date(),
-      },
+      data: data as any,
     });
 
     this.auditService.log({

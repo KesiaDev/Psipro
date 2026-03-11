@@ -42,6 +42,14 @@ interface PatientDao {
 
     @Query("SELECT * FROM patients")
     suspend fun getAll(): List<Patient>
+
+    /** Remove todos os pacientes já sincronizados (uuid preenchido) - usada quando backend retorna lista vazia */
+    @Query("DELETE FROM patients WHERE uuid IS NOT NULL")
+    suspend fun deleteAllSyncedPatients()
+
+    /** Remove pacientes cujo uuid não está na lista permitida (reconciliação com backend) */
+    @Query("DELETE FROM patients WHERE uuid IS NOT NULL AND uuid NOT IN (:keepUuids)")
+    suspend fun deleteByUuidsNotIn(keepUuids: List<String>)
 } 
 
 
