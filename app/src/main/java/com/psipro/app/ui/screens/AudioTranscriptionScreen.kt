@@ -23,6 +23,7 @@ fun AudioTranscriptionScreen(
     viewModel: AudioTranscriptionViewModel = viewModel()
 ) {
     val isRecording by viewModel.isRecording.collectAsState()
+    val isTranscribing by viewModel.isTranscribing.collectAsState()
     val status by viewModel.status.collectAsState()
     var texto by remember { mutableStateOf("") }
     val transcription by viewModel.transcription.collectAsState()
@@ -58,9 +59,9 @@ fun AudioTranscriptionScreen(
         Button(
             onClick = { viewModel.transcribe(pacienteId, dataSessao) },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isRecording
+            enabled = !isRecording && !isTranscribing
         ) {
-            Text("Transcrever e Salvar")
+            Text(if (isTranscribing) "Transcrevendo..." else "Transcrever")
         }
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = status)
@@ -75,11 +76,11 @@ fun AudioTranscriptionScreen(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Button(
-            onClick = { viewModel.atualizarTranscricaoFirestore(texto) },
+            onClick = { viewModel.updateTranscriptionText(texto) },
             modifier = Modifier.fillMaxWidth(),
             enabled = texto.isNotBlank()
         ) {
-            Text("Atualizar Transcrição no Firestore")
+            Text("Atualizar transcrição")
         }
     }
 } 

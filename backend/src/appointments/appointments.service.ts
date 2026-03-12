@@ -2,6 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { GoogleCalendarService } from '../integrations/google-calendar/google-calendar.service';
 import { whereNotDeleted } from '../prisma/soft-delete.helper';
 
 /** Código de erro Prisma para violação de unique constraint */
@@ -20,6 +21,7 @@ export class AppointmentsService {
   constructor(
     private prisma: PrismaService,
     private auditService: AuditService,
+    private googleCalendar: GoogleCalendarService,
   ) {}
 
   private async checkScheduleConflict(
@@ -101,6 +103,25 @@ export class AppointmentsService {
       entityId: created.id,
       metadata: { patientId: dto.patientId, scheduledAt: dto.scheduledAt },
     }).catch(() => {});
+
+    if (this.googleCalendar.isConfigured()) {
+      this.googleCalendar
+        .syncAppointmentToGoogle(
+          effectiveUserId,
+          clinicId,
+          {
+            id: created.id,
+            patientId: created.patientId,
+            scheduledAt: created.scheduledAt,
+            duration: created.duration ?? 60,
+            type: created.type,
+            notes: created.notes,
+            patientName: created.patient?.name,
+          },
+          null,
+        )
+        .catch(() => {});
+    }
 
     return created;
   }

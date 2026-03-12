@@ -14,6 +14,9 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.ItemTouchHelper
 import com.psipro.app.R
 import com.psipro.app.adapter.AppointmentAdapter
+import com.psipro.app.sync.di.SyncEntryPoint
+import com.psipro.app.ui.ClinicSwitchDialog
+import dagger.hilt.android.EntryPointAccessors
 import com.psipro.app.databinding.FragmentHomeBinding
 import com.psipro.app.viewmodel.AppointmentViewModel
 import com.psipro.app.viewmodel.PatientViewModel
@@ -50,6 +53,7 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.welcomeText.text = "Bem-vindo (a)!"
+        setupClinicSwitchChip()
         setupRecyclerView()
         loadAllAppointments()
 
@@ -75,6 +79,15 @@ class HomeFragment : Fragment() {
             override fun onTabUnselected(tab: com.google.android.material.tabs.TabLayout.Tab) {}
             override fun onTabReselected(tab: com.google.android.material.tabs.TabLayout.Tab) {}
         })
+    }
+
+    private fun setupClinicSwitchChip() {
+        val ctx = context ?: return
+        val entryPoint = EntryPointAccessors.fromApplication(ctx.applicationContext, SyncEntryPoint::class.java)
+        binding.clinicSwitchChip.visibility = if (entryPoint.backendAuthManager().isBackendAuthenticated()) View.VISIBLE else View.GONE
+        binding.clinicSwitchChip.setOnClickListener {
+            ClinicSwitchDialog().show(childFragmentManager, "clinicSwitch")
+        }
     }
 
     private fun setupRecyclerView() {

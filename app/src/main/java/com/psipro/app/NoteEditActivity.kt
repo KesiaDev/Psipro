@@ -13,6 +13,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import com.psipro.app.sync.di.SyncEntryPoint
+import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import android.provider.OpenableColumns
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.psipro.app.adapters.AttachmentAdapter
 import com.psipro.app.adapters.AttachmentItem
@@ -24,7 +34,6 @@ import com.psipro.app.utils.AttachmentManager
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import java.io.FileOutputStream
-import java.io.FileInputStream
 import java.util.Date
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.firestore.FirebaseFirestore
@@ -463,41 +472,50 @@ class NoteEditActivity : AppCompatActivity() {
     }
 
     private fun transcribeAudioFromUri(uri: Uri) {
-        // Chama uma função utilitária ou ViewModel para transcrever o áudio
-        // Aqui, exemplo simplificado usando Vosk (pode ser adaptado para seu fluxo)
-        binding.editTextNote.setText("Transcrevendo áudio...")
-        Thread {
-            try {
-                val context = this
-                val inputStream = contentResolver.openInputStream(uri)
-                val tempFile = File.createTempFile("audio_transcribe", ".wav", cacheDir)
-                inputStream?.use { input ->
-                    FileOutputStream(tempFile).use { output ->
+        lifecycleScope.launch {
+            transcribeAudioFromUriInternal(uri)
+        }
+    }
+
+    private suspend fun transcribeAudioFromUriInternal(uri: Uri) {
+        withContext(Dispatchers.Main) { binding.editTextNote.setText("Transcrevendo áudio...") }
+        try {
+            val tempFile = withContext(Dispatchers.IO) {
+                val stream = contentResolver.openInputStream(uri) ?: return@withContext null
+                val ext = contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    val nameIdx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (cursor.moveToFirst() && nameIdx >= 0) {
+                        val name = cursor.getString(nameIdx) ?: ""
+                        when {
+                            name.endsWith(".m4a", true) -> ".m4a"
+                            name.endsWith(".mp3", true) -> ".mp3"
+                            name.endsWith(".wav", true) -> ".wav"
+                            name.endsWith(".webm", true) -> ".webm"
+                            name.endsWith(".ogg", true) -> ".ogg"
+                            name.endsWith(".flac", true) -> ".flac"
+                            name.endsWith(".mp4", true) -> ".mp4"
+                            else -> ".m4a"
+                        }
+                    } else ".m4a"
+                } ?: ".m4a"
+                val f = File(cacheDir, "audio_transcribe_${System.currentTimeMillis()}$ext")
+                stream.use { input ->
+                    FileOutputStream(f).use { output ->
                         input.copyTo(output)
                     }
                 }
-                // Aqui você pode chamar sua lógica de transcrição offline (Vosk)
-                // Exemplo:
-                val model = org.vosk.Model("${filesDir}/model-pt")
-                val recognizer = org.vosk.Recognizer(model, 16000.0f)
-                val audioInput = FileInputStream(tempFile)
-                val buffer = ByteArray(4096)
-                var bytesRead: Int
-                while (audioInput.read(buffer).also { bytesRead = it } >= 0) {
-                    recognizer.acceptWaveForm(buffer, bytesRead)
-                }
-                val result = recognizer.finalResult
-                val texto = org.json.JSONObject(result).optString("text")
-                runOnUiThread {
-                    binding.editTextNote.setText(texto)
-                    Toast.makeText(context, "Transcrição concluída!", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    Toast.makeText(this, "Erro na transcrição: ${e.message}", Toast.LENGTH_LONG).show()
-                }
+                f
             }
-        }.start()
+            if (tempFile == null) {
+                withContext(Dispatchers.Main) { Toast.makeText(this@NoteEditActivity, "Não foi possível abrir o arquivo", Toast.LENGTH_LONG).show() }
+                return
+            }
+            transcribeViaBackend(tempFile)
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@NoteEditActivity, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun showTranscribeChoiceDialog() {
@@ -535,32 +553,62 @@ class NoteEditActivity : AppCompatActivity() {
     }
 
     private fun transcribeAudioFromFile(path: String) {
-        binding.editTextNote.setText("Transcrevendo áudio...")
-        Thread {
-            try {
-                val context = this
-                val tempFile = File(path)
-                // Aqui você pode chamar sua lógica de transcrição offline (Vosk)
-                val model = org.vosk.Model("${filesDir}/model-pt")
-                val recognizer = org.vosk.Recognizer(model, 16000.0f)
-                val audioInput = FileInputStream(tempFile)
-                val buffer = ByteArray(4096)
-                var bytesRead: Int
-                while (audioInput.read(buffer).also { bytesRead = it } >= 0) {
-                    recognizer.acceptWaveForm(buffer, bytesRead)
-                }
-                val result = recognizer.finalResult
-                val texto = org.json.JSONObject(result).optString("text")
-                runOnUiThread {
-                    binding.editTextNote.setText(texto)
-                    Toast.makeText(context, "Transcrição concluída!", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    Toast.makeText(this, "Erro na transcrição: ${e.message}", Toast.LENGTH_LONG).show()
+        lifecycleScope.launch {
+            binding.editTextNote.setText("Transcrevendo áudio...")
+            val file = File(path)
+            if (file.exists()) {
+                transcribeViaBackend(file)
+            } else {
+                runOnUiThread { Toast.makeText(this@NoteEditActivity, "Arquivo não encontrado", Toast.LENGTH_LONG).show() }
+            }
+        }
+    }
+
+    private suspend fun transcribeViaBackend(file: File) {
+        val entryPoint = EntryPointAccessors.fromApplication(applicationContext, SyncEntryPoint::class.java)
+        if (!entryPoint.backendAuthManager().isBackendAuthenticated()) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@NoteEditActivity, "Faça login no backend para usar transcrição de voz.", Toast.LENGTH_LONG).show()
+            }
+            return
+        }
+        try {
+            val ext = when {
+                file.name.endsWith(".m4a", ignoreCase = true) -> "audio/mp4"
+                file.name.endsWith(".mp3", ignoreCase = true) -> "audio/mpeg"
+                file.name.endsWith(".wav", ignoreCase = true) -> "audio/wav"
+                else -> "audio/mp4"
+            }
+            val requestFile = file.asRequestBody(ext.toMediaTypeOrNull())
+            val part = MultipartBody.Part.createFormData("file", file.name, requestFile)
+            val resp = withContext(Dispatchers.IO) {
+                entryPoint.backendApiService().transcribe(part)
+            }
+            withContext(Dispatchers.Main) {
+                if (resp.isSuccessful) {
+                    val transcript = resp.body()?.transcript?.trim() ?: ""
+                    val current = binding.editTextNote.text.toString()
+                    binding.editTextNote.setText(if (current.isBlank()) transcript else "$current\n\n$transcript")
+                    Toast.makeText(this@NoteEditActivity, "Transcrição concluída!", Toast.LENGTH_SHORT).show()
+                } else {
+                    val msg = resp.errorBody()?.string() ?: "Erro ${resp.code()}"
+                    Toast.makeText(this@NoteEditActivity, "Transcrição falhou: $msg", Toast.LENGTH_LONG).show()
                 }
             }
-        }.start()
+        } catch (e: retrofit2.HttpException) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@NoteEditActivity, when (e.code()) {
+                    401 -> "Faça login no backend para usar transcrição."
+                    else -> "Erro ${e.code()}: ${e.message()}"
+                }, Toast.LENGTH_LONG).show()
+            }
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@NoteEditActivity, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        } finally {
+            try { if (file.absolutePath.contains("audio_transcribe")) file.delete() } catch (_: Exception) {}
+        }
     }
 } 
 

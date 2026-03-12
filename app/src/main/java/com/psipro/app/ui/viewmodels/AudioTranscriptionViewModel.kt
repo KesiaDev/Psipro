@@ -2,28 +2,37 @@ package com.psipro.app.ui.viewmodels
 
 import android.Manifest
 import android.app.Application
+import android.content.Context
 import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.net.Uri
 import android.os.Environment
+import android.provider.OpenableColumns
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.FirebaseFirestore
+import com.psipro.app.sync.api.BackendApiService
+import com.psipro.app.sync.BackendAuthManager
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import org.vosk.Model
-import org.vosk.Recognizer
-import org.vosk.android.StorageService
-import org.json.JSONObject
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.*
-import android.content.Context
-import android.net.Uri
 
-class AudioTranscriptionViewModel(app: Application) : AndroidViewModel(app) {
+@HiltViewModel
+class AudioTranscriptionViewModel @javax.inject.Inject constructor(
+    app: Application,
+    private val backendApi: BackendApiService,
+    private val backendAuth: BackendAuthManager
+) : AndroidViewModel(app) {
+
     private var isRecordingAudio = false
     private var audioRecord: AudioRecord? = null
     private var wavFile: File? = null
@@ -32,32 +41,32 @@ class AudioTranscriptionViewModel(app: Application) : AndroidViewModel(app) {
     private val _isRecording = MutableStateFlow(false)
     val isRecording: StateFlow<Boolean> = _isRecording
 
+    private val _isTranscribing = MutableStateFlow(false)
+    val isTranscribing: StateFlow<Boolean> = _isTranscribing
+
     private val _status = MutableStateFlow("")
     val status: StateFlow<String> = _status
 
     private val _transcription = MutableStateFlow("")
     val transcription: StateFlow<String> = _transcription
 
-    private val _docId = MutableStateFlow<String?>(null)
-    val docId: StateFlow<String?> = _docId
-
     fun startRecording() {
         val context = getApplication<Application>()
-        
-        // Verificar permissão de microfone
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) 
-            != PackageManager.PERMISSION_GRANTED) {
+
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
             _status.value = "Permissão de microfone necessária"
             return
         }
-        
+
         val dir = context.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
-        wavFile = File(dir, "audio.wav")
+        wavFile = File(dir, "audio_${System.currentTimeMillis()}.wav")
         val sampleRate = 16000
         val channelConfig = AudioFormat.CHANNEL_IN_MONO
         val audioFormat = AudioFormat.ENCODING_PCM_16BIT
         val bufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
-        
+
         try {
             audioRecord = AudioRecord(
                 MediaRecorder.AudioSource.MIC,
@@ -88,15 +97,15 @@ class AudioTranscriptionViewModel(app: Application) : AndroidViewModel(app) {
         audioRecord = null
         recordingThread = null
         _isRecording.value = false
-        _status.value = "Áudio gravado: ${wavFile?.absolutePath}"
+        _status.value = "Áudio gravado. Toque em Transcrever para enviar ao servidor."
     }
 
     private fun writeAudioDataToWavFile(bufferSize: Int, sampleRate: Int, _channelConfig: Int, _audioFormat: Int) {
         val pcmBuffer = ByteArray(bufferSize)
-        val outputStream = FileOutputStream(wavFile)
+        val file = wavFile ?: return
+        val outputStream = FileOutputStream(file)
         val dataOutputStream = DataOutputStream(BufferedOutputStream(outputStream))
         try {
-            // Placeholder for WAV header
             for (i in 0 until 44) dataOutputStream.write(0)
             var totalBytes = 0
             while (isRecordingAudio) {
@@ -107,9 +116,8 @@ class AudioTranscriptionViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
             dataOutputStream.flush()
-            // Escreve o header WAV
             val wavHeader = createWavHeader(totalBytes, sampleRate, 1, 16)
-            val raf = RandomAccessFile(wavFile, "rw")
+            val raf = RandomAccessFile(file, "rw")
             raf.seek(0)
             raf.write(wavHeader)
             raf.close()
@@ -139,108 +147,121 @@ class AudioTranscriptionViewModel(app: Application) : AndroidViewModel(app) {
         writeInt(header, 40, totalAudioLen)
         return header
     }
+
     private fun writeInt(header: ByteArray, offset: Int, value: Int) {
         header[offset] = (value and 0xff).toByte()
         header[offset + 1] = ((value shr 8) and 0xff).toByte()
         header[offset + 2] = ((value shr 16) and 0xff).toByte()
         header[offset + 3] = ((value shr 24) and 0xff).toByte()
     }
+
     private fun writeShort(header: ByteArray, offset: Int, value: Short) {
         header[offset] = (value.toInt() and 0xff).toByte()
         header[offset + 1] = ((value.toInt() shr 8) and 0xff).toByte()
     }
 
     fun transcribe(pacienteId: String, dataSessao: String) {
+        val file = wavFile
+        if (file == null || !file.exists()) {
+            _status.value = "Grave ou selecione um áudio primeiro"
+            return
+        }
+        if (!backendAuth.isBackendAuthenticated()) {
+            _status.value = "Faça login no backend para usar transcrição de voz."
+            return
+        }
         _status.value = "Transcrevendo..."
-        viewModelScope.launch(Dispatchers.IO) {
-            transcreverAudioVosk(pacienteId, dataSessao)
+        _isTranscribing.value = true
+        viewModelScope.launch {
+            try {
+                val requestFile = file.asRequestBody("audio/wav".toMediaTypeOrNull())
+                val part = MultipartBody.Part.createFormData("file", file.name, requestFile)
+                val resp = withContext(Dispatchers.IO) { backendApi.transcribe(part) }
+                if (resp.isSuccessful) {
+                    val transcript = resp.body()?.transcript?.trim() ?: ""
+                    _transcription.value = transcript
+                    _status.value = "Transcrição concluída!"
+                } else {
+                    val msg = resp.errorBody()?.string() ?: "Erro ${resp.code()}"
+                    _status.value = "Transcrição falhou: $msg"
+                }
+            } catch (e: retrofit2.HttpException) {
+                _status.value = when (e.code()) {
+                    401 -> "Faça login no backend para usar transcrição."
+                    else -> "Erro ${e.code()}: ${e.message()}"
+                }
+            } catch (e: Exception) {
+                _status.value = "Erro: ${e.message}"
+            } finally {
+                _isTranscribing.value = false
+            }
         }
     }
 
-    private fun transcreverAudioVosk(pacienteId: String, dataSessao: String) {
-        StorageService.unpack(
-            getApplication(),
-            "model-pt",
-            "model-pt",
-            { modelPath: Model ->
-                try {
-                    val recognizer = Recognizer(modelPath, 16000.0f)
-                    val inputStream = FileInputStream(wavFile!!)
-                    val buffer = ByteArray(4096)
-                    var bytesRead: Int
-                    while (inputStream.read(buffer).also { bytesRead = it } >= 0) {
-                        recognizer.acceptWaveForm(buffer, bytesRead)
-                    }
-                    val result = recognizer.finalResult
-                    val texto = JSONObject(result).optString("text")
-                    _transcription.value = texto
-                    _status.value = "Transcrição concluída!"
-                    salvarTranscricaoFirestore(pacienteId, dataSessao, wavFile!!.absolutePath, texto)
-                } catch (e: Exception) {
-                    _status.value = "Erro na transcrição: ${e.message}"
-                }
-            },
-            { exception ->
-                _status.value = "Erro ao carregar modelo: ${exception.message}"
-            }
-        )
-    }
-
-    private fun salvarTranscricaoFirestore(
-        pacienteId: String,
-        dataSessao: String,
-        urlAudio: String,
-        textoTranscricao: String
-    ) {
-        val firestore = FirebaseFirestore.getInstance()
-        val data = hashMapOf(
-            "pacienteId" to pacienteId,
-            "dataSessao" to dataSessao,
-            "urlAudio" to urlAudio,
-            "textoTranscricao" to textoTranscricao
-        )
-        firestore.collection("transcricoes")
-            .add(data)
-            .addOnSuccessListener { docRef ->
-                _docId.value = docRef.id
-                _status.value = "Transcrição salva no Firestore!"
-            }
-            .addOnFailureListener { e ->
-                _status.value = "Erro ao salvar no Firestore: ${e.message}"
-            }
-    }
-
-    fun atualizarTranscricaoFirestore(novoTexto: String) {
-        val docId = _docId.value ?: return
-        val firestore = FirebaseFirestore.getInstance()
-        firestore.collection("transcricoes").document(docId)
-            .update("textoTranscricao", novoTexto)
-            .addOnSuccessListener { _status.value = "Transcrição atualizada!" }
-            .addOnFailureListener { e -> _status.value = "Erro ao atualizar: ${e.message}" }
-    }
-
     fun transcribeFromUri(context: Context, uri: Uri, pacienteId: String, dataSessao: String) {
+        if (!backendAuth.isBackendAuthenticated()) {
+            _status.value = "Faça login no backend para usar transcrição de voz."
+            return
+        }
         _status.value = "Processando arquivo..."
-        viewModelScope.launch(Dispatchers.IO) {
+        _isTranscribing.value = true
+        viewModelScope.launch {
             try {
-                // Copia o arquivo do Uri para um arquivo temporário WAV
-                val inputStream = context.contentResolver.openInputStream(uri)
+                val inputStream = context.contentResolver.openInputStream(uri) ?: run {
+                    _status.value = "Não foi possível abrir o arquivo"
+                    return@launch
+                }
+                val ext = context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    val nameIdx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (cursor.moveToFirst() && nameIdx >= 0) {
+                        val name = cursor.getString(nameIdx) ?: ""
+                        when {
+                            name.endsWith(".m4a", ignoreCase = true) -> ".m4a"
+                            name.endsWith(".mp3", ignoreCase = true) -> ".mp3"
+                            name.endsWith(".wav", ignoreCase = true) -> ".wav"
+                            name.endsWith(".webm", ignoreCase = true) -> ".webm"
+                            name.endsWith(".ogg", ignoreCase = true) -> ".ogg"
+                            name.endsWith(".flac", ignoreCase = true) -> ".flac"
+                            name.endsWith(".mp4", ignoreCase = true) -> ".mp4"
+                            else -> ".m4a"
+                        }
+                    } else ".m4a"
+                } ?: ".m4a"
                 val dir = context.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
-                val tempFile = File(dir, "audio_temp.wav")
-                inputStream?.use { input ->
+                val tempFile = File(dir, "audio_temp_${System.currentTimeMillis()}$ext")
+                inputStream.use { input ->
                     FileOutputStream(tempFile).use { output ->
                         input.copyTo(output)
                     }
                 }
-                wavFile = tempFile
-                _status.value = "Arquivo pronto para transcrição."
-                transcreverAudioVosk(pacienteId, dataSessao)
+                val mimeType = when {
+                    ext.endsWith(".m4a", ignoreCase = true) -> "audio/mp4"
+                    ext.endsWith(".mp3", ignoreCase = true) -> "audio/mpeg"
+                    ext.endsWith(".wav", ignoreCase = true) -> "audio/wav"
+                    else -> "audio/mp4"
+                }
+                val requestFile = tempFile.asRequestBody(mimeType.toMediaTypeOrNull())
+                val part = MultipartBody.Part.createFormData("file", tempFile.name, requestFile)
+                val resp = withContext(Dispatchers.IO) { backendApi.transcribe(part) }
+                if (resp.isSuccessful) {
+                    val transcript = resp.body()?.transcript?.trim() ?: ""
+                    _transcription.value = transcript
+                    _status.value = "Transcrição concluída!"
+                } else {
+                    _status.value = "Transcrição falhou: ${resp.code()}"
+                }
+                try { tempFile.delete() } catch (_: Exception) {}
             } catch (e: Exception) {
-                _status.value = "Erro ao processar arquivo: ${e.message}"
+                _status.value = "Erro: ${e.message}"
+            } finally {
+                _isTranscribing.value = false
             }
         }
     }
-} 
 
-
-
+    /** Permite editar/atualizar o texto da transcrição (para correções manuais) */
+    fun updateTranscriptionText(text: String) {
+        _transcription.value = text
+        _status.value = "Transcrição atualizada"
+    }
+}

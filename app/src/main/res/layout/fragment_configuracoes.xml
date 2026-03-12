@@ -1,36 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:background="?attr/colorSurface">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="32dp">
 
+        <!-- Título leve, alinhado ao web -->
         <TextView
             android:id="@+id/titleText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Configurações"
-            android:textColor="@color/bronze_gold"
-            android:textSize="24sp"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="22sp"
             android:textStyle="bold"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="16dp" />
+            android:letterSpacing="0.02"
+            android:layout_marginBottom="24dp" />
 
+        <!-- Perfil - card leve -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/profileCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="4dp"
-            app:layout_constraintTop_toBottomOf="@id/titleText">
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorOutline"
+            app:cardBackgroundColor="?attr/colorSurface">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -42,67 +48,38 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Perfil"
-                    android:textColor="@color/bronze_gold"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="14sp"
+                    android:textAllCaps="true"
+                    android:letterSpacing="0.05"
+                    android:layout_marginBottom="12dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/editProfileButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Editar Perfil"
+                    android:text="Editar perfil"
                     android:contentDescription="Editar perfil do usuário"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
-
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    app:icon="@drawable/ic_edit"
+                    app:iconGravity="start"
+                    app:iconPadding="8dp"
+                    app:iconSize="20dp"
+                    app:iconTint="?attr/colorPrimary" />
             </LinearLayout>
-
         </com.google.android.material.card.MaterialCardView>
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/clinicCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="4dp"
-            app:layout_constraintTop_toBottomOf="@id/profileCard">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Clínica"
-                    android:textColor="@color/bronze_gold"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/switchClinicButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Trocar clínica"
-                    android:contentDescription="Trocar clínica ativa"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
+        <!-- Sincronização - card leve -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/syncCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="4dp"
-            app:layout_constraintTop_toBottomOf="@id/clinicCard">
+            android:layout_marginTop="12dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorOutline"
+            app:cardBackgroundColor="?attr/colorSurface">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -114,39 +91,47 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Sincronização"
-                    android:textColor="@color/bronze_gold"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="14sp"
+                    android:textAllCaps="true"
+                    android:letterSpacing="0.05"
+                    android:layout_marginBottom="4dp" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="12dp"
                     android:text="Força nova sincronização com o servidor (agenda, pacientes, etc.)"
                     android:textSize="13sp"
-                    android:textColor="?attr/textColorSecondary" />
+                    android:textColor="?attr/textColorSecondary"
+                    android:lineSpacingExtra="2dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/syncNowButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:text="Sincronizar agora"
                     android:contentDescription="Forçar sincronização completa"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
-
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    app:icon="@drawable/ic_summary_check"
+                    app:iconGravity="start"
+                    app:iconPadding="8dp"
+                    app:iconSize="20dp"
+                    app:iconTint="?attr/colorPrimary" />
             </LinearLayout>
-
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Preferências -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/preferencesCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="4dp"
-            app:layout_constraintTop_toBottomOf="@id/syncCard">
+            android:layout_marginTop="12dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorOutline"
+            app:cardBackgroundColor="?attr/colorSurface">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -158,49 +143,58 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Preferências"
-                    android:textColor="@color/bronze_gold"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="14sp"
+                    android:textAllCaps="true"
+                    android:letterSpacing="0.05"
+                    android:layout_marginBottom="12dp" />
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/notificationsSwitch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:text="Notificações"
                     android:textColor="?attr/colorOnSurface"
-                    android:contentDescription="Ativar ou desativar notificações" />
+                    android:contentDescription="Ativar ou desativar notificações"
+                    />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="8dp"
+                    android:background="?attr/dividerColor" />
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/darkModeSwitch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Modo Escuro"
+                    android:text="Modo escuro"
                     android:textColor="?attr/colorOnSurface"
-                    android:contentDescription="Alternar modo escuro" />
+                    android:contentDescription="Alternar modo escuro"
+                    />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="0dp"
-                    android:layout_marginTop="2dp"
-                    android:text="Desligue para usar o Modo Claro"
+                    android:layout_marginTop="4dp"
+                    android:text="Desligue para usar o modo claro"
                     android:textSize="12sp"
                     android:textColor="?attr/textColorSecondary" />
-
             </LinearLayout>
-
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Acessibilidade -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/accessibilityCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="4dp"
-            app:layout_constraintTop_toBottomOf="@id/preferencesCard">
+            android:layout_marginTop="12dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorOutline"
+            app:cardBackgroundColor="?attr/colorSurface">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -212,58 +206,79 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/accessibility"
-                    android:textColor="@color/bronze_gold"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="14sp"
+                    android:textAllCaps="true"
+                    android:letterSpacing="0.05"
+                    android:layout_marginBottom="12dp" />
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/accessibilityLargeFontSwitch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:text="@string/accessibility_large_font"
                     android:textColor="?attr/colorOnSurface"
-                    android:contentDescription="Fonte ampliada para melhor leitura" />
+                    android:contentDescription="Fonte ampliada para melhor leitura"
+                    />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="8dp"
+                    android:background="?attr/dividerColor" />
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/accessibilityHighContrastSwitch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:text="@string/accessibility_high_contrast"
                     android:textColor="?attr/colorOnSurface"
-                    android:contentDescription="Alto contraste para melhor visualização" />
+                    android:contentDescription="Alto contraste para melhor visualização"
+                    />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="8dp"
+                    android:background="?attr/dividerColor" />
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/accessibilityLargerButtonsSwitch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:text="@string/accessibility_larger_buttons"
                     android:textColor="?attr/colorOnSurface"
-                    android:contentDescription="Botões maiores para facilitar toques" />
+                    android:contentDescription="Botões maiores para facilitar toques"
+                    />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="8dp"
+                    android:background="?attr/dividerColor" />
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/accessibilitySpacingSwitch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:text="@string/accessibility_increased_spacing"
                     android:textColor="?attr/colorOnSurface"
-                    android:contentDescription="Espaçamento aumentado entre elementos" />
-
+                    android:contentDescription="Espaçamento aumentado entre elementos"
+                    />
             </LinearLayout>
-
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Sobre -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/aboutCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="4dp"
-            app:layout_constraintTop_toBottomOf="@id/accessibilityCard">
+            android:layout_marginTop="12dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorOutline"
+            app:cardBackgroundColor="?attr/colorSurface">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -275,17 +290,19 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Sobre"
-                    android:textColor="@color/bronze_gold"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="14sp"
+                    android:textAllCaps="true"
+                    android:letterSpacing="0.05"
+                    android:layout_marginBottom="12dp" />
 
                 <TextView
                     android:id="@+id/versionText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:text="Versão 1.0.0"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="14sp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/privacyPolicyButton"
@@ -301,11 +318,8 @@
                     android:layout_height="wrap_content"
                     android:text="Termos de Uso"
                     style="@style/Widget.MaterialComponents.Button.TextButton" />
-
             </LinearLayout>
-
         </com.google.android.material.card.MaterialCardView>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-</androidx.core.widget.NestedScrollView> 
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

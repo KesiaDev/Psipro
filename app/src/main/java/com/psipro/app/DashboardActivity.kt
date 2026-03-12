@@ -27,6 +27,7 @@ import com.psipro.app.utils.AccessibilityPreferences
 import com.psipro.app.ui.viewmodels.VoiceCommandViewModel
 import com.psipro.app.utils.VoiceAction
 import com.psipro.app.databinding.ActivityDashboardBinding
+import com.psipro.app.ui.ClinicSwitchDialog
 import com.psipro.app.ui.NotificationsActivity
 import com.psipro.app.ui.viewmodels.NotificationViewModel
 import com.psipro.app.utils.WebNavigator
@@ -140,6 +141,9 @@ class DashboardActivity : AppCompatActivity() {
                 R.id.nav_sync_patients -> {
                     runSyncWithFeedback()
                 }
+                R.id.nav_trocar_clinica -> {
+                    ClinicSwitchDialog().show(supportFragmentManager, "clinicSwitch")
+                }
                 R.id.nav_configuracoes -> {
                     try {
                         navController.navigate(R.id.nav_configuracoes)
@@ -196,6 +200,9 @@ class DashboardActivity : AppCompatActivity() {
         
         // Configurar badge de notificações
         setupNotificationBadge()
+
+        // Visibilidade de Trocar Clínica (só quando logado no backend)
+        updateTrocarClinicaVisibility()
 
         // Observar comandos de voz reconhecidos
         lifecycleScope.launch {
@@ -288,8 +295,18 @@ class DashboardActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updateDrawerHeader()
+        updateTrocarClinicaVisibility()
         // Sync leve ao voltar ao foreground (não bloqueia offline)
         com.psipro.app.sync.work.SyncScheduler.enqueueBoth(this, "foreground")
+    }
+
+    private fun updateTrocarClinicaVisibility() {
+        val menuItem = navigationView.menu.findItem(R.id.nav_trocar_clinica)
+        val isBackendAuth = try {
+            EntryPointAccessors.fromApplication(applicationContext, SyncEntryPoint::class.java)
+                .backendAuthManager().isBackendAuthenticated()
+        } catch (_: Exception) { false }
+        menuItem.isVisible = isBackendAuth
     }
 
     fun updateDrawerHeader() {

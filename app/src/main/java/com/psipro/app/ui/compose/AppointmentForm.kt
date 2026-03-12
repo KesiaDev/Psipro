@@ -59,7 +59,7 @@ fun AppointmentForm(
     val isEditing = existingAppointment != null
 
     var eventTypeIndex by remember { mutableStateOf(initialEventTypeIndex) }
-    val eventTypes = listOf("Consulta", "Reconsulta", "Pessoal")
+    val eventTypes = listOf("Consulta", "Reconsulta")
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedDate by remember {
@@ -147,9 +147,7 @@ fun AppointmentForm(
             selectedPatient = patients.find { it.id == existingAppointment.patientId }
             statusIndex = statusEnumMap.entries.find { it.value == existingAppointment.status }?.key ?: 0
             eventTypeIndex = when (existingAppointment.type) {
-                AppointmentType.CONSULTA -> 0
                 AppointmentType.RECONSULTA -> 1
-                AppointmentType.PESSOAL -> 2
                 else -> 0
             }
         }
@@ -226,9 +224,8 @@ fun AppointmentForm(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                if (eventTypes[eventTypeIndex] != "Pessoal") {
-                    ExposedDropdownMenuBox(
-                        expanded = patientDropdownExpanded,
+                ExposedDropdownMenuBox(
+                    expanded = patientDropdownExpanded,
                         onExpandedChange = { patientDropdownExpanded = !patientDropdownExpanded },
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -257,7 +254,6 @@ fun AppointmentForm(
                             }
                         }
                     }
-                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -385,14 +381,13 @@ fun AppointmentForm(
                             startTime = startTime,
                             endTime = endTime,
                             patientId = selectedPatient?.id,
-                            patientName = selectedPatient?.name ?: "Pessoal",
+                            patientName = selectedPatient?.name ?: "",
 
                             colorHex = existingAppointment?.colorHex ?: appointmentColors.random(),
                             patientPhone = selectedPatient?.phone ?: "",
                             type = when (eventTypes[eventTypeIndex]) {
-                                "Consulta" -> AppointmentType.CONSULTA
                                 "Reconsulta" -> AppointmentType.RECONSULTA
-                                else -> AppointmentType.PESSOAL
+                                else -> AppointmentType.CONSULTA
                             }
                         )
 

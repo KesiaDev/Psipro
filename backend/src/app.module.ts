@@ -23,6 +23,7 @@ import { SyncModule } from './sync/sync.module';
 import { AnamneseModule } from './anamnese/anamnese.module';
 import { BetaModule } from './beta/beta.module';
 import { VoiceModule } from './voice/voice.module';
+import { IntegrationsModule } from './integrations/integrations.module';
 
 /**
  * PsiPro Backend
@@ -58,6 +59,7 @@ import { VoiceModule } from './voice/voice.module';
     AnamneseModule,
     BetaModule,
     VoiceModule,
+    IntegrationsModule,
   ],
 })
 export class AppModule {}

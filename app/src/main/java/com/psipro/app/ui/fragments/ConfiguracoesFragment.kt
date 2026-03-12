@@ -21,7 +21,6 @@ import com.psipro.app.ui.EditProfileDialog
 import android.util.Log
 import com.psipro.app.utils.AccessibilityPreferences
 import com.psipro.app.ui.EditProfileActivity
-import com.psipro.app.ui.ClinicSwitchDialog
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 import com.psipro.app.sync.BackendAuthManager
@@ -103,14 +102,8 @@ class ConfiguracoesFragment : Fragment() {
             Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
         }
 
-        // Trocar clínica (só para usuários logados no backend)
+        // Sincronizar agora (limpa watermarks e força sync completo) - só para usuários logados no backend
         val entryPoint = EntryPointAccessors.fromApplication(ctx.applicationContext, SyncEntryPoint::class.java)
-        binding.clinicCard.visibility = if (entryPoint.backendAuthManager().isBackendAuthenticated()) View.VISIBLE else View.GONE
-        binding.switchClinicButton.setOnClickListener {
-            ClinicSwitchDialog().show(childFragmentManager, "clinicSwitch")
-        }
-
-        // Sincronizar agora (limpa watermarks e força sync completo)
         binding.syncCard.visibility = if (entryPoint.backendAuthManager().isBackendAuthenticated()) View.VISIBLE else View.GONE
         binding.syncNowButton.setOnClickListener {
             entryPoint.sessionStore().clearSyncWatermarks()

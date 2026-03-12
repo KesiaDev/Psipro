@@ -11,14 +11,36 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/welcomeText"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:text="Bem-vindo (a)!"
-            android:textAppearance="?attr/textAppearanceHeadline5"
-            android:textColor="@color/bronze_gold" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="4dp">
+
+            <TextView
+                android:id="@+id/welcomeText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Bem-vindo (a)!"
+                android:textAppearance="?attr/textAppearanceHeadline5"
+                android:textColor="@color/bronze_gold" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/clinicSwitchChip"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Trocar clínica"
+                android:visibility="gone"
+                android:contentDescription="Trocar clínica ativa"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                app:chipIcon="@drawable/ic_business"
+                app:chipIconSize="18dp"
+                app:chipIconTint="?attr/colorPrimary" />
+        </LinearLayout>
 
         <!-- Cards de resumo - estilo da ficha do paciente -->
         <LinearLayout

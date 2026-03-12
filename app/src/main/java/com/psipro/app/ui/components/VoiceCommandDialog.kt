@@ -92,6 +92,11 @@ fun VoiceCommandDialog(
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
+                Text(
+                    text = "Ex.: \"nova sessão\", \"pacientes\", \"agenda de hoje\", \"dashboard\"",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 if (state.isListening) {
                     OutlinedButton(
                         onClick = onStopListening,

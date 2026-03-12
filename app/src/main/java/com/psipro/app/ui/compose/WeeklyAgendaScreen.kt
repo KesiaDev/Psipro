@@ -354,7 +354,6 @@ fun WeeklyAgendaScreen(
                     preselectedPatient = preselectedPatient,
                     initialEventTypeIndex = when (tipoConsulta) {
                         "Reconsulta" -> 1
-                        "Pessoal" -> 2
                         else -> 0 // "Consulta" ou null
                     },
                     onAppointmentCreated = { date -> focusedDate = date }
