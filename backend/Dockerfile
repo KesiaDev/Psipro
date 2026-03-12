@@ -1,5 +1,5 @@
-# Backend PsiPro - evita Nixpacks (que falha no Railway)
-FROM node:20-alpine AS builder
+# Backend PsiPro - usa Debian (não Alpine) para compatibilidade com Prisma
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
@@ -13,11 +13,14 @@ RUN npx prisma generate
 RUN npm run build
 
 # Produção
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
 
 ENV NODE_ENV=production
+
+# OpenSSL para Prisma
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Copiar apenas o necessário
 COPY --from=builder /app/package.json ./
