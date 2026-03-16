@@ -6,8 +6,11 @@ import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.psipro.app.sync.di.SyncEntryPoint
+import com.psipro.app.sync.work.SyncScheduler
 import com.psipro.app.ui.compose.PsiproTheme
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.EntryPointAccessors
 
 @AndroidEntryPoint
 class AnotacoesSessaoActivity : ComponentActivity() {
@@ -15,6 +18,15 @@ class AnotacoesSessaoActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val patientId = intent.getLongExtra("PATIENT_ID", -1)
         val patientName = intent.getStringExtra("PATIENT_NAME") ?: "Paciente"
+
+        // Sincronizar sessões ao abrir para alinhar com a web
+        try {
+            val entryPoint = EntryPointAccessors.fromApplication(applicationContext, SyncEntryPoint::class.java)
+            if (entryPoint.backendAuthManager().isBackendAuthenticated()) {
+                SyncScheduler.enqueueBoth(this, "anotacoes_sessao_open")
+            }
+        } catch (_: Exception) {}
+
         setContent {
             PsiproTheme {
                 Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier) {
