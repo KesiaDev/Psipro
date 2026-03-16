@@ -1,0 +1,27 @@
+{
+  "name": "qa-psipro",
+  "version": "3.0.0",
+  "description": "PsiPro QA Agent V3 - Exploração automática e validação da plataforma",
+  "private": true,
+  "scripts": {
+    "test": "npm run test:infra && npm run test:api && npm run test:web && npm run test:ai",
+    "test:v3": "npm run test && npm run explore && npm run test:explorer",
+    "test:infra": "playwright test tests/infra",
+    "test:api": "playwright test tests/api",
+    "test:web": "playwright test tests/web",
+    "test:ai": "playwright test tests/ai",
+    "test:sync": "playwright test tests/sync",
+    "test:security": "playwright test tests/security",
+    "test:performance": "playwright test tests/performance",
+    "test:explorer": "playwright test tests/explorer",
+    "test:all": "playwright test",
+    "test:mobile": "echo \"Mobile: execute ./gradlew connectedAndroidTest no psipro-app\"",
+    "explore": "npx ts-node --transpile-only agents/explorer-agent.ts",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.0.0",
+    "ts-node": "^10.9.2"
+  }
+}

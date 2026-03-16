@@ -1,0 +1,8 @@
+.env
+playwright-auth/
+test-results/
+playwright-report/
+blob-report/
+reports/
+junit/
+node_modules/
