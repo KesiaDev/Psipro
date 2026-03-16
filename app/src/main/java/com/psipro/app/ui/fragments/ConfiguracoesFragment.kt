@@ -112,6 +112,9 @@ class ConfiguracoesFragment : Fragment() {
         }
 
         // Listeners dos botões
+        binding.systemHealthButton.setOnClickListener {
+            startActivity(Intent(ctx, com.psipro.app.ui.SystemHealthActivity::class.java))
+        }
         binding.editProfileButton.setOnClickListener {
             val intent = Intent(ctx, EditProfileActivity::class.java)
             editProfileLauncher.launch(intent)

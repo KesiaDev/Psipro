@@ -101,5 +101,43 @@ interface BackendApiService {
 
     @POST("sessions/voice-note")
     suspend fun voiceNote(@Body body: VoiceNoteRequest): Response<SessionResponse>
+
+    /** SSO App->Web: envia JWT, recebe redirectUrl com handoff token (30s, single-use) */
+    @POST("auth/handoff")
+    suspend fun handoffCreate(@Body body: HandoffCreateRequest): Response<HandoffCreateResponse>
 }
+
+data class HandoffCreateRequest(
+    val token: String,
+    val returnUrl: String? = "/dashboard"
+)
+
+data class HandoffCreateResponse(
+    val handoffToken: String?,
+    val redirectUrl: String
+)
+
+/** API para health check (endpoint em /system-health, sem prefixo /api) */
+interface SystemHealthApi {
+    @GET("system-health")
+    suspend fun getSystemHealth(): Response<SystemHealthResponse>
+}
+
+data class SystemHealthResponse(
+    val status: String,
+    val services: SystemHealthServices,
+    val latency: SystemHealthLatency,
+    val timestamp: String
+)
+
+data class SystemHealthServices(
+    val backend: String,
+    val database: String,
+    val web: String,
+    val mobileSync: String
+)
+
+data class SystemHealthLatency(
+    val api: String
+)
 

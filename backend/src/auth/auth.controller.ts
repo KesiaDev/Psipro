@@ -70,11 +70,9 @@ export class AuthController {
   /**
    * POST /auth/handoff
    *
-   * Endpoint seguro de handoff para SSO Android -> Web:
-   * - recebe o mesmo JWT já emitido pelo backend (body ou Authorization header)
-   * - valida JWT com JwtService (mesma base lógica do /auth/me)
-   * - NÃO cria novo token e NÃO altera claims
-   * - retorna `{ token, user }` para o Web criar sessão local
+   * SSO Android -> Web (token 30s, single-use):
+   * - App envia JWT → retorna { handoffToken, redirectUrl }
+   * - Web envia handoffToken → retorna { accessToken, refreshToken, user }
    */
   @Post('handoff')
   async handoff(@Body() body: HandoffDto, @Headers('authorization') authorization?: string) {
@@ -84,11 +82,10 @@ export class AuthController {
 
     const token = body?.token || headerToken;
     if (!token) {
-      // 401 (ausente) — o Web/Android devem sempre enviar um JWT válido.
       throw new UnauthorizedException('Token inválido');
     }
 
-    return this.authService.handoff(token);
+    return this.authService.handoff(token, body?.returnUrl);
   }
 
   /**

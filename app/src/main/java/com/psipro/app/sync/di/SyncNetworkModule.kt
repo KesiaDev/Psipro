@@ -6,6 +6,7 @@ import com.psipro.app.BuildConfig
 import com.psipro.app.sync.BackendSessionStore
 import com.psipro.app.sync.api.AuthInterceptor
 import com.psipro.app.sync.api.BackendApiService
+import com.psipro.app.sync.api.SystemHealthApi
 import com.psipro.app.sync.api.RefreshInterceptor
 import dagger.Module
 import dagger.Provides
@@ -16,6 +17,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -67,6 +69,27 @@ object SyncNetworkModule {
     @Singleton
     fun provideBackendApi(retrofit: Retrofit): BackendApiService {
         return retrofit.create(BackendApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    @Named("systemHealth")
+    fun provideSystemHealthRetrofit(gson: Gson, client: OkHttpClient): Retrofit {
+        val base = BuildConfig.PSIPRO_API_BASE_URL
+            .trim()
+            .replace(Regex("/api/?$"), "")
+            .let { if (it.endsWith("/")) it else "$it/" }
+        return Retrofit.Builder()
+            .baseUrl(base)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSystemHealthApi(@Named("systemHealth") retrofit: Retrofit): SystemHealthApi {
+        return retrofit.create(SystemHealthApi::class.java)
     }
 }
 

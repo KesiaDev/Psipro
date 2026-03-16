@@ -151,6 +151,7 @@ model User {
   documents      Document[]
   auditLogs      AuditLog[]
   integrations   UserIntegration[]
+  handoffTokens   HandoffToken[]
 
   @@index([clinicId])
   @@map("users")
@@ -174,7 +175,22 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
-// Integrações externas (Google Calendar, WhatsApp, Gateway de Pagamento)
+// Token de handoff SSO (App -> Web). Single-use, 30s expiry.
+model HandoffToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String
+  clinicId  String?
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([expiresAt])
+  @@map("handoff_tokens")
+}
 model UserIntegration {
   id         String   @id @default(uuid())
   userId     String

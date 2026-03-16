@@ -4,8 +4,10 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type AuditRequest } from '../audit/audit.service';
 import { RefreshTokenService } from './refresh-token.service';
@@ -16,6 +18,7 @@ const ACCESS_TOKEN_EXPIRY = '15m';
 const BCRYPT_SALT_ROUNDS = 12;
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 min
+const HANDOFF_TOKEN_EXPIRY_SEC = 30;
 
 type AuthMeRole = 'ADMIN' | 'USER';
 
@@ -26,6 +29,7 @@ export class AuthService {
     private jwtService: JwtService,
     private refreshTokenService: RefreshTokenService,
     private auditService: AuditService,
+    private config: ConfigService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -397,27 +401,116 @@ export class AuthService {
 
   /**
    * Endpoint de handoff (SSO) Android -> Web.
-   * - Não cria token novo
-   * - Não altera claims
-   * - Apenas valida assinatura/expiração e devolve o payload mínimo do usuário
+   *
+   * Dois fluxos:
+   * 1) JWT (App): Valida JWT, cria handoff token single-use (30s), retorna redirectUrl
+   * 2) Handoff token (Web): Valida, marca usado, retorna accessToken + refreshToken + user
    */
-  async handoff(token: string) {
+  async handoff(token: string, returnUrl?: string) {
+    const isJwt = this.looksLikeJwt(token);
+
+    if (isJwt) {
+      return this.handoffCreateFromJwt(token, returnUrl ?? '/dashboard');
+    }
+    return this.handoffExchange(token);
+  }
+
+  private looksLikeJwt(str: string): boolean {
+    const parts = str.split('.');
+    return parts.length === 3 && parts.every((p) => /^[A-Za-z0-9_-]+$/.test(p));
+  }
+
+  /**
+   * App envia JWT → criar handoff token (30s, single-use) e retornar redirectUrl
+   */
+  private async handoffCreateFromJwt(jwt: string, returnUrl: string) {
     try {
-      const payload: any = await this.jwtService.verifyAsync(token);
+      const payload: { sub?: string } = await this.jwtService.verifyAsync(jwt);
       if (!payload?.sub) {
         throw new UnauthorizedException('Token inválido');
       }
 
       const user = await this.validateToken(String(payload.sub));
+      const clinicId = user.clinicId ?? null;
+
+      const handoffToken = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + HANDOFF_TOKEN_EXPIRY_SEC * 1000);
+
+      await this.prisma.handoffToken.create({
+        data: {
+          token: handoffToken,
+          userId: user.id,
+          clinicId,
+          expiresAt,
+        },
+      });
+
+      const dashboardUrl = this.config.get<string>('DASHBOARD_URL', 'https://psipro-dashboard-production.up.railway.app');
+      const base = dashboardUrl.replace(/\/+$/, '');
+      const safeReturn =
+        returnUrl && returnUrl.startsWith('/') && !returnUrl.includes('//')
+          ? returnUrl
+          : '/dashboard';
+      const redirectUrl = `${base}/login?token=${encodeURIComponent(handoffToken)}&returnUrl=${encodeURIComponent(safeReturn)}`;
 
       return {
-        token,
-        user,
+        handoffToken,
+        redirectUrl,
       };
     } catch (err) {
-      // Padronizar para 401 sem vazar detalhes do verificador JWT
+      if (err instanceof UnauthorizedException) throw err;
       throw new UnauthorizedException('Token inválido');
     }
+  }
+
+  /**
+   * Web envia handoff token → trocar por accessToken + refreshToken + user
+   */
+  private async handoffExchange(handoffToken: string) {
+    const now = new Date();
+    const record = await this.prisma.handoffToken.findUnique({
+      where: { token: handoffToken },
+      include: { user: true },
+    });
+
+    if (!record) {
+      throw new UnauthorizedException('Token inválido');
+    }
+    if (record.usedAt) {
+      throw new UnauthorizedException('Token já utilizado');
+    }
+    if (record.expiresAt < now) {
+      throw new UnauthorizedException('Token expirado');
+    }
+
+    await this.prisma.handoffToken.update({
+      where: { id: record.id },
+      data: { usedAt: now },
+    });
+
+    const userId = record.userId;
+    const clinicId = record.clinicId ?? undefined;
+
+    const payload = { sub: userId, ...(clinicId && { clinicId }) };
+    const accessToken = this.jwtService.sign(payload, { expiresIn: ACCESS_TOKEN_EXPIRY });
+    const refreshToken = await this.refreshTokenService.createRefreshToken(userId, clinicId ?? undefined);
+
+    const user = await this.validateToken(userId);
+    const professionalType = record.user.professionalType ?? 'psychologist';
+
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        fullName: user.name,
+        role: user.role,
+        professionalType,
+        clinicId: user.clinicId ?? undefined,
+      },
+    };
   }
 }
 

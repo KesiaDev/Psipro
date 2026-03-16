@@ -10,6 +10,8 @@ import { getApiBaseUrl } from "../../services/api";
 const API_BASE_URL = getApiBaseUrl();
 
 type HandoffResponse = {
+  accessToken?: string;
+  refreshToken?: string;
   token?: string;
   user?: {
     id?: string;
@@ -61,8 +63,11 @@ export default function LoginPage() {
           return;
         }
         const result = (await response.json()) as HandoffResponse;
-        const finalToken = result?.token ?? token;
+        const finalToken = result?.accessToken ?? result?.token ?? token;
         localStorage.setItem("psipro_token", finalToken);
+        if (result?.refreshToken) {
+          localStorage.setItem("psipro_refresh_token", result.refreshToken);
+        }
         const clinicId = result?.user?.clinicId;
         if (clinicId != null && String(clinicId).length > 0) {
           localStorage.setItem("psipro_current_clinic_id", String(clinicId));

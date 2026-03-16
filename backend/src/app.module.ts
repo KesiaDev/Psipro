@@ -24,6 +24,7 @@ import { AnamneseModule } from './anamnese/anamnese.module';
 import { BetaModule } from './beta/beta.module';
 import { VoiceModule } from './voice/voice.module';
 import { IntegrationsModule } from './integrations/integrations.module';
+import { SystemHealthModule } from './system-health/system-health.module';
 
 /**
  * PsiPro Backend
@@ -60,6 +61,7 @@ import { IntegrationsModule } from './integrations/integrations.module';
     BetaModule,
     VoiceModule,
     IntegrationsModule,
+    SystemHealthModule,
   ],
 })
 export class AppModule {}

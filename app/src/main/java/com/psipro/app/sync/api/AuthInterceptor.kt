@@ -14,7 +14,8 @@ class AuthInterceptor @Inject constructor(
 
         // Endpoints públicos (não enviam Authorization)
         if (path.endsWith("/auth/login") || path.endsWith("/auth/register") ||
-            path.endsWith("/auth/refresh") || path.endsWith("/auth/logout")) {
+            path.endsWith("/auth/refresh") || path.endsWith("/auth/logout") ||
+            path.endsWith("/system-health")) {
             return chain.proceed(request)
         }
 

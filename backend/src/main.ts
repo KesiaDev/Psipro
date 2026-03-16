@@ -68,7 +68,9 @@ async function bootstrap() {
     }),
   );
 
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', {
+      exclude: ['system-health', 'system-health/full', 'system-health/metrics'],
+    });
 
   const port = process.env.PORT ? Number(process.env.PORT) : 8080;
   await app.listen(port, '0.0.0.0');

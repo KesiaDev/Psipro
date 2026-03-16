@@ -6,13 +6,17 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
 import com.psipro.app.BuildConfig
-import com.psipro.app.R
+import com.psipro.app.sync.api.HandoffCreateRequest
 import com.psipro.app.sync.di.SyncEntryPoint
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Ponto central para abrir a plataforma Web do PsiPro via Chrome Custom Tabs.
- * Usa accessToken do backend (JWT) para handoff.
+ * SSO: App chama POST /auth/handoff com JWT, recebe redirectUrl com handoff token (30s, single-use).
  * Custom Tabs evita 404 na primeira abertura (pre-warm) e oferece experiência mais estável.
  */
 object WebNavigator {
@@ -40,22 +44,31 @@ object WebNavigator {
     private fun openWithSso(context: Context, returnPath: String) {
         val base = BASE_URL.trim().trimEnd('/')
         val loginUrl = "$base/login"
-        val url: String = try {
-            val entryPoint = EntryPointAccessors.fromApplication(
-                context.applicationContext,
-                SyncEntryPoint::class.java
-            )
-            val token = entryPoint.sessionStore().getAccessToken()
-            if (token.isNullOrBlank()) {
-                Toast.makeText(context, "Faça login no app para abrir automaticamente na plataforma web.", Toast.LENGTH_LONG).show()
-                loginUrl
-            } else {
-                "$loginUrl?token=${Uri.encode(token)}&returnUrl=${Uri.encode(returnPath)}"
+
+        CoroutineScope(Dispatchers.Main).launch {
+            val url = withContext(Dispatchers.IO) {
+                try {
+                    val entryPoint = EntryPointAccessors.fromApplication(
+                        context.applicationContext,
+                        SyncEntryPoint::class.java
+                    )
+                    val token = entryPoint.sessionStore().getAccessToken()
+                    if (token.isNullOrBlank()) {
+                        return@withContext null
+                    }
+                    val api = entryPoint.backendApiService()
+                    val resp = api.handoffCreate(HandoffCreateRequest(token = token, returnUrl = returnPath))
+                    if (resp.isSuccessful) resp.body()?.redirectUrl else null
+                } catch (_: Exception) {
+                    null
+                }
             }
-        } catch (e: Exception) {
-            loginUrl
+            val finalUrl = url ?: loginUrl
+            if (url == null) {
+                Toast.makeText(context, "Faça login no app para abrir automaticamente na plataforma web.", Toast.LENGTH_LONG).show()
+            }
+            openUrl(context, finalUrl)
         }
-        openUrl(context, url)
     }
 
     private fun openUrl(context: Context, url: String) {
