@@ -236,6 +236,9 @@ model Patient {
   // Compartilhamento (IDs dos psicólogos que podem ver/atender)
   sharedWith  String[] @default([])
   
+  // Anamnese (formulário livre do detalhe do paciente - dashboard)
+  anamnesis   Json?    // { items: [{ key, label, value, isCustom }], updatedAt }
+
   // Sincronização
   source      String   @default("app") // app | web
   origin      PatientOrigin @default(WEB)

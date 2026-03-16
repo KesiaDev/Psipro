@@ -83,7 +83,15 @@ export class PatientsService {
       throw new NotFoundException('Paciente não encontrado');
     }
 
-    return patient;
+    // Aliases para compatibilidade com frontend (anamnesis_data, anamnesisData)
+    const anamnesis = patient.anamnesis;
+    return {
+      ...patient,
+      ...(anamnesis != null && {
+        anamnesis_data: anamnesis,
+        anamnesisData: anamnesis,
+      }),
+    };
   }
 
   async create(
@@ -274,6 +282,7 @@ export class PatientsService {
     if (updatePatientDto.status !== undefined) data.status = updatePatientDto.status;
     if (updatePatientDto.type !== undefined) data.type = updatePatientDto.type;
     if (updatePatientDto.sharedWith !== undefined) data.sharedWith = updatePatientDto.sharedWith;
+    if (updatePatientDto.anamnesis !== undefined) data.anamnesis = updatePatientDto.anamnesis as object | null;
     if (updatePatientDto.source) {
       (data as any).origin = updatePatientDto.source === 'app' ? 'ANDROID' : 'WEB';
     }
