@@ -6,9 +6,10 @@ import { PatientPatternsService } from './patient-patterns.service';
 import { EmotionalEvolutionService } from './emotional-evolution.service';
 import { CommonModule } from '../common/common.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { VoiceModule } from '../voice/voice.module';
 
 @Module({
-  imports: [PrismaModule, CommonModule],
+  imports: [PrismaModule, CommonModule, VoiceModule],
   controllers: [PatientsController],
   providers: [
     PatientsService,

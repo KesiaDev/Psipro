@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { VoiceService } from '../voice/voice.service';
+import { extractAnamnesisText } from '../voice/voice.service';
 import { whereNotDeleted } from '../prisma/soft-delete.helper';
 
 export interface PatientPatternsResponse {
@@ -21,12 +23,15 @@ function toStrArray(val: JsonValue | null | undefined): string[] {
 
 @Injectable()
 export class PatientPatternsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly voiceService: VoiceService,
+  ) {}
 
   async getPatterns(patientId: string, clinicId: string): Promise<PatientPatternsResponse> {
     const patient = await this.prisma.patient.findFirst({
       where: whereNotDeleted('patient', { id: patientId, clinicId }),
-      select: { id: true },
+      select: { id: true, anamnesis: true, observations: true },
     });
     if (!patient) {
       throw new NotFoundException('Paciente não encontrado');
@@ -43,6 +48,7 @@ export class PatientPatternsService {
         themes: true,
         emotions: true,
         riskFlags: true,
+        notes: true,
       },
       orderBy: { date: 'asc' },
     });
@@ -52,10 +58,26 @@ export class PatientPatternsService {
     const patterns = this.computePatterns(sessions, dominantThemes, dominantEmotions);
     const alerts = this.computeAlerts(sessions);
 
+    // Padrões adicionais via IA a partir dos textos do profissional
+    const anamnesisText = extractAnamnesisText(patient.anamnesis);
+    const sessionNotes = sessions.map((s) => s.notes || '').filter(Boolean);
+    const aiPatterns = await this.voiceService.generatePatternsFromClinicianText(
+      anamnesisText,
+      patient.observations || '',
+      sessionNotes,
+    );
+
+    const mergedPatterns = [...patterns];
+    for (const p of aiPatterns) {
+      if (p && !mergedPatterns.some((x) => x.toLowerCase() === p.toLowerCase())) {
+        mergedPatterns.push(p);
+      }
+    }
+
     return {
       dominantThemes,
       dominantEmotions,
-      patterns,
+      patterns: mergedPatterns.slice(0, 10),
       alerts,
     };
   }

@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { VoiceService } from '../voice/voice.service';
+import { extractAnamnesisText } from '../voice/voice.service';
 import { whereNotDeleted } from '../prisma/soft-delete.helper';
 
 export interface SessionEmotionEntry {
@@ -28,6 +30,8 @@ export interface EmotionalEvolutionResponse {
   timelineData: TimelineDataPoint[];
   emotionFrequency: EmotionFrequencyEntry[];
   trend: EmotionTrendEntry[];
+  /** Resumo narrativo da evolução emocional considerando anamnese e notas do profissional */
+  aiContextSummary?: string;
 }
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
@@ -54,12 +58,15 @@ function extractEmotions(val: JsonValue | null | undefined): string[] {
 
 @Injectable()
 export class EmotionalEvolutionService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly voiceService: VoiceService,
+  ) {}
 
   async getEmotionalEvolution(patientId: string, clinicId: string): Promise<EmotionalEvolutionResponse> {
     const patient = await this.prisma.patient.findFirst({
       where: whereNotDeleted('patient', { id: patientId, clinicId }),
-      select: { id: true },
+      select: { id: true, anamnesis: true, observations: true },
     });
     if (!patient) {
       throw new NotFoundException('Paciente não encontrado');
@@ -70,7 +77,7 @@ export class EmotionalEvolutionService {
         ...whereNotDeleted('session', { patientId }),
         status: 'realizada',
       },
-      select: { id: true, date: true, emotions: true },
+      select: { id: true, date: true, emotions: true, notes: true },
       orderBy: { date: 'asc' },
     });
 
@@ -87,12 +94,26 @@ export class EmotionalEvolutionService {
     const trend = this.computeTrend(sessionEntries);
     const timelineData = this.buildTimelineData(sessionEntries);
 
-    return {
+    const emotionSummary = emotionFrequency
+      .map((e) => `${e.emotion}: ${e.count}x`)
+      .join('; ');
+    const sessionNotes = sessions.map((s) => s.notes || '').filter(Boolean);
+    const aiContextSummary = await this.voiceService.generateEmotionalContextSummary(
+      extractAnamnesisText(patient.anamnesis),
+      patient.observations || '',
+      sessionNotes,
+      emotionSummary,
+    );
+
+    const result: EmotionalEvolutionResponse = {
       sessions: sessionEntries,
       timelineData,
       emotionFrequency,
       trend,
     };
+    if (aiContextSummary) result.aiContextSummary = aiContextSummary;
+
+    return result;
   }
 
   private buildTimelineData(sessions: SessionEmotionEntry[]): TimelineDataPoint[] {

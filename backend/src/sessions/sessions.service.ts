@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { VoiceService } from '../voice/voice.service';
+import { VoiceService, extractAnamnesisText } from '../voice/voice.service';
 import { whereNotDeleted } from '../prisma/soft-delete.helper';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
@@ -228,7 +228,15 @@ export class SessionsService {
   ) {
     const session = await this.prisma.session.findFirst({
       where: whereNotDeleted('session', { id: sessionId }),
-      include: { patient: { select: { clinicId: true } } },
+      include: {
+        patient: {
+          select: {
+            clinicId: true,
+            anamnesis: true,
+            observations: true,
+          },
+        },
+      },
     });
     if (!session) {
       throw new NotFoundException('Sessão não encontrada');
@@ -239,9 +247,17 @@ export class SessionsService {
     }
 
     const transcriptText = transcript.trim();
+    const anamnesisText = extractAnamnesisText(session.patient?.anamnesis);
+    const observations = session.patient?.observations?.trim() || '';
 
     try {
-      const insights = await this.voiceService.generateInsights(transcriptText);
+      const insights = await this.voiceService.generateInsights(transcriptText, {
+        sessionNotes: session.notes || undefined,
+        patientContext:
+          anamnesisText || observations
+            ? { anamnesis: anamnesisText, observations }
+            : undefined,
+      });
       return this.prisma.session.update({
         where: { id: sessionId },
         data: {
