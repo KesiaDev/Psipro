@@ -9,24 +9,53 @@ import { CreateClinicDto } from './dto/create-clinic.dto';
 import { UpdateClinicDto } from './dto/update-clinic.dto';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { UpdateClinicUserDto } from './dto/update-clinic-user.dto';
+import { PlanType } from '@prisma/client';
+import { AuditService } from '../audit/audit.service';
+import { whereNotDeleted } from '../prisma/soft-delete.helper';
 
 @Injectable()
 export class ClinicsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditService: AuditService,
+  ) {}
 
+  /**
+   * POST /clinics — Cria nova clínica e associa usuário como OWNER.
+   * Não exige clinicId; usuário pode não ter clínica ainda.
+   * Retorna clinic + novo accessToken com userId, email, clinicId, role.
+   */
   async create(userId: string, createClinicDto: CreateClinicDto) {
-    // Criar clínica
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true },
+    });
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    // Criar clínica com planType INDIVIDUAL e status active
     const clinic = await this.prisma.clinic.create({
       data: {
-        ...createClinicDto,
+        name: createClinicDto.name,
+        planType: PlanType.INDIVIDUAL,
+        status: 'active',
+        plan: 'basic',
+        ...(createClinicDto.email && { email: createClinicDto.email }),
+        ...(createClinicDto.phone && { phone: createClinicDto.phone }),
+        ...(createClinicDto.address && { address: createClinicDto.address }),
+        ...(createClinicDto.cnpj && { cnpj: createClinicDto.cnpj }),
       },
     });
 
-    // Adicionar criador como owner
-    await this.prisma.clinicUser.create({
-      data: {
+    // NÃO alterar User. Relação via ClinicUser (N:N).
+    await this.prisma.clinicUser.upsert({
+      where: {
+        clinicId_userId: { clinicId: clinic.id, userId },
+      },
+      create: {
         clinicId: clinic.id,
-        userId: userId,
+        userId,
         role: 'owner',
         status: 'active',
         canViewAllPatients: true,
@@ -34,19 +63,15 @@ export class ClinicsService {
         canViewFinancial: true,
         canManageUsers: true,
       },
+      update: { role: 'owner', status: 'active' },
     });
 
-    // Atualizar usuário para não ser mais independente (opcional)
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { isIndependent: false },
-    });
-
-    return clinic;
+    // Retorna apenas clinic. JWT não é regenerado.
+    return { clinic };
   }
 
   async findAll(userId: string) {
-    // Buscar todas as clínicas do usuário
+    // Buscar todas as clínicas do usuário via ClinicUser
     const clinicUsers = await this.prisma.clinicUser.findMany({
       where: {
         userId: userId,
@@ -57,16 +82,34 @@ export class ClinicsService {
       },
     });
 
-    return clinicUsers.map((cu) => ({
-      ...cu.clinic,
-      role: cu.role,
-      permissions: {
-        canViewAllPatients: cu.canViewAllPatients,
-        canEditAllPatients: cu.canEditAllPatients,
-        canViewFinancial: cu.canViewFinancial,
-        canManageUsers: cu.canManageUsers,
-      },
-    }));
+    if (clinicUsers.length > 0) {
+      return clinicUsers.map((cu) => ({
+        ...cu.clinic,
+        role: cu.role,
+        permissions: {
+          canViewAllPatients: cu.canViewAllPatients,
+          canEditAllPatients: cu.canEditAllPatients,
+          canViewFinancial: cu.canViewFinancial,
+          canManageUsers: cu.canManageUsers,
+        },
+      }));
+    }
+
+    // Fallback: usuário com User.clinicId mas sem ClinicUser (registros antigos)
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { clinicId: true },
+    });
+    if (user?.clinicId) {
+      const clinic = await this.prisma.clinic.findUnique({
+        where: { id: user.clinicId },
+      });
+      if (clinic) {
+        return [{ ...clinic, role: 'owner', permissions: { canViewAllPatients: true, canEditAllPatients: true, canViewFinancial: true, canManageUsers: true } }];
+      }
+    }
+
+    return [];
   }
 
   async findOne(id: string, userId: string) {
@@ -122,28 +165,42 @@ export class ClinicsService {
   }
 
   async update(id: string, userId: string, updateClinicDto: UpdateClinicDto) {
-    // Verificar se usuário é owner ou admin
-    const clinicUser = await this.prisma.clinicUser.findUnique({
-      where: {
-        clinicId_userId: {
-          clinicId: id,
-          userId: userId,
-        },
-      },
-    });
-
-    if (!clinicUser) {
-      throw new NotFoundException('Clínica não encontrada');
-    }
-
-    if (!['owner', 'admin'].includes(clinicUser.role)) {
-      throw new ForbiddenException('Sem permissão para editar clínica');
-    }
-
+    await this.assertCanManageClinic(id, userId);
     return this.prisma.clinic.update({
       where: { id },
       data: updateClinicDto,
     });
+  }
+
+  /**
+   * DELETE /clinics/:id — Apenas owner ou admin.
+   * Remove clínica e dados em cascata (ClinicUser, Patient, etc).
+   */
+  async delete(id: string, userId: string) {
+    await this.assertCanManageClinic(id, userId);
+
+    await this.prisma.user.updateMany({
+      where: { clinicId: id },
+      data: { clinicId: null },
+    });
+
+    return this.prisma.clinic.delete({
+      where: { id },
+    });
+  }
+
+  private async assertCanManageClinic(clinicId: string, userId: string) {
+    const clinicUser = await this.prisma.clinicUser.findUnique({
+      where: {
+        clinicId_userId: { clinicId, userId },
+      },
+    });
+    if (!clinicUser) {
+      throw new NotFoundException('Clínica não encontrada');
+    }
+    if (!['owner', 'admin'].includes(clinicUser.role)) {
+      throw new ForbiddenException('Sem permissão para gerenciar esta clínica');
+    }
   }
 
   async inviteUser(clinicId: string, userId: string, inviteUserDto: InviteUserDto) {
@@ -185,7 +242,7 @@ export class ClinicsService {
     }
 
     // Criar convite
-    return this.prisma.clinicUser.create({
+    const created = await this.prisma.clinicUser.create({
       data: {
         clinicId: clinicId,
         userId: user.id,
@@ -197,6 +254,17 @@ export class ClinicsService {
         canManageUsers: inviteUserDto.canManageUsers || false,
       },
     });
+
+    this.auditService.log({
+      userId,
+      clinicId,
+      action: 'clinic_invite',
+      entity: 'ClinicUser',
+      entityId: created.id,
+      metadata: { targetEmail: inviteUserDto.email, role: created.role },
+    }).catch(() => {});
+
+    return created;
   }
 
   async updateUser(
@@ -238,7 +306,7 @@ export class ClinicsService {
       throw new ForbiddenException('Não é possível alterar role do owner');
     }
 
-    return this.prisma.clinicUser.update({
+    const updated = await this.prisma.clinicUser.update({
       where: {
         clinicId_userId: {
           clinicId: clinicId,
@@ -247,6 +315,19 @@ export class ClinicsService {
       },
       data: updateDto,
     });
+
+    if (updateDto.role && targetUser.role !== updateDto.role) {
+      this.auditService.log({
+        userId: currentUserId,
+        clinicId,
+        action: 'role_change',
+        entity: 'ClinicUser',
+        entityId: targetUserId,
+        metadata: { targetUserId, from: targetUser.role, to: updateDto.role },
+      }).catch(() => {});
+    }
+
+    return updated;
   }
 
   async removeUser(clinicId: string, targetUserId: string, currentUserId: string) {
@@ -292,6 +373,32 @@ export class ClinicsService {
     });
   }
 
+  async getProfessionals(clinicId: string, userId: string) {
+    const clinicUser = await this.prisma.clinicUser.findUnique({
+      where: {
+        clinicId_userId: { clinicId, userId },
+      },
+    });
+    if (!clinicUser) {
+      throw new NotFoundException('Clínica não encontrada');
+    }
+
+    const clinicUsers = await this.prisma.clinicUser.findMany({
+      where: { clinicId, status: 'active' },
+      include: { user: true },
+      orderBy: { joinedAt: 'desc' },
+    });
+
+    return clinicUsers.map((cu) => ({
+      id: cu.user.id,
+      name: cu.user.name,
+      email: cu.user.email,
+      role: cu.role,
+      status: cu.status,
+      joinedAt: cu.joinedAt,
+    }));
+  }
+
   async getClinicStats(clinicId: string, userId: string) {
     // Verificar acesso
     const clinicUser = await this.prisma.clinicUser.findUnique({
@@ -314,24 +421,20 @@ export class ClinicsService {
 
     const [patientsCount, appointmentsCount, sessionsCount, revenue] = await Promise.all([
       this.prisma.patient.count({
-        where: { clinicId: clinicId },
+        where: whereNotDeleted('patient', { clinicId: clinicId }),
       }),
       this.prisma.appointment.count({
-        where: { clinicId: clinicId },
+        where: whereNotDeleted('appointment', { clinicId: clinicId }),
       }),
       this.prisma.session.count({
-        where: {
-          patient: {
-            clinicId: clinicId,
-          },
-        },
+        where: whereNotDeleted('session', {
+          patient: { clinicId: clinicId, deletedAt: null },
+        }),
       }),
       this.prisma.payment.aggregate({
         where: {
-          patient: {
-            clinicId: clinicId,
-          },
-          status: 'pago',
+          ...whereNotDeleted('payment', { status: 'pago' }),
+          patient: { clinicId: clinicId, deletedAt: null },
         },
         _sum: {
           amount: true,

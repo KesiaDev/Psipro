@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.fragments.HomeFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="4dp">
+
+            <TextView
+                android:id="@+id/welcomeText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Bem-vindo (a)!"
+                android:textAppearance="?attr/textAppearanceHeadline5"
+                android:textColor="@color/bronze_gold" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/clinicSwitchChip"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Trocar clínica"
+                android:visibility="gone"
+                android:contentDescription="Trocar clínica ativa"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                app:chipIcon="@drawable/ic_business"
+                app:chipIconSize="18dp"
+                app:chipIconTint="?attr/colorPrimary" />
+        </LinearLayout>
+
+        <!-- Cards de resumo - estilo da ficha do paciente -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingBottom="12dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="80dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="@drawable/card_summary_bg"
+                android:gravity="center"
+                android:layout_margin="4dp">
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_calendar"
+                    app:tint="?attr/colorSecondary" />
+                <TextView
+                    android:id="@+id/appointmentsCountText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sessões"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="80dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="@drawable/card_summary_bg"
+                android:gravity="center"
+                android:layout_margin="4dp">
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_check_circle"
+                    app:tint="@color/success_green" />
+                <TextView
+                    android:id="@+id/tvAtendidas"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Atendidas"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="80dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="@drawable/card_summary_bg"
+                android:gravity="center"
+                android:layout_margin="4dp">
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_error"
+                    app:tint="@color/error_red" />
+                <TextView
+                    android:id="@+id/tvFaltas"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Faltas"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Espaço extra entre resumo e abas -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="24dp" />
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/appointmentsTabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:tabGravity="fill"
+            app:tabMode="fixed"
+            app:tabIndicatorColor="@color/bronze_gold"
+            app:tabSelectedTextColor="@color/bronze_gold"
+            app:tabTextColor="?attr/colorOnSurface"
+            app:tabTextAppearance="@style/TabTextAppearance" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/appointmentsRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            tools:listitem="@layout/item_appointment" />
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout> 

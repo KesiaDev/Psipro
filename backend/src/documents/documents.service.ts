@@ -5,19 +5,13 @@ import { PrismaService } from '../prisma/prisma.service';
 export class DocumentsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(
-    userId: string,
-    patientId?: string,
-    clinicId?: string,
-  ) {
-    const where: { userId: string; patientId?: string; clinicId?: string } = {
-      userId,
-      ...(patientId && { patientId }),
-    };
-    if (clinicId) where.clinicId = clinicId;
-
+  async findAll(userId: string, clinicId: string, patientId?: string) {
     return this.prisma.document.findMany({
-      where,
+      where: {
+        userId,
+        patient: { clinicId },
+        ...(patientId && { patientId }),
+      },
       include: {
         patient: {
           select: {

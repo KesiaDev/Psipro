@@ -1,5 +1,15 @@
 import { api, ApiError } from './api';
 
+/** Mensagem amigável para conflito de agenda (409). Usar em toasts/feedback. */
+export const APPOINTMENT_CONFLICT_MESSAGE =
+  'Já existe uma consulta agendada neste horário. Escolha outro horário.';
+
+/** Verifica se o erro é de conflito de agenda (409). */
+export function isAppointmentConflictError(e: unknown): boolean {
+  if (!e || typeof e !== 'object' || !('status' in e)) return false;
+  return (e as ApiError).status === 409;
+}
+
 export interface Appointment {
   id: string;
   patientId: string;
@@ -102,7 +112,12 @@ class AppointmentService {
 
   private handleError(error: unknown): ApiError {
     if (error && typeof error === 'object' && 'status' in error) {
-      return error as ApiError;
+      const apiError = error as ApiError;
+      // B4: Tratar 409 Conflict - conflito de agenda
+      if (apiError.status === 409) {
+        return { message: APPOINTMENT_CONFLICT_MESSAGE, status: 409 };
+      }
+      return apiError;
     }
     return {
       message: 'Erro desconhecido',

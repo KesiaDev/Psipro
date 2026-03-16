@@ -8,10 +8,12 @@ import HistoricoClinicoTab from "@/app/components/paciente/HistoricoClinicoTab";
 import FinanceiroPacienteTab from "@/app/components/paciente/FinanceiroPacienteTab";
 import DocumentosArquivosTab from "@/app/components/paciente/DocumentosArquivosTab";
 import DadosCadastraisTab from "@/app/components/paciente/DadosCadastraisTab";
+import AnamneseTab from "@/app/components/paciente/AnamneseTab";
 
 const tabs = [
   { id: "visao-geral", label: "Visão Geral", icon: "📊", component: VisaoGeralTab },
   { id: "historico", label: "Histórico Clínico", icon: "📝", component: HistoricoClinicoTab },
+  { id: "anamnese", label: "Anamnese", icon: "📋", component: AnamneseTab },
   { id: "financeiro", label: "Financeiro", icon: "💰", component: FinanceiroPacienteTab },
   { id: "documentos", label: "Documentos & Arquivos", icon: "📄", component: DocumentosArquivosTab },
   { id: "dados", label: "Dados Cadastrais", icon: "👤", component: DadosCadastraisTab },

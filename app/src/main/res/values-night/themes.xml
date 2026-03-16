@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Tema ESCURO - PsiPro (fundo #0F0F10, superfície #1A1A1D, texto branco) -->
+    <style name="Theme.Psipro" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/psipro_primary</item>
+        <item name="colorPrimaryVariant">@color/psipro_primary_dark</item>
+        <item name="colorOnPrimary">@color/text_black</item>
+        <item name="colorSecondary">@color/secondary_bronze</item>
+        <item name="colorSecondaryVariant">@color/accent_bronze</item>
+        <item name="colorOnSecondary">@color/text_black</item>
+        <item name="android:windowBackground">@color/psipro_background_dark</item>
+        <item name="colorSurface">@color/psipro_surface_dark</item>
+        <item name="colorOnSurface">@color/text_white</item>
+        <item name="colorOnSurfaceVariant">@color/text_hint</item>
+        <item name="colorBackground">@color/psipro_background_dark</item>
+        <item name="textColorPrimary">@color/text_white</item>
+        <item name="textColorSecondary">@color/text_hint</item>
+        <item name="colorError">@color/error_red</item>
+        <item name="colorOutline">@color/psipro_primary</item>
+        <item name="dividerColor">@color/divider_psipro</item>
+        <item name="android:statusBarColor">@color/psipro_surface_dark</item>
+        <item name="android:navigationBarColor">@color/psipro_surface_dark</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+        <item name="fontFamily">@font/nunito</item>
+    </style>
+
+    <style name="Theme.Psipro.NoActionBar" parent="Theme.Psipro">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <!-- Alto contraste modo escuro - preto puro, texto branco -->
+    <style name="Theme.Psipro.HighContrast" parent="Theme.Psipro">
+        <item name="android:windowBackground">@color/high_contrast_bg_dark</item>
+        <item name="colorSurface">@color/high_contrast_bg_dark</item>
+        <item name="colorBackground">@color/high_contrast_bg_dark</item>
+        <item name="colorOnSurface">@color/high_contrast_text_dark</item>
+        <item name="colorOnSurfaceVariant">@color/high_contrast_text_dark</item>
+        <item name="colorOnBackground">@color/high_contrast_text_dark</item>
+        <item name="textColorPrimary">@color/high_contrast_text_dark</item>
+        <item name="textColorSecondary">@color/high_contrast_text_dark</item>
+        <item name="colorPrimary">@color/high_contrast_primary_dark</item>
+        <item name="colorOutline">@color/high_contrast_outline_dark</item>
+        <item name="android:statusBarColor">@color/high_contrast_bg_dark</item>
+        <item name="android:navigationBarColor">@color/high_contrast_bg_dark</item>
+    </style>
+</resources>

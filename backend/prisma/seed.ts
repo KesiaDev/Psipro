@@ -51,7 +51,7 @@ async function main() {
   // Criar clínica
   const clinic = await prisma.clinic.upsert({
     where: { id: 'clinic-1' },
-    update: {},
+    update: { planType: 'CLINIC' },
     create: {
       id: 'clinic-1',
       name: 'PsiClinic - Centro de Psicologia',
@@ -60,11 +60,37 @@ async function main() {
       phone: '(11) 3456-7890',
       address: 'Rua Exemplo, 123 - São Paulo, SP',
       plan: 'professional',
+      planType: 'CLINIC',
       status: 'active',
     },
   });
 
-  // Adicionar owner à clínica
+  // Atualizar owner e psychologist com clinicId
+  await prisma.user.update({
+    where: { id: owner.id },
+    data: { clinicId: clinic.id, role: 'OWNER', isIndependent: false },
+  });
+  await prisma.user.update({
+    where: { id: psychologist.id },
+    data: { clinicId: clinic.id, role: 'PSYCHOLOGIST', isIndependent: false },
+  });
+
+  // Psicólogo independente: criar sua própria clinic INDIVIDUAL
+  const individualClinic = await prisma.clinic.create({
+    data: {
+      name: independent.name,
+      email: independent.email,
+      plan: 'basic',
+      planType: 'INDIVIDUAL',
+      status: 'active',
+    },
+  });
+  await prisma.user.update({
+    where: { id: independent.id },
+    data: { clinicId: individualClinic.id, role: 'OWNER', isIndependent: true },
+  });
+
+  // Adicionar owner à clínica (ClinicUser)
   await prisma.clinicUser.upsert({
     where: {
       clinicId_userId: {
@@ -162,6 +188,34 @@ async function main() {
   ]);
 
   console.log('✅ Pacientes criados:', clinicPatients.length + independentPatients.length);
+
+  // Registros financeiros de teste (apenas se não existirem)
+  const financialCount = await prisma.financialRecord.count();
+  if (financialCount === 0) {
+    await prisma.financialRecord.createMany({
+      data: [
+        {
+          userId: owner.id,
+          clinicId: clinic.id,
+          date: new Date(),
+          type: 'receita',
+          amount: 150.0,
+          description: 'Sessão - Maria Silva',
+          category: 'session',
+        },
+        {
+          userId: owner.id,
+          clinicId: clinic.id,
+          date: new Date(),
+          type: 'despesa',
+          amount: 50.0,
+          description: 'Material de expediente',
+          category: 'other',
+        },
+      ],
+    });
+    console.log('✅ 2 registros financeiros de teste criados');
+  }
 
   console.log('🎉 Seed concluído!');
   console.log('\n📋 Credenciais:');

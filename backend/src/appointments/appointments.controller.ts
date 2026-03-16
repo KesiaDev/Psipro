@@ -1,18 +1,79 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { ClinicContextGuard } from '../common/guards/clinic-context.guard';
+import { ClinicGuard } from '../common/guards/clinic.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { ClinicId } from '../common/decorators/clinic-id.decorator';
+import { CurrentClinicId } from '../common/decorators/current-clinic.decorator';
+import { CreateAppointmentDto } from './dto/create-appointment.dto';
+import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 
 @Controller('appointments')
-@UseGuards(JwtAuthGuard, ClinicContextGuard)
+@UseGuards(JwtAuthGuard, ClinicGuard, RolesGuard)
+@Roles('admin', 'psychologist', 'assistant')
 export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}
 
   @Get()
-  findAll(@CurrentUser() user: any, @ClinicId() clinicId: string | null) {
-    return this.appointmentsService.findAll(user.sub, clinicId ?? undefined);
+  findAll(@CurrentUser() user: any, @CurrentClinicId() clinicId: string) {
+    return this.appointmentsService.findAll(user.sub, clinicId);
+  }
+
+  @Get('today')
+  getToday(@CurrentUser() user: any, @CurrentClinicId() clinicId: string) {
+    return this.appointmentsService.getToday(user.sub, clinicId);
+  }
+
+  @Get('recent')
+  getRecent(@CurrentUser() user: any, @CurrentClinicId() clinicId: string) {
+    return this.appointmentsService.getRecent(user.sub, clinicId);
+  }
+
+  @Get(':id')
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @CurrentClinicId() clinicId: string,
+  ) {
+    return this.appointmentsService.findOne(id, user.sub, clinicId);
+  }
+
+  @Post()
+  create(
+    @CurrentUser() user: any,
+    @CurrentClinicId() clinicId: string,
+    @Body() dto: CreateAppointmentDto,
+  ) {
+    return this.appointmentsService.create(user.sub, dto, clinicId);
+  }
+
+  @Put(':id')
+  update(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @CurrentClinicId() clinicId: string,
+    @Body() dto: UpdateAppointmentDto,
+  ) {
+    return this.appointmentsService.update(id, user.sub, dto, clinicId);
+  }
+
+  @Delete(':id')
+  delete(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @CurrentClinicId() clinicId: string,
+  ) {
+    return this.appointmentsService.delete(id, user.sub, clinicId);
   }
 }
 

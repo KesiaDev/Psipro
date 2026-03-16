@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsDateString, IsIn } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsIn, IsArray } from 'class-validator';
 
 export class UpdatePatientDto {
   @IsOptional()
@@ -45,5 +45,10 @@ export class UpdatePatientDto {
   @IsString()
   @IsIn(['app', 'web'])
   source?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  sharedWith?: string[];
 }
 

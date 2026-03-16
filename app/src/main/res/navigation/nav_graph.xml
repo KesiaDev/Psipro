@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/navigation_home">
+
+    <fragment
+        android:id="@+id/navigation_home"
+        android:name="com.psipro.app.ui.fragments.HomeInteligenteFragment"
+        android:label="@string/home"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/navigation_schedule"
+        android:name="com.psipro.app.ui.fragments.ScheduleFragment"
+        android:label="@string/schedule"
+        tools:layout="@layout/fragment_schedule" />
+
+    <fragment
+        android:id="@+id/navigation_patients"
+        android:name="com.psipro.app.ui.fragments.PatientsFragment"
+        android:label="@string/patients"
+        tools:layout="@layout/fragment_patients" />
+
+    <fragment
+        android:id="@+id/nav_notificacoes"
+        android:name="com.psipro.app.ui.fragments.NotificacoesFragment"
+        android:label="Notificações"
+        tools:layout="@layout/fragment_notificacoes" />
+
+    <fragment
+        android:id="@+id/nav_configuracoes"
+        android:name="com.psipro.app.ui.fragments.ConfiguracoesFragment"
+        android:label="Configurações"
+        tools:layout="@layout/fragment_configuracoes" />
+
+    <fragment
+        android:id="@+id/nav_suporte"
+        android:name="com.psipro.app.ui.fragments.SuporteFragment"
+        android:label="Suporte"
+        tools:layout="@layout/fragment_suporte" />
+
+</navigation> 

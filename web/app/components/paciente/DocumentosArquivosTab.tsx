@@ -1,28 +1,85 @@
-export default function DocumentosArquivosTab({ patientId }: { patientId: string }) {
-  // Dados mockados
-  const documents = [
-    {
-      id: "1",
-      name: "Termo de Consentimento",
-      type: "Documento",
-      date: "15/01/2025",
-      status: "Ativo",
-    },
-    {
-      id: "2",
-      name: "Avaliação Inicial",
-      type: "Relatório",
-      date: "20/01/2025",
-      status: "Ativo",
-    },
-    {
-      id: "3",
-      name: "Receita Médica",
-      type: "Documento",
-      date: "10/02/2025",
-      status: "Ativo",
-    },
-  ];
+"use client";
+
+import { useState, useEffect } from "react";
+import { documentService, type Document } from "@/app/services/documentService";
+import Skeleton from "@/app/components/Skeleton";
+
+function formatDate(iso?: string) {
+  if (!iso) return "—";
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+export default function DocumentosArquivosTab({
+  patientId,
+}: {
+  patientId: string;
+}) {
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    documentService
+      .getByPatient(patientId)
+      .then((d) => {
+        if (!cancelled) setDocuments(d);
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setError(
+            e && typeof e === "object" && "message" in e
+              ? String((e as { message: string }).message)
+              : "Erro ao carregar documentos"
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [patientId]);
+
+  const handleView = (doc: Document) => {
+    if (doc.fileUrl) window.open(doc.fileUrl, "_blank");
+  };
+
+  const handleDownload = (doc: Document) => {
+    if (doc.fileUrl) {
+      const a = document.createElement("a");
+      a.href = doc.fileUrl;
+      a.download = doc.name || "documento";
+      a.target = "_blank";
+      a.click();
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-48" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-psipro-error/10 border border-psipro-error/20 text-psipro-error rounded-lg p-6">
+        <p className="font-medium">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -32,7 +89,7 @@ export default function DocumentosArquivosTab({ patientId }: { patientId: string
         </p>
       </div>
 
-      <div className="bg-psipro-surface-elevated rounded-lg border border-psipro-border shadow-sm">
+      <div className="bg-psipro-surface-elevated rounded-lg border border-psipro-border">
         <div className="p-6 border-b border-psipro-divider">
           <h2 className="text-lg font-semibold text-psipro-text">Documentos & Arquivos</h2>
         </div>
@@ -49,7 +106,7 @@ export default function DocumentosArquivosTab({ patientId }: { patientId: string
                       </span>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-psipro-text-secondary">
-                      <span>{doc.date}</span>
+                      <span>{formatDate(doc.createdAt)}</span>
                       <span
                         className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
                           doc.status === "Ativo"
@@ -62,10 +119,18 @@ export default function DocumentosArquivosTab({ patientId }: { patientId: string
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button className="px-3 py-1.5 text-sm font-medium text-psipro-text-secondary bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated transition-all">
+                    <button
+                      onClick={() => handleView(doc)}
+                      disabled={!doc.fileUrl}
+                      className="px-3 py-1.5 text-sm font-medium text-psipro-text-secondary bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                       Visualizar
                     </button>
-                    <button className="px-3 py-1.5 text-sm font-medium text-psipro-text-secondary bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated transition-all">
+                    <button
+                      onClick={() => handleDownload(doc)}
+                      disabled={!doc.fileUrl}
+                      className="px-3 py-1.5 text-sm font-medium text-psipro-text-secondary bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                       Download
                     </button>
                   </div>
@@ -88,7 +153,3 @@ export default function DocumentosArquivosTab({ patientId }: { patientId: string
     </div>
   );
 }
-
-
-
-

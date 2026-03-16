@@ -1,13 +1,19 @@
-import { IsJWT, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class HandoffDto {
   /**
-   * JWT para validação.
+   * JWT (App → criar handoff) ou handoff token (Web → trocar por sessão).
    * Pode ser enviado no body (`token`) ou via `Authorization: Bearer <token>`.
    */
   @IsOptional()
   @IsString()
-  @IsJWT()
   token?: string;
+
+  /**
+   * Path para redirecionar após login (ex: /dashboard). Usado quando App cria handoff.
+   */
+  @IsOptional()
+  @IsString()
+  returnUrl?: string;
 }
 

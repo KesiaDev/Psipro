@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- PsiPro Design System - Dark -->
+    <color name="psipro_primary">#C89B3C</color>
+    <color name="psipro_primary_dark">#A67C2E</color>
+    <color name="psipro_background_dark">#0F0F10</color>
+    <color name="psipro_surface_dark">#1A1A1D</color>
+    <color name="divider_psipro">#2E2E31</color>
+    <!-- Drawer/BottomNav - modo escuro -->
+    <color name="drawer_item_text_unselected">@color/text_white</color>
+    <color name="drawer_item_bg_selected">#2A2518</color>
+
+    <!-- Cores da Marca -->
+    <color name="primary_bronze">#9e742c</color>
+    <color name="secondary_bronze">#9e742c</color>
+    <color name="accent_bronze">#9e742c</color>
+    <color name="bronze_gold">#9e742c</color>
+    <color name="bronze_gold_dark">#9e742c</color>
+
+    <!-- Cores de Texto -->
+    <color name="text_black">#FFFFFFFF</color>
+    <color name="text_gray">#6C757D</color>
+    <color name="text_white">#FFFFFFFF</color>
+    <color name="text_hint">#AAAAAA</color>
+
+    <!-- Cores de Fundo e Superfície -->
+    <color name="background_light">#121212</color>
+    <color name="surface_white">#1E1E1E</color>
+    <color name="background_black">#121212</color>
+    <color name="surface_black">#1E1E1E</color>
+    <color name="surface_bronze_dark">#1E1E1E</color>
+
+    <!-- Cores Funcionais -->
+    <color name="dividerColor">#1FFFFFFF</color> <!-- White com 12% de opacidade -->
+    <color name="error_red">#CF6679</color>
+    <color name="success_green">#81C784</color>
+    <color name="transparent">#00000000</color>
+
+    <!-- Cores de Aviso -->
+    <color name="warning_orange">#FFB74D</color>
+    <color name="warning_orange_light">#3E2723</color>
+
+    <!-- Cores Básicas (Evitar redefinir, usar @android:color se possível) -->
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+
+    <!-- Cor do ícone do launcher -->
+    <color name="ic_launcher_background">#1E1E1E</color>
+
+    <!-- Cores Legadas da Agenda (a serem revisadas/removidas) -->
+    <color name="agenda_bronze">#9e742c</color>
+    <color name="agenda_bronze_30">#4D9e742c</color>
+    <color name="agenda_event_bg">#269e742c</color>
+    <color name="agenda_event_text">#F5F5F5</color>
+    <color name="agenda_divider">#4D9e742c</color>
+    <color name="agenda_toggle_selected">#9e742c</color>
+    <color name="agenda_toggle_unselected">#333333</color>
+    <color name="agenda_toggle_text">#F5F5F5</color>
+    <color name="agenda_fab">#9e742c</color>
+    <color name="agenda_fab_ripple">#4D9e742c</color>
+
+    <color name="colorCardBackground">@color/surface_black</color>
+
+    <color name="attachment_button_primary">#9e742c</color>
+    <color name="attachment_button_secondary">#9e742c</color>
+    <color name="attachment_button_stroke">#9e742c</color>
+</resources>

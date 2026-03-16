@@ -1,0 +1,226 @@
+package com.psipro.app.ui.viewmodels
+
+import androidx.lifecycle.ViewModel
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewModelScope
+import com.psipro.app.data.entities.Patient
+import com.psipro.app.data.repository.PatientRepository
+import com.psipro.app.security.EncryptionManager
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+import kotlinx.coroutines.flow.asStateFlow
+import com.psipro.app.data.dao.AnamneseCampoDao
+import com.psipro.app.data.entities.AnamneseCampo
+import java.util.Date
+import java.util.UUID
+
+@HiltViewModel
+class PatientViewModel @Inject constructor(
+    private val repository: PatientRepository,
+    private val encryptionManager: EncryptionManager
+) : ViewModel() {
+
+    private val _patients = MutableStateFlow<List<Patient>>(emptyList())
+    val patients: StateFlow<List<Patient>> = _patients
+
+    private val _searchResults = MutableStateFlow<List<Patient>>(emptyList())
+    val searchResults: StateFlow<List<Patient>> = _searchResults
+
+    private val _currentPatient = MutableStateFlow<Patient?>(null)
+    val currentPatient: StateFlow<Patient?> = _currentPatient
+
+    private val _patientCount = MutableStateFlow(0)
+    val patientCount: StateFlow<Int> = _patientCount
+
+    private val _isNearLimit = MutableStateFlow(false)
+    val isNearLimit: StateFlow<Boolean> = _isNearLimit
+
+    private val _uiState = MutableStateFlow<PatientUiState>(PatientUiState.Loading)
+    val uiState: StateFlow<PatientUiState> = _uiState.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery
+
+    var anamneseCampos: List<AnamneseCampo> by mutableStateOf(emptyList())
+        private set
+
+    init {
+        loadPatients()
+        checkPatientCount()
+    }
+
+    private fun checkPatientCount() {
+        viewModelScope.launch {
+            _patientCount.value = repository.getPatientCount()
+            _isNearLimit.value = repository.isNearLimit()
+        }
+    }
+
+    private fun loadPatients() {
+        viewModelScope.launch {
+            try {
+                repository.allPatients.collect { allPatients ->
+                    _patients.value = allPatients.map { decryptPatientData(it) }
+                    _uiState.value = PatientUiState.Success(allPatients)
+                    checkPatientLimit()
+                }
+            } catch (e: Exception) {
+                _uiState.value = PatientUiState.Error("Erro ao carregar pacientes: ${e.message}")
+            }
+        }
+    }
+
+    fun searchPatients(query: String) {
+        viewModelScope.launch {
+            try {
+                if (query.isBlank()) {
+                    repository.allPatients.collect { allPatients ->
+                        _patients.value = allPatients.map { decryptPatientData(it) }
+                    }
+                } else {
+                    repository.searchPatients(query).collect { filteredPatients ->
+                        _patients.value = filteredPatients.map { decryptPatientData(it) }
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.value = PatientUiState.Error("Erro ao buscar pacientes: ${e.message}")
+            }
+        }
+    }
+
+    fun loadPatient(patientId: Long) {
+        viewModelScope.launch {
+            val patient = repository.getPatientById(patientId)
+            _currentPatient.value = patient?.let { decryptPatientData(it) }
+        }
+    }
+
+    suspend fun canAddMorePatients(): Boolean {
+        return repository.canAddMorePatients()
+    }
+
+    fun savePatient(patient: Patient) {
+        viewModelScope.launch {
+            if (!repository.canAddMorePatients()) {
+                // Emitir evento de limite atingido
+                return@launch
+            }
+
+            // Garantir metadados de sync (offline-first):
+            // - uuid se ausente
+            // - origin ANDROID
+            // - dirty true
+            // - updatedAt sempre "agora"
+            val now = Date()
+            val patientWithSync = patient.copy(
+                uuid = patient.uuid ?: UUID.randomUUID().toString(),
+                origin = "ANDROID",
+                dirty = true,
+                createdAt = if (patient.id == 0L) now else patient.createdAt,
+                updatedAt = now
+            )
+
+            val encryptedPatient = encryptPatientData(patientWithSync)
+            if (patientWithSync.id == 0L) {
+                repository.insertPatient(encryptedPatient)
+            } else {
+                repository.updatePatient(encryptedPatient)
+            }
+            // Otimização: só atualiza o paciente atual se for o mesmo
+            if (_currentPatient.value?.id == patientWithSync.id) {
+                _currentPatient.value = patientWithSync
+            }
+        }
+    }
+
+    fun deletePatient(patient: Patient) {
+        viewModelScope.launch {
+            repository.deletePatient(patient)
+            loadPatients()
+        }
+    }
+
+    suspend fun getPatientByCpf(cpf: String): Patient? {
+        return repository.getPatientByCpf(cpf)?.let { decryptPatientData(it) }
+    }
+
+    suspend fun getPatientById(id: Long): Patient? {
+        return repository.getPatientById(id)?.let { decryptPatientData(it) }
+    }
+
+    private fun encryptPatientData(patient: Patient): Patient {
+        if (patient.isEncrypted) return patient
+
+        return patient.copy(
+            clinicalHistory = patient.clinicalHistory?.let { encryptionManager.encrypt(it) },
+            medications = patient.medications?.let { encryptionManager.encrypt(it) },
+            allergies = patient.allergies?.let { encryptionManager.encrypt(it) },
+            isEncrypted = true
+        )
+    }
+
+    private fun decryptPatientData(patient: Patient): Patient {
+        if (!patient.isEncrypted) return patient
+
+        return patient.copy(
+            clinicalHistory = patient.clinicalHistory?.let { encryptionManager.decrypt(it) },
+            medications = patient.medications?.let { encryptionManager.decrypt(it) },
+            allergies = patient.allergies?.let { encryptionManager.decrypt(it) },
+            isEncrypted = false
+        )
+    }
+
+    fun checkPatientLimit() {
+        viewModelScope.launch {
+            try {
+                val currentCount = repository.getPatientCount()
+                val maxPatients = 100 // Limite máximo de pacientes
+                val warningThreshold = 90 // Limite para mostrar aviso
+
+                if (currentCount >= maxPatients) {
+                    _uiState.value = PatientUiState.Error("Limite máximo de pacientes atingido!")
+                    _isNearLimit.value = true
+                } else if (currentCount >= warningThreshold) {
+                    val remaining = maxPatients - currentCount
+                    _uiState.value = PatientUiState.Warning("Atenção: Restam apenas $remaining vagas para pacientes!")
+                    _isNearLimit.value = true
+                } else {
+                    _isNearLimit.value = false
+                }
+            } catch (e: Exception) {
+                _uiState.value = PatientUiState.Error("Erro ao verificar limite de pacientes: ${e.message}")
+            }
+        }
+    }
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+        searchPatients(query)
+    }
+
+    fun loadAllPatients() {
+        loadPatients()
+    }
+
+    fun carregarCamposAnamnese(anamneseCampoDao: AnamneseCampoDao, modeloId: Long) {
+        viewModelScope.launch {
+            anamneseCampos = anamneseCampoDao.getByModeloId(modeloId)
+        }
+    }
+}
+
+sealed class PatientUiState {
+    object Loading : PatientUiState()
+    data class Success(val patients: List<Patient>) : PatientUiState()
+    data class Error(val message: String) : PatientUiState()
+    data class Warning(val message: String) : PatientUiState()
+} 
+
+
+

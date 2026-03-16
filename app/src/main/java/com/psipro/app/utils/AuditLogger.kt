@@ -1,0 +1,28 @@
+package com.psipro.app.utils
+
+import android.content.Context
+import android.util.Log
+import com.psipro.app.data.AppDatabase
+import com.psipro.app.data.entities.AuditLog
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.util.Date
+
+object AuditLogger {
+    fun log(context: Context, userId: Long?, action: String, target: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val db = AppDatabase.getInstance(context)
+            db.auditLogDao().insertLog(
+                AuditLog(
+                    action = action,
+                    user = userId?.toString() ?: "desconhecido",
+                    details = target
+                )
+            )
+        }
+    }
+} 
+
+
+

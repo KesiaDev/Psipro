@@ -9,6 +9,7 @@ const navigation = [
   { name: "Pacientes", href: "/pacientes", icon: "👥" },
   { name: "Agenda", href: "/agenda", icon: "📅" },
   { name: "Financeiro", href: "/financeiro", icon: "💰" },
+  { name: "Relatórios", href: "/relatorios", icon: "📈" },
   { name: "Clínicas", href: "/clinica", icon: "🏥" },
   { name: "🧪 Teste", href: "/test", icon: "🧪" },
 ];

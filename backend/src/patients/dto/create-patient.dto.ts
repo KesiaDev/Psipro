@@ -1,8 +1,25 @@
-import { IsString, IsOptional, IsDateString, IsIn, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsIn, IsArray, MinLength } from 'class-validator';
+import { Transform } from 'class-transformer';
+
+function toName(obj: any): string {
+  const v = obj?.name ?? obj?.full_name ?? obj?.nome ?? '';
+  return (typeof v === 'string' ? v : String(v ?? '')).trim();
+}
 
 export class CreatePatientDto {
+  @Transform(({ obj }) => toName(obj))
   @IsString()
+  @MinLength(1, { message: 'Nome é obrigatório' })
   name: string;
+
+  /** Aliases para name (compatibilidade) */
+  @IsOptional()
+  @IsString()
+  full_name?: string;
+
+  @IsOptional()
+  @IsString()
+  nome?: string;
 
   @IsOptional()
   @IsString()

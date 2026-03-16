@@ -82,25 +82,11 @@ export interface UpdatePatientDto {
 
 class PatientService {
   /**
-   * Lista pacientes do usuário/clinica para sync Android <-> Web.
-   * Fonte de verdade: GET /sync/patients
+   * Lista pacientes da clínica ativa.
+   * GET /api/patients — clinicId vem do header X-Clinic-Id automaticamente.
    */
-  async getPatients(clinicId?: string): Promise<Patient[]> {
-    try {
-      const params = clinicId ? { clinicId } : undefined;
-      return await api.get<Patient[]>('/sync/patients', params);
-    } catch (error) {
-      // Fallback para modo "independente" (sem clínica) se o backend negar sync (403).
-      // Mantém compatibilidade com o fluxo anterior sem quebrar a navegação.
-      if (error && typeof error === 'object' && 'status' in error) {
-        const status = (error as ApiError).status;
-        if (status === 403) {
-          const params = clinicId ? { clinicId } : undefined;
-          return await api.get<Patient[]>('/patients', params);
-        }
-      }
-      throw this.handleError(error);
-    }
+  async getPatients(): Promise<Patient[]> {
+    return await api.get<Patient[]>('/patients');
   }
 
   /**
@@ -116,34 +102,10 @@ class PatientService {
 
   /**
    * Cria um novo paciente.
-   * - Se houver clinicId: usa POST /sync/patients (origin WEB + updatedAt)
-   * - Senão: usa POST /patients (modo independente)
+   * POST /api/patients — clinicId vem do header X-Clinic-Id automaticamente.
    */
   async createPatient(data: CreatePatientDto): Promise<Patient> {
     try {
-      if (data.clinicId) {
-        const synced = await this.syncPatients(data.clinicId, [
-          {
-            clinicId: data.clinicId,
-            name: data.name,
-            cpf: data.cpf,
-            phone: data.phone,
-            email: data.email,
-            birthDate: data.birthDate,
-            address: data.address,
-            emergencyContact: data.emergencyContact,
-            observations: data.observations,
-            status: data.status,
-            type: data.type,
-            sharedWith: data.sharedWith,
-            origin: 'WEB',
-            source: 'web',
-            updatedAt: new Date().toISOString(),
-          },
-        ]);
-        return synced[0];
-      }
-
       return await api.post<Patient>('/patients', data);
     } catch (error) {
       throw this.handleError(error);
@@ -151,8 +113,9 @@ class PatientService {
   }
 
   /**
-   * Upsert de pacientes para sync bidirecional (Android <-> Web).
-   * POST /sync/patients?clinicId=...
+   * Upsert de pacientes para sync bidirecional (Android ↔ Web).
+   * APENAS para sincronização — NÃO usar para CRUD normal.
+   * CRUD usa: createPatient() → POST /api/patients
    */
   async syncPatients(clinicId: string, patients: SyncPatientDto[]): Promise<Patient[]> {
     try {
@@ -167,19 +130,23 @@ class PatientService {
   /**
    * Importa pacientes via Excel (multipart/form-data).
    * Retorna a lista criada pelo backend (persistida).
+   * clinicId vem do header X-Clinic-Id automaticamente.
    */
   async importPatients(
     file: File,
     mapping: Record<string, string>,
-    clinicId?: string,
-  ): Promise<Patient[]> {
+  ): Promise<Patient[] | { imported: number; skipped: number }> {
     try {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('mapping', JSON.stringify(mapping));
-      if (clinicId) formData.append('clinicId', clinicId);
+      // Enviar clinicId no body como backup (header X-Clinic-Id pode ser necessário)
+      const clinicId = typeof window !== 'undefined' ? localStorage.getItem('active_clinic_id') : null;
+      if (clinicId) {
+        formData.append('clinicId', clinicId);
+      }
 
-      return await api.postFormData<Patient[]>('/patients/import', formData);
+      return await api.postFormData<Patient[] | { imported: number; skipped: number }>('/patients/import', formData);
     } catch (error) {
       throw this.handleError(error);
     }

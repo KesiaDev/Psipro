@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Fundo verde -->
+    <path
+        android:fillColor="#009739"
+        android:pathData="M2,2h20v20h-20z"/>
+    <!-- Losango amarelo -->
+    <path
+        android:fillColor="#FFCC29"
+        android:pathData="M12,4 L20,12 L12,20 L4,12 Z"/>
+    <!-- Círculo azul -->
+    <path
+        android:fillColor="#3E4095"
+        android:pathData="M12,8a4,4 0 1,0 0,8a4,4 0 1,0 0,-8"/>
+</vector>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cores da Marca -->
+    <color name="primary_bronze">#CD7F32</color>
+    <color name="secondary_bronze">#B87333</color>
+    <color name="accent_bronze">#D2691E</color>
+    <color name="bronze_gold">#B8860B</color>
+    <color name="bronze_gold_dark">#8B6914</color>
+    <!-- PsiPro Design System -->
+    <color name="psipro_primary">#C89B3C</color>
+    <color name="psipro_primary_dark">#A67C2E</color>
+    <!-- Modo Claro (Web) -->
+    <color name="psipro_background_light">#FAFAFA</color>
+    <color name="psipro_surface_light">#FFFFFF</color>
+    <color name="psipro_text_primary_light">#0F0F10</color>
+    <color name="psipro_text_secondary_light">#525252</color>
+    <color name="psipro_border_light">#E5E5E5</color>
+    <!-- Borda dos inputs - visível mas suave (linha fraca) -->
+    <color name="input_stroke_default">#B8B8B8</color>
+    <color name="psipro_divider_light">#E5E5E5</color>
+    <!-- Drawer/BottomNav - adaptam ao tema -->
+    <color name="drawer_item_text_unselected">@color/psipro_text_primary_light</color>
+    <color name="drawer_item_bg_selected">#F5EDE0</color>
+    <color name="button_create_account_bg">#F8F4EE</color>
+    <!-- Botão Criar conta - creme que harmoniza com o dourado -->
+    <color name="psipro_cream">#F8F4EE</color>
+    <!-- Modo Alto Contraste (baixa visão) -->
+    <color name="high_contrast_bg_light">#FFFFFF</color>
+    <color name="high_contrast_bg_dark">#000000</color>
+    <color name="high_contrast_text_light">#000000</color>
+    <color name="high_contrast_text_dark">#FFFFFF</color>
+    <color name="high_contrast_primary">#8B6914</color>
+    <color name="high_contrast_primary_dark">#FFD54F</color>
+    <color name="high_contrast_outline">#000000</color>
+    <color name="high_contrast_outline_dark">#FFFFFF</color>
+    <!-- Modo Escuro -->
+    <color name="psipro_background_dark">#0F0F10</color>
+    <color name="psipro_surface_dark">#1A1A1D</color>
+    <color name="divider_psipro">#2E2E31</color>
+
+    <!-- Cores de Texto -->
+    <color name="text_black">#212529</color>
+    <color name="text_gray">#6C757D</color>
+    <color name="text_white">#FFFFFFFF</color>
+    <color name="text_hint">#AAAAAA</color>
+
+    <!-- Cores de Fundo e Superfície -->
+    <color name="background_light">#FAFAFA</color>
+    <color name="surface_white">#FFFFFF</color>
+
+    <!-- Cores Funcionais -->
+    <color name="dividerColor">#1F000000</color>
+    <color name="error_red">#D32F2F</color>
+    <color name="success_green">#388E3C</color>
+    <color name="transparent">#00000000</color>
+    <color name="red">#F44336</color>
+
+    <!-- Cores de Aviso -->
+    <color name="warning_orange">#FF9800</color>
+    <color name="warning_orange_light">#FFF3E0</color>
+
+    <!-- Cores Básicas (Evitar redefinir, usar @android:color se possível) -->
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+
+    <!-- Cor do ícone do launcher -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+
+    <!-- Cores Legadas da Agenda (a serem revisadas/removidas) -->
+    <color name="agenda_bronze">#B8860B</color>
+    <color name="agenda_bronze_30">#4DB8860B</color>
+    <color name="agenda_event_bg">#26B8860B</color>
+    <color name="agenda_event_text">#F5F5F5</color>
+    <color name="agenda_divider">#4DB8860B</color>
+    <color name="agenda_toggle_selected">#B8860B</color>
+    <color name="agenda_toggle_unselected">#FFFFFF</color>
+    <color name="agenda_toggle_text">#B8860B</color>
+    <color name="agenda_fab">#B8860B</color>
+    <color name="agenda_fab_ripple">#4DB8860B</color>
+
+    <color name="background_black">#000000</color>
+    <color name="surface_black">#1E1E1E</color>
+    <color name="surface_bronze_dark">#D3C5B3</color>
+
+    <color name="colorCardBackground">@color/bronze_gold</color>
+    
+    <!-- Cores para botões de anexo -->
+    <color name="attachment_button_primary">#CD7F32</color>
+    <color name="attachment_button_secondary">#B87333</color>
+    <color name="attachment_button_text">#FFFFFF</color>
+    <color name="attachment_button_stroke">#A0522D</color>
+    <color name="attachment_button_gold">@color/bronze_gold</color>
+    <color name="attachment_button_text_black">#000000</color>
+
+    <!-- Cores do Material Design -->
+    <color name="colorPrimary">#D1A054</color>
+    <color name="colorPrimaryDark">#B08D57</color>
+    <color name="colorAccent">#CD7F32</color>
+    <color name="colorSurface">#FFFFFF</color>
+    <color name="colorOnSurface">#212121</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+    <color name="whatsapp_green">#25D366</color>
+</resources>

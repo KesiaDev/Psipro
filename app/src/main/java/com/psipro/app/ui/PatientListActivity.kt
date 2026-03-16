@@ -1,0 +1,152 @@
+package com.psipro.app.ui
+
+import android.content.Intent
+import android.os.Bundle
+import com.psipro.app.R
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.psipro.app.adapter.PatientAdapter
+import com.psipro.app.databinding.ActivityPatientListBinding
+import com.psipro.app.DetalhePacienteActivity
+import com.psipro.app.ui.AppointmentScheduleActivity
+import com.psipro.app.ui.viewmodels.PatientViewModel
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.collect
+import com.psipro.app.CadastroPacienteActivity
+
+
+class PatientListActivity : SecureActivity() {
+    private lateinit var binding: ActivityPatientListBinding
+    private val viewModel: PatientViewModel by viewModels()
+    private lateinit var adapter: PatientAdapter
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityPatientListBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        setupRecyclerView()
+        setupSearch()
+        observePatients()
+        binding.addPatientButton.setOnClickListener {
+            android.widget.Toast.makeText(this, "FAB Clicado", android.widget.Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, CadastroPacienteActivity::class.java))
+        }
+    }
+
+    private fun setupRecyclerView() {
+        adapter = PatientAdapter(
+            onItemClick = { patient ->
+                // Abrir detalhes do paciente
+                val intent = Intent(this, DetalhePacienteActivity::class.java).apply {
+                    putExtra("PATIENT_ID", patient.id)
+                }
+                startActivity(intent)
+            },
+            onScheduleClick = { patient ->
+                // Abrir agendamento de consulta
+                val intent = Intent(this, AppointmentScheduleActivity::class.java).apply {
+                    putExtra("patient_id", patient.id)
+                    putExtra("patient_name", patient.name)
+                }
+                startActivity(intent)
+            },
+            onDeleteClick = { patient ->
+                androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("Excluir paciente")
+                    .setMessage("Tem certeza que deseja excluir este paciente?")
+                    .setPositiveButton("Excluir") { _, _ ->
+                        viewModel.deletePatient(patient)
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+            }
+        )
+
+        binding.patientsRecyclerView.apply {
+            layoutManager = LinearLayoutManager(this@PatientListActivity)
+            adapter = this@PatientListActivity.adapter
+        }
+    }
+
+    @OptIn(FlowPreview::class)
+    private fun setupSearch() {
+        binding.searchEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                viewModel.setSearchQuery(s?.toString() ?: "")
+            }
+        })
+
+        // Observar mudanças na busca com debounce
+        viewModel.searchQuery
+            .debounce(300)
+            .distinctUntilChanged()
+            .filter { it.length >= 3 || it.isEmpty() }
+            .onEach { query ->
+                if (query.isEmpty()) {
+                    viewModel.loadAllPatients()
+                } else {
+                    viewModel.searchPatients(query)
+                }
+            }
+            .launchIn(lifecycleScope)
+    }
+
+    private fun observePatients() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.patients.collect { patients ->
+                    adapter.submitList(patients)
+                    binding.emptyView.visibility = if (patients.isEmpty()) View.VISIBLE else View.GONE
+                }
+            }
+        }
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        finish()
+        return true
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_patient_list, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_import_patients -> {
+                // TODO: Iniciar fluxo de importação de pacientes
+                android.widget.Toast.makeText(this, "Importar Pacientes clicado", android.widget.Toast.LENGTH_SHORT).show()
+                true
+            }
+            android.R.id.home -> {
+                finish()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+} 
+
+
+

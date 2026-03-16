@@ -1,4 +1,5 @@
 # compiled output
+/dist
 /node_modules
 
 # Logs
@@ -38,8 +39,7 @@ lerna-debug.log*
 .env.local
 .env.*.local
 
-# Prisma (migrations devem ser commitadas para deploy)
-
+# Prisma (migrations devem ser versionadas para deploy)
 
 
 

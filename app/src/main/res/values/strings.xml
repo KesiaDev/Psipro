@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Psipro</string>
+    <string name="new_appointment">Nova consulta</string>
+    <string name="edit_appointment">Editar consulta</string>
+    <string name="save">Salvar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="delete">Excluir</string>
+    <string name="delete_appointment">Excluir consulta</string>
+    <string name="delete_appointment_confirmation">Tem certeza que deseja excluir esta consulta?</string>
+    <string name="fill_required_fields">Preencha todos os campos obrigatórios</string>
+    <string name="select_patient">Selecionar paciente</string>
+    <string name="no_patients_registered">Nenhum paciente cadastrado</string>
+    <string name="fill_all_fields">Por favor, preencha todos os campos obrigatórios</string>
+    <string name="search_patients">Buscar pacientes...</string>
+    <string name="view_details">Ver detalhes</string>
+    <string name="schedule_appointment">Agendar consulta</string>
+    
+    <!-- Cadastro de Paciente -->
+    <string name="patient_registration">Cadastro de paciente</string>
+    <string name="personal_data">Dados pessoais</string>
+    <string name="full_name">Nome completo</string>
+    <string name="cpf">CPF</string>
+    <string name="birth_date">Data de nascimento</string>
+    <string name="phone">Telefone</string>
+    <string name="clinical_info">Informações clínicas</string>
+    <string name="clinical_history">Histórico clínico</string>
+    <string name="medications">Medicamentos em uso</string>
+    <string name="allergies">Alergias</string>
+    <string name="patient_saved">Paciente cadastrado com sucesso!</string>
+    <string name="invalid_birth_date">Data de nascimento inválida</string>
+    <string name="fill_name">Por favor, preencha o nome</string>
+    <string name="fill_cpf">Por favor, preencha o CPF corretamente</string>
+    <string name="fill_birth_date">Por favor, preencha a data de nascimento corretamente</string>
+    <string name="fill_phone">Por favor, preencha o telefone corretamente</string>
+
+    <!-- Detalhes do Paciente -->
+    <string name="patient_details">Detalhes do paciente</string>
+    <string name="notes">Anotações</string>
+    <string name="add_note">Adicionar anotação</string>
+    <string name="note_saved">Anotação salva com sucesso</string>
+    <string name="error_saving_note">Erro ao salvar anotação: %1$s</string>
+    <string name="enter_note">Por favor, insira uma anotação</string>
+    <string name="error_loading_patient">Erro ao carregar paciente</string>
+
+    <string name="appointment_title">Título da consulta</string>
+    <string name="appointment_description">Descrição</string>
+    <string name="patient_name">Nome do paciente</string>
+    <string name="patient_phone">Telefone do paciente</string>
+    <string name="appointment_date">Data da consulta</string>
+    <string name="start_time">Hora de início</string>
+    <string name="end_time">Hora de término</string>
+    <string name="enable_reminder">Ativar lembrete</string>
+    <string name="reminder_minutes">Minutos antes do lembrete</string>
+    <string name="today">Hoje</string>
+    <string name="appointment_deleted">Consulta excluída com sucesso</string>
+    <string name="error_deleting_appointment">Erro ao excluir consulta</string>
+    <string name="appointment_conflict">Já existe uma consulta agendada neste horário</string>
+    <string name="appointment_updated">Consulta atualizada com sucesso</string>
+    <string name="error_updating_appointment">Erro ao atualizar consulta</string>
+    <string name="appointment_created">Consulta criada com sucesso</string>
+    <string name="error_creating_appointment">Erro ao criar consulta</string>
+    <string name="home">Dashboard</string>
+    <string name="schedule">Agenda</string>
+    <string name="schedule_professional">Agenda do profissional</string>
+    <string name="about_professional">Sobre o Profissional</string>
+    <string name="professional_type">Tipo de profissional</string>
+    <string name="patients">Pacientes</string>
+    <string name="welcome_message">Bem-vindo(a) ao Psipro</string>
+    <string name="today_summary">Resumo do dia</string>
+    <string name="today_appointments">Consultas de hoje</string>
+    <string name="no_appointments_today">Nenhuma consulta agendada para hoje</string>
+    <string name="logout">Sair</string>
+
+    <string name="patient_group">Grupo</string>
+    <string name="select_group">Selecione o grupo</string>
+    <string name="financial_info">Informações Financeiras</string>
+    <string name="session_value">Valor da Sessão</string>
+    <string name="billing_day">Dia da Cobrança</string>
+    <string name="enable_billing_reminder">Ativar lembrete mensal de cobrança</string>
+    <!-- Acessibilidade -->
+    <string name="accessibility">Acessibilidade</string>
+    <string name="accessibility_large_font">Fonte ampliada</string>
+    <string name="accessibility_high_contrast">Alto contraste</string>
+    <string name="accessibility_larger_buttons">Botões maiores</string>
+    <string name="accessibility_increased_spacing">Espaçamento aumentado</string>
+    <string name="add_patient">Adicionar paciente</string>
+    <string name="add">Adicionar</string>
+    <string name="back">Voltar</string>
+    <string name="record_session">Gravar sessão</string>
+    <string name="stop_record">Parar gravação</string>
+    <string name="end_session">Encerrar sessão</string>
+    <string name="start_session">Iniciar sessão</string>
+    <string name="ai_summary_generated">Resumo da sessão gerado pela inteligência artificial</string>
+    <string name="voice_command">Comando de voz</string>
+    <string name="voice_command_accessibility">Comando de voz. Toque para dar comandos por voz, como nova sessão, buscar paciente ou agenda de hoje.</string>
+
+    <string name="financial_responsible">Responsável Financeiro</string>
+    <string name="responsible_name">Nome do responsável</string>
+    <string name="responsible_whatsapp">WhatsApp do responsável</string>
+    <string name="responsible_email">E-mail do responsável</string>
+    <string name="responsible_cpf">CPF do responsável</string>
+    <string name="emergency_contact">Contato de Emergência</string>
+    <string name="contact_name">Nome do contato</string>
+    <string name="contact_whatsapp">WhatsApp do contato</string>
+    <string name="additional_info">Dados Adicionais</string>
+    <string name="gender">Gênero</string>
+    <string name="birthplace">Naturalidade</string>
+    <string name="education">Escolaridade</string>
+    <string name="profession">Profissão</string>
+    <string name="referral">Encaminhamento</string>
+    <string name="marital_status">Estado Civil</string>
+    <string name="navigation_drawer_open">Abrir menu</string>
+    <string name="navigation_drawer_close">Fechar menu</string>
+
+    <string name="platform_web">Plataforma Web</string>
+    <string name="relatorios">Relatórios</string>
+    <string name="sync_patients">Sincronizar</string>
+
+    <!-- Help Screen -->
+    <string name="help">Ajuda</string>
+    
+    <!-- FAQ Questions -->
+    <string name="faq_question_1">Como adicionar um novo paciente?</string>
+    <string name="faq_answer_1">Para adicionar um novo paciente, clique no botão \"+\" na tela inicial e preencha os dados necessários no formulário de cadastro.</string>
+    
+    <string name="faq_question_2">Como agendar uma consulta?</string>
+    <string name="faq_answer_2">Na tela de detalhes do paciente, clique no botão \"Agendar Consulta\" e selecione a data e horário desejados.</string>
+    
+    <string name="faq_question_3">Como fazer backup dos dados?</string>
+    <string name="faq_answer_3">O backup é feito automaticamente quando você está conectado à internet. Você também pode fazer backup manual nas configurações do aplicativo.</string>
+    
+    <string name="faq_question_4">Como recuperar minha senha?</string>
+    <string name="faq_answer_4">Na tela de login, clique em \"Esqueci minha senha\" e siga as instruções enviadas para seu e-mail cadastrado.</string>
+    
+    <string name="faq_question_5">Como alterar minhas informações de perfil?</string>
+    <string name="faq_answer_5">Acesse o menu lateral, clique em \"Meu Perfil\" e edite as informações desejadas.</string>
+
+    <!-- Privacy Policy -->
+    <string name="privacy_policy">Política de Privacidade</string>
+    <string name="terms_of_use">Termos de Uso</string>
+    <string name="accept_terms">Ao continuar, você concorda com nossos Termos de Uso e Política de Privacidade</string>
+
+    <string name="skip">Pular</string>
+    <string name="next">Próximo</string>
+    <string name="email">E-mail</string>
+    <string name="recover_password">Recuperar Senha</string>
+    <string name="password_recovery">Recuperar Senha</string>
+    <string name="fill_email">Por favor, preencha o e-mail</string>
+    <string name="recovery_email_sent">E-mail de recuperação enviado com sucesso</string>
+    <string name="error_recovery">Erro ao recuperar senha. Tente novamente.</string>
+
+    <!-- Trocar clínica -->
+    <string name="switch_clinic">Trocar clínica</string>
+    <string name="no_clinics_available">Nenhuma clínica disponível</string>
+    <string name="error_loading_clinics">Erro ao carregar clínicas</string>
+    <string name="clinic_switched">Clínica alterada para %1$s</string>
+    <string name="error_switching_clinic">Erro ao trocar clínica</string>
+</resources>

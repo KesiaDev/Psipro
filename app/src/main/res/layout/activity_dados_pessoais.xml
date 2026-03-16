@@ -1,0 +1,674 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorBackground"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Cabeçalho -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingBottom="16dp">
+
+            <ImageView
+                android:id="@+id/btnVoltar"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="Voltar"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="?attr/colorPrimary" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:text="Dados do Paciente"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Seção: Dados Pessoais e Contato -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeColor="@color/bronze_gold"
+            app:cardBackgroundColor="?attr/colorSurface">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Nome -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_person"
+                        app:tint="@color/bronze_gold" />
+                    <EditText
+                        android:id="@+id/edtNome"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:background="@android:color/transparent"
+                        android:hint="Nome"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/textColorSecondary"
+                        android:textSize="16sp"
+                        android:fontFamily="sans-serif-medium" />
+                </LinearLayout>
+
+                <!-- Telefone -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_whatsapp"
+                        app:tint="@color/bronze_gold" />
+                    <EditText
+                        android:id="@+id/edtTelefone"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:background="@android:color/transparent"
+                        android:hint="WhatsApp"
+                        android:inputType="phone"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/textColorSecondary"
+                        android:textSize="16sp"
+                        android:fontFamily="sans-serif-medium" />
+                </LinearLayout>
+
+                <!-- Email -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_email"
+                        app:tint="@color/bronze_gold" />
+                    <EditText
+                        android:id="@+id/edtEmail"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:background="@android:color/transparent"
+                        android:hint="Email"
+                        android:inputType="textEmailAddress"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/textColorSecondary"
+                        android:textSize="16sp"
+                        android:fontFamily="sans-serif-medium" />
+                </LinearLayout>
+
+                <!-- CPF -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_badge"
+                        app:tint="@color/bronze_gold" />
+                    <EditText
+                        android:id="@+id/edtCpf"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:background="@android:color/transparent"
+                        android:hint="CPF"
+                        android:inputType="number"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/textColorSecondary"
+                        android:textSize="16sp"
+                        android:fontFamily="sans-serif-medium" />
+                </LinearLayout>
+
+                <!-- Tipo de Anamnese -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_anamnese"
+                        app:tint="@color/bronze_gold" />
+                    <AutoCompleteTextView
+                        android:id="@+id/spinnerTipoAnamnese"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/edit_text_background"
+                        android:hint="Tipo de Anamnese"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/textColorSecondary"
+                        android:textSize="16sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:inputType="none"
+                        android:focusable="false"
+                        android:clickable="true"
+                        android:drawableEnd="@drawable/ic_arrow_drop_down"
+                        android:drawableTint="@color/bronze_gold"
+                        android:padding="12dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Seção: Video Chamada e Identificação -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeColor="@color/bronze_gold"
+            app:cardBackgroundColor="?attr/colorSurface">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Link Video Chamada -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_video_call"
+                        app:tint="@color/bronze_gold" />
+                    <EditText
+                        android:id="@+id/edtVideoCall"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:background="@android:color/transparent"
+                        android:hint="Link de video chamada"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/textColorSecondary"
+                        android:textSize="16sp"
+                        android:fontFamily="sans-serif-medium" />
+                </LinearLayout>
+
+                <!-- RG -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_badge"
+                        app:tint="@color/bronze_gold" />
+                    <EditText
+                        android:id="@+id/edtRg"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:background="@android:color/transparent"
+                        android:hint="RG"
+                        android:inputType="text"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/textColorSecondary"
+                        android:textSize="16sp"
+                        android:fontFamily="sans-serif-medium" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Seção: Endereço -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeColor="@color/bronze_gold"
+            app:cardBackgroundColor="?attr/colorSurface">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Título da Seção -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="16dp">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_location"
+                        app:tint="@color/bronze_gold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:text="Endereço"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium" />
+                </LinearLayout>
+
+                <!-- CEP -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_location"
+                        app:tint="@color/bronze_gold" />
+                    <EditText
+                        android:id="@+id/edtCep"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:background="@android:color/transparent"
+                        android:hint="CEP"
+                        android:inputType="number"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/textColorSecondary"
+                        android:textSize="16sp"
+                        android:fontFamily="sans-serif-medium" />
+                </LinearLayout>
+
+                <!-- Endereço -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_location"
+                        app:tint="@color/bronze_gold" />
+                    <EditText
+                        android:id="@+id/edtEndereco"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:background="@android:color/transparent"
+                        android:hint="Endereço"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/textColorSecondary"
+                        android:textSize="16sp"
+                        android:fontFamily="sans-serif-medium" />
+                </LinearLayout>
+
+                <!-- Número e Bairro -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_location"
+                            app:tint="@color/bronze_gold" />
+                        <EditText
+                            android:id="@+id/edtNumero"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:background="@android:color/transparent"
+                            android:hint="Número"
+                            android:inputType="number"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textColorHint="?attr/textColorSecondary"
+                            android:textSize="16sp"
+                            android:fontFamily="sans-serif-medium" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_location"
+                            app:tint="@color/bronze_gold" />
+                        <EditText
+                            android:id="@+id/edtBairro"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:background="@android:color/transparent"
+                            android:hint="Bairro"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textColorHint="?attr/textColorSecondary"
+                            android:textSize="16sp"
+                            android:fontFamily="sans-serif-medium" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Cidade e Estado -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_location"
+                            app:tint="@color/bronze_gold" />
+                        <EditText
+                            android:id="@+id/edtCidade"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:background="@android:color/transparent"
+                            android:hint="Cidade"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textColorHint="?attr/textColorSecondary"
+                            android:textSize="16sp"
+                            android:fontFamily="sans-serif-medium" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_location"
+                            app:tint="@color/bronze_gold" />
+                        <EditText
+                            android:id="@+id/edtEstado"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:background="@android:color/transparent"
+                            android:hint="Estado"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textColorHint="?attr/textColorSecondary"
+                            android:textSize="16sp"
+                            android:fontFamily="sans-serif-medium" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Complemento -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_location"
+                        app:tint="@color/bronze_gold" />
+                    <EditText
+                        android:id="@+id/edtComplemento"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:background="@android:color/transparent"
+                        android:hint="Complemento"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/textColorSecondary"
+                        android:textSize="16sp"
+                        android:fontFamily="sans-serif-medium" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Seção: Financeiro -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeColor="@color/bronze_gold"
+            app:cardBackgroundColor="?attr/colorSurface">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Título da Seção -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="16dp">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_notification"
+                        app:tint="@color/bronze_gold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:text="Financeiro"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium" />
+                </LinearLayout>
+
+                <!-- Valor da Sessão e Dia de Cobrança -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_attach_money"
+                            app:tint="@color/bronze_gold" />
+                        <EditText
+                            android:id="@+id/edtValorSessao"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:background="@android:color/transparent"
+                            android:hint="R$ 0,00"
+                            android:inputType="numberDecimal"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textColorHint="?attr/textColorSecondary"
+                            android:textSize="16sp"
+                            android:fontFamily="sans-serif-medium" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_calendar"
+                            app:tint="@color/bronze_gold" />
+                        <EditText
+                            android:id="@+id/edtDiaCobranca"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:background="@android:color/transparent"
+                            android:hint="Dia"
+                            android:inputType="number"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textColorHint="?attr/textColorSecondary"
+                            android:textSize="16sp"
+                            android:fontFamily="sans-serif-medium" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Lembrete de Cobrança -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_notification"
+                        app:tint="@color/bronze_gold" />
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:text="Enviar lembrete mensal de cobrança"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp"
+                        android:fontFamily="sans-serif-medium" />
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchLembreteCobranca"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="false" />
+                </LinearLayout>
+
+                <!-- Aviso de Cobrança Automática -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_warning_card"
+                    android:padding="12dp"
+                    android:layout_marginTop="8dp">
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_info"
+                        app:tint="@color/warning_orange" />
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:text="Atenção: Cobrança automática ativada. Mantenha os registros financeiros do seu paciente atualizados."
+                        android:textColor="@color/warning_orange"
+                        android:textSize="14sp"
+                        android:fontFamily="sans-serif-medium" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Botão Salvar -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSalvarDados"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            android:text="Salvar Dados"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:cornerRadius="16dp"
+            app:backgroundTint="@color/bronze_gold"
+            android:textColor="@android:color/white" />
+
+    </LinearLayout>
+</ScrollView> 

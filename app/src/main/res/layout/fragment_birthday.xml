@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorBackground"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <!-- Header Compacto -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="?attr/colorSurface">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <!-- Navegação de Meses -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginBottom="8dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/prevMonthButton"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:text="◀"
+                        android:textSize="14sp"
+                        android:textColor="?attr/colorPrimary"
+                        app:icon="@drawable/ic_chevron_left"
+                        app:iconSize="16dp"
+                        app:iconTint="?attr/colorPrimary"
+                        app:cornerRadius="20dp" />
+
+                    <TextView
+                        android:id="@+id/monthYearText"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Julho 2024"
+                        android:textColor="?attr/colorPrimary"
+                        android:textStyle="bold"
+                        android:textSize="16sp"
+                        android:gravity="center"
+                        android:layout_marginHorizontal="12dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/nextMonthButton"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:text="▶"
+                        android:textSize="14sp"
+                        android:textColor="?attr/colorPrimary"
+                        app:icon="@drawable/ic_chevron_right"
+                        app:iconSize="16dp"
+                        app:iconTint="?attr/colorPrimary"
+                        app:cornerRadius="20dp" />
+                </LinearLayout>
+
+                <!-- Título Compacto -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_cake"
+                        android:tint="?attr/colorPrimary"
+                        android:layout_marginEnd="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Aniversariantes"
+                        android:textColor="?attr/colorPrimary"
+                        android:textStyle="bold"
+                        android:textSize="18sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Lista de Aniversariantes -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="?attr/colorSurface">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <TextView
+                    android:id="@+id/birthdayList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Carregando aniversariantes..."
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="14sp"
+                    android:lineSpacingExtra="2dp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Seção de Mensagens -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/messageLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="?attr/colorSurface">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <!-- Título da Seção -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_message"
+                        android:tint="?attr/colorPrimary"
+                        android:layout_marginEnd="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Enviar Mensagem"
+                        android:textColor="?attr/colorPrimary"
+                        android:textStyle="bold"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <!-- Seleção de Paciente -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:hint="Escolher aniversariante"
+                    app:startIconDrawable="@drawable/ic_person"
+                    app:startIconTint="?attr/colorPrimary"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/patientSpinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none"
+                        android:textSize="14sp"
+                        android:focusable="false"
+                        android:clickable="true" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Seleção de Mensagem -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:hint="Escolher mensagem de aniversário"
+                    app:startIconDrawable="@drawable/ic_edit"
+                    app:startIconTint="?attr/colorPrimary"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/messageSpinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none"
+                        android:textSize="14sp"
+                        android:focusable="false"
+                        android:clickable="true" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Campo para Editar Mensagem -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:hint="Editar mensagem (opcional)"
+                    app:startIconDrawable="@drawable/ic_edit"
+                    app:startIconTint="?attr/colorPrimary"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editMessageText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textMultiLine"
+                        android:minLines="3"
+                        android:maxLines="6"
+                        android:textSize="14sp"
+                        android:hint="Clique aqui para editar a mensagem..." />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Botões de Ação -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/copyButton"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="6dp"
+                        android:text="Copiar"
+                        android:textSize="12sp"
+                        android:textAllCaps="false"
+                        app:icon="@drawable/ic_copy"
+                        app:iconSize="16dp"
+                        app:iconGravity="textStart"
+                        app:cornerRadius="22dp"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/whatsappButton"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:text="Whatsapp"
+                        android:textSize="12sp"
+                        android:textAllCaps="false"
+                        app:icon="@drawable/ic_whatsapp"
+                        app:iconSize="16dp"
+                        app:iconGravity="textStart"
+                        app:cornerRadius="22dp"
+                        android:backgroundTint="@color/whatsapp_green"
+                        android:textColor="?attr/colorOnPrimary" />
+
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+    </LinearLayout>
+</ScrollView> 

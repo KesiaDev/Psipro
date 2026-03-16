@@ -1,10 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { ClinicContextGuard } from './common/guards/clinic-context.guard';
+import { ScheduleModule } from '@nestjs/schedule';
+import { LoggerModule } from './logger/logger.module';
+import { AppThrottlerModule } from './throttler/throttler.module';
+import { AuditModule } from './audit/audit.module';
+import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
 import { ClinicsModule } from './clinics/clinics.module';
+import { ProfessionalsModule } from './professionals/professionals.module';
+import { UsersModule } from './users/users.module';
 import { PatientsModule } from './patients/patients.module';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { SessionsModule } from './sessions/sessions.module';
@@ -13,9 +17,14 @@ import { FinancialModule } from './financial/financial.module';
 import { DocumentsModule } from './documents/documents.module';
 import { InsightsModule } from './insights/insights.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { CommonModule } from './common/common.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { ReportsModule } from './reports/reports.module';
 import { SyncModule } from './sync/sync.module';
-import { HealthModule } from './health/health.module';
+import { AnamneseModule } from './anamnese/anamnese.module';
+import { BetaModule } from './beta/beta.module';
+import { VoiceModule } from './voice/voice.module';
+import { IntegrationsModule } from './integrations/integrations.module';
+import { SystemHealthModule } from './system-health/system-health.module';
 
 /**
  * PsiPro Backend
@@ -25,20 +34,19 @@ import { HealthModule } from './health/health.module';
  */
 @Module({
   imports: [
+    LoggerModule,
+    AppThrottlerModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60,
-        limit: 100,
-      },
-    ]),
+    ScheduleModule.forRoot(),
     PrismaModule,
+    AuditModule,
     CommonModule,
-    HealthModule,
     AuthModule,
     ClinicsModule,
+    ProfessionalsModule,
+    UsersModule,
     PatientsModule,
     AppointmentsModule,
     SessionsModule,
@@ -46,14 +54,14 @@ import { HealthModule } from './health/health.module';
     FinancialModule,
     DocumentsModule,
     InsightsModule,
+    DashboardModule,
+    ReportsModule,
     SyncModule,
-  ],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
-    ClinicContextGuard,
+    AnamneseModule,
+    BetaModule,
+    VoiceModule,
+    IntegrationsModule,
+    SystemHealthModule,
   ],
 })
 export class AppModule {}

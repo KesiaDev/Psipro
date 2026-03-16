@@ -6,6 +6,7 @@ import ImportPatientsModal from "@/app/components/ImportPatientsModal";
 import CreatePatientModal, {
   type CreatePatientFormValues,
 } from "@/app/components/CreatePatientModal";
+import { DASHBOARD_REFRESH_EVENT } from "@/app/constants/events";
 import { patientService, type Patient } from "@/app/services/patientService";
 import { useClinic } from "@/app/contexts/ClinicContext";
 import { useToast } from "@/app/contexts/ToastContext";
@@ -22,50 +23,69 @@ export default function PacientesPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [pageError, setPageError] = useState<string | null>(null);
 
   const isImportEnabled = true;
 
-  // Carregar pacientes
-  useEffect(() => {
-    loadPatients();
-  }, [currentClinic?.id]);
-
   const loadPatients = async () => {
     setLoading(true);
+    setPageError(null);
     try {
-      const clinicId = currentClinic?.id;
-      const data = await patientService.getPatients(clinicId);
+      const data = await patientService.getPatients();
       setPatients(data);
     } catch (error) {
-      showError("Erro ao carregar pacientes");
-      console.error(error);
+      const err = error as { status?: number; message?: string };
+      const status = err?.status;
+      const msg =
+        status === 401
+          ? "Sessão expirada. Faça login novamente."
+          : status === 403
+            ? "Sem permissão para acessar os pacientes desta clínica."
+            : err?.message || "Erro ao carregar pacientes";
+      setPageError(msg);
+      showError(msg);
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    loadPatients();
+  }, [currentClinic?.id]);
+
   const handleCreatePatient = async (values: CreatePatientFormValues) => {
     setCreating(true);
     try {
       const payload = {
-        name: values.name.trim(),
-        phone: values.phone.trim() || undefined,
-        email: values.email.trim() || undefined,
-        cpf: values.cpf.trim() || undefined,
+        name: (values.name ?? '').trim(),
+        phone: (values.phone ?? '').trim() || undefined,
+        email: (values.email ?? '').trim() || undefined,
+        cpf: (values.cpf ?? '').trim() || undefined,
         birthDate: values.birthDate || undefined,
-        clinicId: currentClinic?.id,
         status: "Ativo",
-        source: "web", // compat: createPatient usa sync (origin WEB) quando clinicId existe
+        source: "web",
       };
 
       await patientService.createPatient(payload);
       showSuccess("Paciente cadastrado com sucesso");
       setIsCreateModalOpen(false);
+      setPageError(null);
       await loadPatients();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent(DASHBOARD_REFRESH_EVENT));
+      }
       router.push("/pacientes");
     } catch (error) {
-      showError("Erro ao cadastrar paciente");
-      console.error(error);
+      const err = error as { status?: number; message?: string };
+      const status = err?.status;
+      const msg =
+        status === 401
+          ? "Sessão expirada. Faça login novamente."
+          : status === 403
+            ? "Sem permissão para cadastrar pacientes nesta clínica."
+            : err?.message || "Erro ao cadastrar paciente";
+      setPageError(msg);
+      showError(msg);
     } finally {
       setCreating(false);
     }
@@ -73,12 +93,24 @@ export default function PacientesPage() {
 
   const handleImportPatients = async (file: File, mapping: Record<string, string>) => {
     try {
-      await patientService.importPatients(file, mapping, currentClinic?.id);
+      await patientService.importPatients(file, mapping);
       showSuccess("Pacientes importados com sucesso");
+      setPageError(null);
       await loadPatients();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent(DASHBOARD_REFRESH_EVENT));
+      }
     } catch (error) {
-      showError("Erro ao importar pacientes");
-      console.error(error);
+      const err = error as { status?: number; message?: string };
+      const status = err?.status;
+      const msg =
+        status === 401
+          ? "Sessão expirada. Faça login novamente."
+          : status === 403
+            ? "Sem permissão para importar pacientes nesta clínica."
+            : err?.message || "Erro ao importar pacientes";
+      setPageError(msg);
+      showError(msg);
       throw error;
     }
   };
@@ -101,6 +133,17 @@ export default function PacientesPage() {
 
   return (
     <div className="min-w-0">
+      {pageError && (
+        <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400">
+          <p className="font-medium">{pageError}</p>
+          <button
+            onClick={loadPatients}
+            className="mt-2 text-sm underline hover:no-underline"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      )}
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <div className="mb-4 sm:mb-6">

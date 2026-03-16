@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?attr/colorBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Prontuário"
+            android:textColor="@color/bronze_or_on_surface"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+        <Button
+            android:id="@+id/btnNovoProntuario"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="Nova Anotação"
+            android:textAllCaps="false"
+            android:textColor="?attr/colorOnSurface"
+            android:backgroundTint="@color/surface_black"
+            android:background="@drawable/rounded_button_bronze"
+            android:paddingLeft="18dp"
+            android:paddingRight="18dp"
+            android:textSize="14sp" />
+        <ImageButton
+            android:id="@+id/btnFiltroFavoritos"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_star"
+            android:background="@android:color/transparent"
+            android:contentDescription="Filtrar favoritos"
+            android:tint="?attr/colorOnSurface"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <!-- Ficha resumida do paciente -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardFichaResumida"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="4dp"
+        app:strokeColor="@color/bronze_gold"
+        app:cardBackgroundColor="?attr/colorSurface">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+            <TextView
+                android:id="@+id/tvNomePaciente"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nome do Paciente"
+                android:textColor="@color/bronze_or_on_surface"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+            <TextView
+                android:id="@+id/tvDadosBasicos"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Idade • Telefone • Email • CPF"
+                android:textColor="@color/bronze_or_on_surface"
+                android:textSize="14sp"
+                android:layout_marginTop="4dp" />
+            <TextView
+                android:id="@+id/labelHistoricoClinico"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Histórico clínico"
+                android:textColor="@color/bronze_or_on_surface"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginTop="12dp" />
+            <TextView
+                android:id="@+id/tvHistoricoClinico"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Histórico clínico resumido..."
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="13sp"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Campo de busca -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/searchLayout"
+        style="@style/LoginInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="8dp"
+        android:background="?attr/colorSurface">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/searchEditText"
+            style="@style/LoginInputEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Buscar por palavra-chave nas sessões"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerProntuarios"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="12dp"
+        android:clipToPadding="false"
+        android:scrollbars="vertical" />
+
+</LinearLayout> 

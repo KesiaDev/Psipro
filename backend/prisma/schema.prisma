@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -29,6 +30,29 @@ enum PatientOrigin {
   WEB
 }
 
+// Tipo de plano: individual (psicólogo autônomo) ou clínica
+enum PlanType {
+  INDIVIDUAL
+  CLINIC
+}
+
+// Papel do usuário na clínica
+enum UserRole {
+  OWNER
+  PSYCHOLOGIST
+  ASSISTANT
+}
+
+// Tipo de profissional de saúde mental
+enum ProfessionalType {
+  psychologist
+  therapist
+  psychoanalyst
+  counselor
+  coach
+  other
+}
+
 // Clínica / Organização
 model Clinic {
   id          String   @id @default(uuid())
@@ -36,17 +60,24 @@ model Clinic {
   cnpj        String?  @unique
   address     String?
   phone       String?
-  email       String?
+  email       String?  // Mantido para compatibilidade
   plan        String   @default("basic") // basic | professional | enterprise
+  planType    PlanType @default(CLINIC)  // INDIVIDUAL = psicólogo autônomo, CLINIC = clínica
   status      String   @default("active") // active | suspended | cancelled
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relações
-  users       ClinicUser[]
-  patients    Patient[]
-  appointments Appointment[]
+  users            ClinicUser[]
+  primaryUsers     User[]       @relation("PrimaryClinic")  // Usuários com esta clínica como principal
+  patients         Patient[]
+  appointments     Appointment[]
+  financialRecords FinancialRecord[]
+  payments         Payment[]
+  subscriptions    Subscription[]
+  anamneseModels   AnamneseModel[]
+  integrations     UserIntegration[]
 
   @@map("clinics")
 }
@@ -89,22 +120,95 @@ model User {
   cpf       String?  @unique
   license   String?  // CRP, etc
   
-  // Se for psicólogo autônomo (sem clínica)
-  isIndependent Boolean @default(true)
+  // @deprecated Use ClinicUser. Mantido para migração. Fonte de verdade: ClinicUser.
+  clinicId  String?
+  clinic    Clinic?  @relation("PrimaryClinic", fields: [clinicId], references: [id], onDelete: Restrict)
   
+  // Papel na clínica principal
+  role      UserRole @default(OWNER)
+  
+  // Tipo de profissional (null = psicólogo para compatibilidade)
+  professionalType ProfessionalType?
+  
+  // Se for psicólogo autônomo (sem clínica) - legado, preferir planType da Clinic
+  isIndependent Boolean @default(true)
+
+  // Bloqueio de login após falhas consecutivas
+  failedLoginAttempts Int       @default(0)
+  lockUntil           DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relações
-  clinics        ClinicUser[]  // Clínicas que o usuário pertence
+  clinics        ClinicUser[]  // Clínicas adicionais que o usuário pertence
   patients       Patient[]     // Pacientes próprios (se independente)
+  refreshTokens  RefreshToken[]
   appointments  Appointment[]
   sessions      Session[]
   payments      Payment[]
   financialRecords FinancialRecord[]
-  documents     Document[]
+  documents      Document[]
+  auditLogs      AuditLog[]
+  integrations   UserIntegration[]
+  handoffTokens   HandoffToken[]
 
+  @@index([clinicId])
   @@map("users")
+}
+
+model RefreshToken {
+  id              String    @id @default(uuid())
+  token           String    @unique
+  userId          String
+  clinicId        String?
+  expiresAt       DateTime
+  createdAt       DateTime  @default(now())
+  revoked         Boolean   @default(false)
+  replacedByToken String?
+  deviceInfo      String?
+  ipAddress       String?
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// Token de handoff SSO (App -> Web). Single-use, 30s expiry.
+model HandoffToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String
+  clinicId  String?
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([expiresAt])
+  @@map("handoff_tokens")
+}
+model UserIntegration {
+  id         String   @id @default(uuid())
+  userId     String
+  clinicId   String?
+  provider   String   // google_calendar | whatsapp | mercadopago | stripe
+  config     Json     // Tokens OAuth, chaves API (criptografar em produção)
+  status     String   @default("connected") // connected | disconnected | error
+  lastSyncAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinic     Clinic?  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, provider])
+  @@index([clinicId])
+  @@map("user_integrations")
 }
 
 // Paciente
@@ -139,6 +243,7 @@ model Patient {
   lastSyncedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? // Soft delete
 
   // Relações
   clinic      Clinic?  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
@@ -147,11 +252,70 @@ model Patient {
   sessions    Session[]
   payments    Payment[]
   documents   Document[]
+  anamnesePreenchidas AnamnesePreenchida[]
 
   @@index([clinicId])
+  @@index([deletedAt])
   @@index([userId])
   @@index([syncHash])
   @@map("patients")
+}
+
+// Modelo de anamnese (template)
+model AnamneseModel {
+  id        String   @id @default(uuid())
+  clinicId  String?  // Clínica dona do modelo (null = modelo global/seed)
+  userId    String?  // Psicólogo dono (se independente)
+  nome      String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clinic    Clinic?  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  campos    AnamneseCampo[]
+  preenchidas AnamnesePreenchida[]
+
+  @@index([clinicId])
+  @@index([userId])
+  @@map("anamnese_models")
+}
+
+// Campo do modelo de anamnese
+model AnamneseCampo {
+  id         String  @id @default(uuid())
+  modeloId   String
+  tipo       String  // TEXTO_CURTO, TEXTO_LONGO, DATA, SELECAO_UNICA, MULTIPLA_ESCOLHA, TITULO
+  label      String
+  opcoes     String? // JSON para opções de seleção
+  obrigatorio Boolean @default(false)
+  ordem      Int     @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  modelo    AnamneseModel @relation(fields: [modeloId], references: [id], onDelete: Cascade)
+
+  @@index([modeloId])
+  @@map("anamnese_campos")
+}
+
+// Anamnese preenchida por paciente
+model AnamnesePreenchida {
+  id             String   @id @default(uuid())
+  patientId      String
+  modeloId       String
+  respostas      Json     // campoId -> resposta
+  assinaturaPath String?
+  data           DateTime
+  versao         Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  patient  Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  modelo   AnamneseModel @relation(fields: [modeloId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([modeloId])
+  @@map("anamnese_preenchidas")
 }
 
 // Agendamento / Consulta
@@ -176,6 +340,7 @@ model Appointment {
   lastSyncedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? // Soft delete
 
   // Relações
   clinic      Clinic?  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
@@ -187,6 +352,7 @@ model Appointment {
   @@index([userId])
   @@index([patientId])
   @@index([scheduledAt])
+  @@index([deletedAt])
   @@index([syncHash])
   @@map("appointments")
 }
@@ -196,29 +362,37 @@ model Session {
   id            String   @id @default(uuid())
   userId        String
   patientId     String
-  clinicId      String?  // Clínica (para isolamento multi-tenant)
   appointmentId String?  @unique
   date          DateTime
   duration      Int      @default(60)
   status        String   @default("realizada") // realizada | falta | cancelada
   notes         String?  // Anotações da sessão
-  
+
+  // Inteligência Clínica (transcrição + insights IA)
+  transcript    String?  // Transcrição de voz da sessão
+  summary       String?  // Resumo clínico gerado por IA
+  themes        Json?    // Principais temas discutidos
+  emotions      Json?    // Emoções predominantes
+  actionItems   Json?    // Tarefas/encaminhamentos terapêuticos
+  riskFlags     Json?    // Sinais de alerta emocional
+
   // Sincronização
   source        String   @default("app")
   syncHash      String?
   lastSyncedAt  DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  deletedAt     DateTime? // Soft delete
 
   // Relações
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
   payment       Payment?
 
   @@index([userId])
+  @@index([deletedAt])
   @@index([patientId])
-  @@index([clinicId])
   @@index([date])
   @@index([syncHash])
   @@map("sessions")
@@ -226,16 +400,17 @@ model Session {
 
 // Pagamento
 model Payment {
-  id          String   @id @default(uuid())
-  userId      String
-  patientId   String
-  clinicId    String?  // Clínica (para isolamento multi-tenant)
-  sessionId   String?  @unique
-  amount      Decimal  @db.Decimal(10, 2)
-  date        DateTime
-  method      String?  // Dinheiro | PIX | Cartão | etc
-  status      String   @default("pago") // pago | pendente | cancelado
-  notes       String?
+  id            String   @id @default(uuid())
+  userId        String
+  patientId     String
+  clinicId      String?  // Isolamento multi-tenant (nullable para migração)
+  sessionId     String?  @unique
+  sessionNumber Int?     // Número da sessão (max+1 ao criar cobrança automática)
+  amount        Decimal  @db.Decimal(10, 2)
+  date          DateTime
+  method        String?  // Dinheiro | PIX | Cartão | etc
+  status        String   @default("pago") // pago | pendente | cancelado
+  notes         String?
   
   // Sincronização
   source      String   @default("app")
@@ -243,18 +418,22 @@ model Payment {
   lastSyncedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? // Soft delete
 
   // Relações
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  session     Session? @relation(fields: [sessionId], references: [id])
+  clinic      Clinic?  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  session     Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
 
+  @@unique([patientId, sessionNumber])
   @@index([userId])
-  @@index([patientId])
   @@index([clinicId])
+  @@index([patientId])
   @@index([date])
   @@index([status])
   @@index([syncHash])
+  @@index([deletedAt])
   @@map("payments")
 }
 
@@ -262,7 +441,7 @@ model Payment {
 model FinancialRecord {
   id          String   @id @default(uuid())
   userId      String
-  clinicId    String?  // Clínica (para isolamento multi-tenant)
+  clinicId    String?  // Isolamento multi-tenant (nullable para migração)
   date        DateTime
   type        String   // receita | despesa
   amount      Decimal  @db.Decimal(10, 2)
@@ -276,6 +455,7 @@ model FinancialRecord {
 
   // Relações
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinic      Clinic?  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([clinicId])
@@ -288,13 +468,13 @@ model Document {
   id          String   @id @default(uuid())
   userId      String
   patientId   String?
-  clinicId    String?  // Clínica (para isolamento multi-tenant)
   name        String
   type        String   // Termo | Relatório | Receita | etc
   fileUrl     String?  // URL do arquivo (S3, local, etc)
   fileSize    Int?
   mimeType    String?
   status      String   @default("Ativo")
+  content     Json?    // Conteúdo HTML/JSON do app (conteudo, assinaturas)
   
   // Sincronização
   source      String   @default("app")
@@ -309,7 +489,6 @@ model Document {
 
   @@index([userId])
   @@index([patientId])
-  @@index([clinicId])
   @@index([syncHash])
   @@map("documents")
 }
@@ -318,7 +497,6 @@ model Document {
 model Insight {
   id          String   @id @default(uuid())
   userId      String
-  clinicId    String?  // Clínica (para isolamento multi-tenant)
   type        String   // clinico | financeiro | agenda
   message     String
   context     Json?    // Dados contextuais
@@ -329,8 +507,66 @@ model Insight {
   updatedAt   DateTime @updatedAt
 
   @@index([userId])
-  @@index([clinicId])
   @@index([dismissed])
   @@map("insights")
+}
+
+// Assinatura (preparação para Stripe futuro)
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+model Subscription {
+  id                    String             @id @default(uuid())
+  clinicId              String
+  status                SubscriptionStatus @default(ACTIVE)
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  currentPeriodEnd      DateTime?
+  
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  clinic                Clinic             @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId])
+  @@map("subscriptions")
+}
+
+// Auditoria enterprise — eventos críticos para rastreabilidade
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  clinicId  String   // Clínica ativa ou user.clinicId / primeira ClinicUser
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([clinicId])
+  @@index([entity])
+  @@index([createdAt])
+  @@index([clinicId, createdAt])
+  @@map("audit_logs")
+}
+
+// Solicitações de acesso beta
+model BetaRequest {
+  id         String   @id @default(uuid())
+  name       String
+  email      String
+  clinicName String?
+  message    String?
+  createdAt  DateTime @default(now())
+
+  @@map("beta_requests")
 }
 

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="8dp"
+    android:layout_marginVertical="1dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="?attr/colorSurface">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="6dp">
+
+        <!-- Horário inicial -->
+        <TextView
+            android:id="@+id/timeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBody1"
+            android:textStyle="bold"
+            android:textColor="?attr/colorOnSurface"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:text="13:00" />
+
+        <!-- Nome do paciente -->
+        <TextView
+            android:id="@+id/titleText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:textAppearance="?attr/textAppearanceBody2"
+            android:textStyle="bold"
+            android:textColor="?attr/colorPrimary"
+            app:layout_constraintStart_toEndOf="@id/timeText"
+            app:layout_constraintEnd_toStartOf="@id/endTimeText"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/subtitleText"
+            app:layout_constraintHorizontal_bias="0.5"
+            tools:text="Carlos Almeida" />
+
+        <!-- Horário final -->
+        <TextView
+            android:id="@+id/endTimeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceCaption"
+            android:textColor="?attr/colorOnSurface"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/timeText"
+            app:layout_constraintBottom_toBottomOf="@id/timeText"
+            tools:text="10:50" />
+
+        <!-- Subtítulo (tipo da consulta) -->
+        <TextView
+            android:id="@+id/subtitleText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textAppearance="?attr/textAppearanceCaption"
+            android:textColor="?attr/colorOnSurface"
+            app:layout_constraintStart_toStartOf="@id/titleText"
+            app:layout_constraintEnd_toStartOf="@id/statusChip"
+            app:layout_constraintTop_toBottomOf="@id/titleText"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:text="Consulta" />
+
+        <!-- Chip de Status -->
+        <com.google.android.material.chip.Chip
+            android:id="@+id/statusChip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:textSize="7sp"
+            android:textStyle="bold"
+            app:chipCornerRadius="4dp"
+            app:chipMinHeight="14dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/endTimeText"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:text="Agendado"
+            tools:chipBackgroundColor="#2196F3" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView> 

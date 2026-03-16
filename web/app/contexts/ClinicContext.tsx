@@ -1,19 +1,9 @@
-/**
- * ⚠️ ARQUIVO CRÍTICO - INTEGRAÇÃO BACKEND
- *
- * Este arquivo contém lógica essencial de integração com API,
- * autenticação ou variáveis de ambiente.
- *
- * NÃO alterar estrutura, headers, interceptors ou contratos de API
- * durante modernização visual.
- *
- * Qualquer alteração pode quebrar produção.
- */
-
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { clinicService } from "../services/clinicService";
+import { authService } from "../services/authService";
+import { useAuth } from "./AuthContext";
 import type { Clinic } from "../services/clinicService";
 
 interface ClinicContextType {
@@ -23,6 +13,7 @@ interface ClinicContextType {
   loading: boolean;
   error: string | null;
   setCurrentClinic: (clinic: Clinic | null) => void;
+  switchClinic: (clinicId: string) => Promise<void>;
   loadClinics: () => Promise<void>;
   refreshClinics: () => Promise<void>;
 }
@@ -30,6 +21,7 @@ interface ClinicContextType {
 const ClinicContext = createContext<ClinicContextType | undefined>(undefined);
 
 export function ClinicProvider({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth();
   const [currentClinic, setCurrentClinicState] = useState<Clinic | null>(null);
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [isIndependent, setIsIndependent] = useState(true);
@@ -43,23 +35,33 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
     try {
       const data = await clinicService.getClinics();
       setClinics(data);
-      
-      // Verificar se há clínica salva no localStorage
-      const savedClinicId = localStorage.getItem("psipro_current_clinic_id");
+
+      // active_clinic_id: obrigatório para header X-Clinic-Id
+      const savedClinicId =
+        localStorage.getItem("active_clinic_id") ||
+        localStorage.getItem("psipro_current_clinic_id");
       if (savedClinicId) {
         const saved = data.find((c) => c.id === savedClinicId);
         if (saved) {
+          localStorage.setItem("active_clinic_id", saved.id);
+          localStorage.removeItem("psipro_current_clinic_id");
           setCurrentClinicState(saved);
           setIsIndependent(false);
           setLoading(false);
           return;
-        } else {
-          // Clínica salva não existe mais, limpar
-          localStorage.removeItem("psipro_current_clinic_id");
         }
+        localStorage.removeItem("active_clinic_id");
+        localStorage.removeItem("psipro_current_clinic_id");
       }
-      
-      setIsIndependent(data.length === 0);
+      // Primeira clínica como ativa (após login)
+      if (data.length > 0) {
+        const first = data[0];
+        localStorage.setItem("active_clinic_id", first.id);
+        setCurrentClinicState(first);
+        setIsIndependent(false);
+      } else {
+        setIsIndependent(true);
+      }
     } catch (err: any) {
       console.error("Erro ao carregar clínicas:", err);
       setError(err.message || "Erro ao carregar clínicas");
@@ -77,17 +79,32 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
   const setCurrentClinic = (clinic: Clinic | null) => {
     setCurrentClinicState(clinic);
     setIsIndependent(clinic === null);
-    
+
     if (clinic) {
-      localStorage.setItem("psipro_current_clinic_id", clinic.id);
+      localStorage.setItem("active_clinic_id", clinic.id);
     } else {
-      localStorage.removeItem("psipro_current_clinic_id");
+      localStorage.removeItem("active_clinic_id");
     }
   };
 
+  const switchClinic = useCallback(async (clinicId: string) => {
+    await authService.switchClinic(clinicId);
+    const clinic = clinics.find((c) => c.id === clinicId);
+    if (clinic) {
+      setCurrentClinicState(clinic);
+      setIsIndependent(false);
+    }
+  }, [clinics]);
+
   useEffect(() => {
-    loadClinics();
-  }, []);
+    if (isAuthenticated) {
+      loadClinics();
+    } else {
+      setLoading(false);
+      setClinics([]);
+      setCurrentClinicState(null);
+    }
+  }, [isAuthenticated]);
 
   return (
     <ClinicContext.Provider
@@ -98,6 +115,7 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
         loading,
         error,
         setCurrentClinic,
+        switchClinic,
         loadClinics,
         refreshClinics,
       }}

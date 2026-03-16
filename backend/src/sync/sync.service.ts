@@ -1,5 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { whereNotDeleted } from '../prisma/soft-delete.helper';
 import { SyncPatientsQueryDto } from './dto/sync-patients-query.dto';
 import { SyncPatientDto } from './dto/sync-patient.dto';
 
@@ -41,21 +42,24 @@ export class SyncService {
     return first.clinicId;
   }
 
-  async getPatients(userId: string, query: SyncPatientsQueryDto) {
-    const clinicId = await this.resolveClinicId(userId, query.clinicId);
+  async getPatients(
+    userId: string,
+    clinicIdFromHeader: string,
+    query: SyncPatientsQueryDto,
+  ) {
+    const clinicId = clinicIdFromHeader;
     const updatedAfter = query.updatedAfter ? new Date(query.updatedAfter) : undefined;
 
     return this.prisma.patient.findMany({
-      where: {
+      where: whereNotDeleted('patient', {
         clinicId,
         ...(updatedAfter ? { updatedAt: { gt: updatedAfter } } : {}),
-      },
-      orderBy: { updatedAt: 'asc' },
+      }),
+      orderBy: { createdAt: 'desc' },
     });
   }
 
-  async syncPatients(userId: string, query: SyncPatientsQueryDto, incoming: SyncPatientDto[]) {
-    const clinicId = await this.resolveClinicId(userId, query.clinicId);
+  async syncPatients(userId: string, clinicId: string, incoming: SyncPatientDto[]) {
 
     // Processamento transacional: backend decide conflitos e retorna estado persistido.
     return this.prisma.$transaction(async (tx) => {
@@ -101,8 +105,9 @@ export class SyncService {
           continue;
         }
 
-        const existing = await tx.patient.findUnique({
-          where: { id: p.id },
+        // Sync permite update em registros soft-deleted (cliente pode restaurar)
+        const existing = await tx.patient.findFirst({
+          where: { id: p.id, clinicId },
         });
 
         if (!existing) {

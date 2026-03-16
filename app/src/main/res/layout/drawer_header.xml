@@ -1,0 +1,44 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="200dp"
+    android:background="?attr/colorSurface"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="bottom">
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/nav_header_photo"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@drawable/ic_account_circle"
+        app:civ_border_color="?attr/colorPrimary"
+        app:civ_border_width="2dp" />
+
+    <TextView
+        android:id="@+id/nav_header_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Seu Nome aqui"
+        android:textColor="?attr/colorOnSurface"
+        android:textStyle="bold"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/nav_header_crp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="CRP não informado"
+        android:textColor="?attr/textColorSecondary"
+        android:textSize="14sp"
+        tools:text="Terapeuta" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="16dp"
+        android:background="?attr/dividerColor" />
+</LinearLayout> 

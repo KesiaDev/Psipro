@@ -69,6 +69,11 @@ export interface ClinicStats {
   revenue: number;
 }
 
+/** Resposta do POST /clinics: retorna apenas clinic (arquitetura multi-clinic). */
+export interface CreateClinicResponse {
+  clinic: Clinic;
+}
+
 class ClinicService {
   /**
    * Lista todas as clínicas do usuário autenticado
@@ -93,11 +98,11 @@ class ClinicService {
   }
 
   /**
-   * Cria uma nova clínica
+   * Cria uma nova clínica. Retorna clinic + accessToken (atualizar token no front).
    */
-  async createClinic(data: CreateClinicDto): Promise<Clinic> {
+  async createClinic(data: CreateClinicDto): Promise<CreateClinicResponse> {
     try {
-      return await api.post<Clinic>('/clinics', data);
+      return await api.post<CreateClinicResponse>('/clinics', data);
     } catch (error) {
       throw this.handleError(error);
     }
@@ -109,6 +114,17 @@ class ClinicService {
   async updateClinic(id: string, data: UpdateClinicDto): Promise<Clinic> {
     try {
       return await api.put<Clinic>(`/clinics/${id}`, data);
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Exclui uma clínica (apenas owner/admin)
+   */
+  async deleteClinic(id: string): Promise<void> {
+    try {
+      await api.delete(`/clinics/${id}`);
     } catch (error) {
       throw this.handleError(error);
     }

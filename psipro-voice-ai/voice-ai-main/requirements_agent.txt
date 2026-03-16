@@ -1,0 +1,16 @@
+# Dependências do Voice Agent (voice_agent.py)
+# Instalar com: pip install -r requirements_agent.txt
+
+# STT (Groq Whisper — rápido e barato)
+groq>=0.11.0
+
+# TTS + STT fallback (OpenAI gpt-4o-mini-tts + Whisper)
+openai>=1.0.0
+
+# VAD (Silero VAD — detecção precisa de fala via deep learning)
+silero-vad>=6.0.0
+onnxruntime>=1.16.0
+
+# Áudio (captura e reprodução)
+sounddevice>=0.4.0
+numpy>=1.26.0

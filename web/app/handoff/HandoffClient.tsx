@@ -2,9 +2,13 @@
 
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { getApiUrl } from "@/lib/env";
+import { getApiBaseUrl } from "../services/api";
+
+const API_BASE_URL = getApiBaseUrl();
 
 type HandoffResponse = {
+  accessToken?: string;
+  refreshToken?: string;
   token?: string;
   user?: {
     id?: string;
@@ -18,8 +22,10 @@ type HandoffResponse = {
 function clearAuthStorage() {
   if (typeof window === "undefined") return;
   localStorage.removeItem("psipro_token");
+  localStorage.removeItem("psipro_refresh_token");
   localStorage.removeItem("psipro_user");
   localStorage.removeItem("psipro_current_clinic_id");
+  localStorage.removeItem("active_clinic_id");
 }
 
 /** Lê token da URL: searchParams (React) e fallback em window.location (evita atraso de hidratação). */
@@ -69,7 +75,7 @@ export default function HandoffClient() {
 
     const run = async () => {
       try {
-        const url = `${getApiUrl()}/auth/handoff`;
+        const url = `${API_BASE_URL}/auth/handoff`;
         const response = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -90,8 +96,11 @@ export default function HandoffClient() {
         const result = (await response.json()) as HandoffResponse;
 
         // Garantir 200 antes de qualquer redirect; só então persistir e redirecionar
-        const finalToken = result?.token ?? token;
+        const finalToken = result?.accessToken ?? result?.token ?? token;
         localStorage.setItem("psipro_token", finalToken);
+        if (result?.refreshToken) {
+          localStorage.setItem("psipro_refresh_token", result.refreshToken);
+        }
 
         // DEBUG: confirmação de token salvo
         console.log("[handoff] resposta 200 recebida; token salvo no localStorage");
@@ -100,6 +109,7 @@ export default function HandoffClient() {
         const clinicId = result?.user?.clinicId;
         if (clinicId != null && String(clinicId).length > 0) {
           localStorage.setItem("psipro_current_clinic_id", String(clinicId));
+          localStorage.setItem("active_clinic_id", String(clinicId));
         }
 
         if (result?.user?.id && result?.user?.email) {

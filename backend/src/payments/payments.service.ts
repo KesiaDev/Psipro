@@ -1,40 +1,30 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { PatientAccessHelper } from '../common/helpers/patient-access.helper';
+import { whereNotDeleted } from '../prisma/soft-delete.helper';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 
 @Injectable()
 export class PaymentsService {
   constructor(
     private prisma: PrismaService,
-    private patientAccess: PatientAccessHelper,
+    private auditService: AuditService,
   ) {}
 
-  async create(
-    userId: string,
-    clinicId: string | undefined,
-    createPaymentDto: CreatePaymentDto,
-  ) {
-    const hasAccess = await this.patientAccess.hasAccessToPatient(
-      createPaymentDto.patientId,
-      userId,
-    );
-    if (!hasAccess) {
-      throw new ForbiddenException('Paciente não encontrado ou acesso negado');
-    }
-
-    const patient = await this.prisma.patient.findUnique({
-      where: { id: createPaymentDto.patientId },
-      select: { clinicId: true },
+  async create(userId: string, createPaymentDto: CreatePaymentDto, clinicId: string) {
+    const patient = await this.prisma.patient.findFirst({
+      where: { id: createPaymentDto.patientId, clinicId },
     });
 
-    const effectiveClinicId = clinicId ?? patient?.clinicId ?? undefined;
+    if (!patient) {
+      throw new Error('Paciente não encontrado ou não pertence à clínica');
+    }
 
     const payment = await this.prisma.payment.create({
       data: {
         ...createPaymentDto,
         userId,
-        clinicId: effectiveClinicId,
+        clinicId,
         date: new Date(createPaymentDto.date),
         amount: createPaymentDto.amount,
         source: createPaymentDto.source || 'app',
@@ -48,6 +38,15 @@ export class PaymentsService {
       },
     });
 
+    this.auditService.log({
+      userId,
+      clinicId,
+      action: 'payment_creation',
+      entity: 'Payment',
+      entityId: payment.id,
+      metadata: { patientId: createPaymentDto.patientId, amount: Number(payment.amount) },
+    }).catch(() => {});
+
     // Contrato mínimo (compatível) para consumo por Android/Web.
     // Não removemos campos existentes; apenas acrescentamos aliases estáveis.
     return {
@@ -57,29 +56,18 @@ export class PaymentsService {
     };
   }
 
-  async findByPatient(
-    patientId: string,
-    userId: string,
-    clinicId?: string,
-  ) {
-    const hasAccess = await this.patientAccess.hasAccessToPatient(
-      patientId,
-      userId,
-    );
-    if (!hasAccess) {
-      throw new ForbiddenException('Paciente não encontrado ou acesso negado');
-    }
-
-    const where: { patientId: string; userId: string; clinicId?: string } = {
-      patientId,
-      userId,
-    };
-    if (clinicId) {
-      where.clinicId = clinicId;
-    }
+  async findByPatient(patientId: string, userId: string, clinicId: string) {
+    const patient = await this.prisma.patient.findFirst({
+      where: whereNotDeleted('patient', { id: patientId, clinicId }),
+    });
+    if (!patient) throw new Error('Paciente não encontrado ou não pertence à clínica');
 
     const payments = await this.prisma.payment.findMany({
-      where,
+      where: whereNotDeleted('payment', {
+        patientId,
+        userId,
+        clinicId,
+      }),
       include: {
         session: {
           select: {
