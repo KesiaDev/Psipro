@@ -8,6 +8,8 @@ import androidx.room.Room
 import com.psipro.app.data.AppDatabase
 import com.psipro.app.config.AppConfig
 import dagger.hilt.android.HiltAndroidApp
+import android.os.Handler
+import android.os.Looper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -61,22 +63,30 @@ class App : Application() {
         applicationScope.launch {
             try {
                 Log.d("App", "Inicializando componentes da aplicação...")
-                
-                // Aguardar um pouco para não bloquear a UI
-                delay(50)
-                
+                delay(100)
+                // Abrir o banco em background para não travar a main thread no primeiro acesso (ex: DashboardActivity)
+                try {
+                    com.psipro.app.data.AppDatabase.getDatabase(applicationContext)
+                } catch (e: Exception) {
+                    Log.w("App", "Warmup do banco adiado ou falhou", e)
+                }
                 Log.d("App", "Aplicação inicializada com sucesso")
             } catch (e: Exception) {
                 Log.e("App", "Erro na inicialização da aplicação", e)
             }
         }
 
-        // Sync quando o app volta ao foreground (pacientes primeiro, depois agendamentos).
-        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
-            override fun onStart(owner: LifecycleOwner) {
-                SyncScheduler.enqueueBoth(applicationContext, "foreground")
-            }
-        })
+        // Registrar observer após startup para evitar ANR (ProcessLifecycleOwner.get() pode travar).
+        Handler(Looper.getMainLooper()).postDelayed({
+            ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+                override fun onStart(owner: LifecycleOwner) {
+                    applicationScope.launch {
+                        delay(2000) // Aguarda startup completo antes de WorkManager
+                        SyncScheduler.enqueueBoth(applicationContext, "foreground")
+                    }
+                }
+            })
+        }, 3000) // 3s após onCreate
     }
     
     private fun setupUncaughtExceptionHandler() {

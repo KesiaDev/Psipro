@@ -167,7 +167,7 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "psipro_database"
+                    "app_pisc_database"
                 )
                 .addCallback(object : RoomDatabase.Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
@@ -397,16 +397,20 @@ abstract class AppDatabase : RoomDatabase() {
                                     FOREIGN KEY (patientId) REFERENCES patients (id) ON DELETE CASCADE
                                 )
                             """)
-                            database.execSQL("""
-                                INSERT INTO documentos_new (id, patientId, titulo, tipo, conteudo, conteudoOriginal,
-                                    dataCriacao, dataModificacao, assinaturaPaciente, assinaturaProfissional,
-                                    dataAssinaturaPaciente, dataAssinaturaProfissional, caminhoPDF, compartilhado, observacoes)
-                                SELECT id, patientId, titulo, tipo, conteudo, conteudoOriginal,
-                                    dataCriacao, dataModificacao, assinaturaPaciente, assinaturaProfissional,
-                                    dataAssinaturaPaciente, dataAssinaturaProfissional, caminhoPDF, compartilhado, observacoes
-                                FROM documentos
-                            """)
-                            database.execSQL("DROP TABLE documentos")
+                            try {
+                                database.execSQL("""
+                                    INSERT INTO documentos_new (id, patientId, titulo, tipo, conteudo, conteudoOriginal,
+                                        dataCriacao, dataModificacao, assinaturaPaciente, assinaturaProfissional,
+                                        dataAssinaturaPaciente, dataAssinaturaProfissional, caminhoPDF, compartilhado, observacoes)
+                                    SELECT id, patientId, titulo, tipo, conteudo, conteudoOriginal,
+                                        dataCriacao, dataModificacao, assinaturaPaciente, assinaturaProfissional,
+                                        dataAssinaturaPaciente, dataAssinaturaProfissional, caminhoPDF, compartilhado, observacoes
+                                    FROM documentos
+                                """)
+                            } catch (e: Exception) {
+                                android.util.Log.w("Migration", "documentos copy skipped: ${e.message}")
+                            }
+                            database.execSQL("DROP TABLE IF EXISTS documentos")
                             database.execSQL("ALTER TABLE documentos_new RENAME TO documentos")
                             database.execSQL("CREATE INDEX IF NOT EXISTS index_documentos_patientId ON documentos(patientId)")
                             database.execSQL("CREATE INDEX IF NOT EXISTS index_documentos_backendId ON documentos(backendId)")
@@ -414,7 +418,6 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 )
                 .fallbackToDestructiveMigration()
-                .fallbackToDestructiveMigrationFrom(28) // Se migração 28→29 falhar, recria o banco
                 .build()
                 INSTANCE = instance
                 instance

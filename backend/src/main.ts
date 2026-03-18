@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { loggingMiddleware } from './logger/logging.middleware';
+import { SystemHealthService } from './system-health/system-health.service';
 
 /** Extrai rotas mapeadas do Express (para log de deploy) */
 function getMappedRoutes(expressApp: any): string[] {
@@ -72,11 +73,32 @@ async function bootstrap() {
       exclude: ['system-health', 'system-health/full', 'system-health/metrics'],
     });
 
+  // Rota /api/system-health para o dashboard (raiz /system-health para load balancers)
+  const httpAdapter = app.getHttpAdapter();
+  const expressApp = (httpAdapter as { getInstance?: () => any }).getInstance?.();
+  const systemHealthService = app.get(SystemHealthService);
+  if (expressApp && systemHealthService) {
+    expressApp.get('/api/system-health', async (_req: any, res: any) => {
+      try {
+        const data = await systemHealthService.check();
+        res.json(data);
+      } catch (e) {
+        res.status(500).json({ status: 'down', error: (e as Error).message });
+      }
+    });
+    expressApp.get('/api/system-health/full', async (_req: any, res: any) => {
+      try {
+        const data = await systemHealthService.checkFull();
+        res.json(data);
+      } catch (e) {
+        res.status(500).json({ status: 'down', error: (e as Error).message });
+      }
+    });
+  }
+
   const port = process.env.PORT ? Number(process.env.PORT) : 8080;
   await app.listen(port, '0.0.0.0');
 
-  const httpAdapter = app.getHttpAdapter();
-  const expressApp = (httpAdapter as { getInstance?: () => any }).getInstance?.();
   const mappedRoutes = expressApp ? getMappedRoutes(expressApp) : [];
 
   console.log(`🚀 PsiPro API running on port ${port}/api`);

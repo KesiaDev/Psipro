@@ -6,50 +6,55 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.psipro.app.DashboardActivity
 import com.psipro.app.MainActivity
+import com.psipro.app.R
 import com.psipro.app.sync.di.SyncEntryPoint
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.Dispatchers
 
 @AndroidEntryPoint
 class SplashActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_splash)
+        // Rodar em IO para não bloquear a main thread (EncryptedSharedPreferences, rede)
         lifecycleScope.launch {
-            delay(500)
-            val entryPoint = EntryPointAccessors.fromApplication(
-                applicationContext,
-                SyncEntryPoint::class.java
-            )
-            val authManager = entryPoint.backendAuthManager()
+            delay(300)
+            withContext(Dispatchers.IO) {
+                val entryPoint = EntryPointAccessors.fromApplication(
+                    applicationContext,
+                    SyncEntryPoint::class.java
+                )
+                val authManager = entryPoint.backendAuthManager()
 
-            if (!authManager.isBackendAuthenticated()) {
-                goToLogin()
-                return@launch
-            }
+                if (!authManager.isBackendAuthenticated()) {
+                    runOnUiThread { goToLogin() }
+                    return@withContext
+                }
 
-            val meOk = try {
-                val resp = entryPoint.backendApiService().me()
-                resp.isSuccessful
-            } catch (_: Exception) { false }
+                val meOk = try {
+                    val resp = entryPoint.backendApiService().me()
+                    resp.isSuccessful
+                } catch (_: Exception) { false }
 
-            if (meOk) {
-                authManager.ensureClinicId()
-                goToDashboard()
-                return@launch
-            }
+                if (meOk) {
+                    authManager.ensureClinicId()
+                    runOnUiThread { goToDashboard() }
+                    return@withContext
+                }
 
-            val refreshOk = authManager.refreshToken()
-            if (refreshOk) {
-                authManager.ensureClinicId()
-                goToDashboard()
-            } else {
-                authManager.logout()
-                goToLogin()
+                val refreshOk = authManager.refreshToken()
+                if (refreshOk) {
+                    authManager.ensureClinicId()
+                    runOnUiThread { goToDashboard() }
+                } else {
+                    authManager.logout()
+                    runOnUiThread { goToLogin() }
+                }
             }
         }
     }

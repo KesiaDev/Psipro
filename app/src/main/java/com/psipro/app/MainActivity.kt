@@ -46,8 +46,6 @@ class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
 
     private fun initializeBasicComponents() {
         try {
-            AuthManager.init(this)
-
             // Seguir tema do sistema (modo claro ou escuro)
             androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
                 androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
@@ -58,8 +56,13 @@ class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
     }
 
     private fun initializeHeavyComponents() {
-        lifecycleScope.launch(Dispatchers.Main) {
+        lifecycleScope.launch {
             try {
+                // AuthManager.init usa EncryptedSharedPreferences - bloquearia a main thread
+                kotlinx.coroutines.withContext(Dispatchers.IO) {
+                    AuthManager.init(this@MainActivity)
+                    kotlinx.coroutines.delay(50)
+                }
                 kotlinx.coroutines.withTimeout(5000) {
                     AuthManager.getInstance().addAuthStateListener(this@MainActivity)
                     kotlinx.coroutines.delay(100)
