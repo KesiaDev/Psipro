@@ -111,6 +111,18 @@ export class AuthController {
   async getProfile(@CurrentUser() user: any) {
     return this.authService.validateToken(user.sub);
   }
+
+  /**
+   * POST /auth/consent
+   *
+   * Registra aceite do termo LGPD pelo usuário (conformidade e auditoria).
+   * Obrigatório antes de liberar uso completo do app.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('consent')
+  async recordConsent(@CurrentUser() user: any) {
+    return this.authService.recordLgpdConsent(user.sub);
+  }
 }
 
 

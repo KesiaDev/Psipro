@@ -28,6 +28,9 @@ interface BackendApiService {
     @GET("auth/me")
     suspend fun me(): Response<BackendMeResponse>
 
+    @POST("auth/consent")
+    suspend fun recordConsent(): Response<BackendConsentResponse>
+
     @GET("clinics")
     suspend fun getClinics(): Response<List<RemoteClinic>>
 

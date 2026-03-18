@@ -137,6 +137,9 @@ model User {
   failedLoginAttempts Int       @default(0)
   lockUntil           DateTime?
 
+  // LGPD: data/hora em que o usuário aceitou o termo de consentimento (app)
+  lgpdAcceptedAt      DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -238,6 +241,10 @@ model Patient {
   
   // Anamnese (formulário livre do detalhe do paciente - dashboard)
   anamnesis   Json?    // { items: [{ key, label, value, isCustom }], updatedAt }
+
+  // LGPD: consentimento do paciente para tratamento de dados
+  consentGiven Boolean @default(false)  // Paciente aceitou termo (ou responsável)
+  consentAt    DateTime?               // Data/hora do aceite
 
   // Sincronização
   source      String   @default("app") // app | web
@@ -538,12 +545,13 @@ model Subscription {
   @@map("subscriptions")
 }
 
-// Auditoria enterprise — eventos críticos para rastreabilidade
+// Auditoria enterprise — eventos críticos para rastreabilidade (LGPD)
+// action: CREATE | UPDATE | DELETE | ANONYMIZE
 model AuditLog {
   id        String   @id @default(uuid())
   userId    String
   clinicId  String   // Clínica ativa ou user.clinicId / primeira ClinicUser
-  action    String
+  action    String   // CREATE | UPDATE | DELETE | ANONYMIZE
   entity    String
   entityId  String?
   metadata  Json?

@@ -70,7 +70,7 @@ async function bootstrap() {
   );
 
   app.setGlobalPrefix('api', {
-      exclude: ['system-health', 'system-health/full', 'system-health/metrics'],
+      exclude: ['health', 'system-health', 'system-health/full', 'system-health/metrics'],
     });
 
   // Rota /api/system-health para o dashboard (raiz /system-health para load balancers)

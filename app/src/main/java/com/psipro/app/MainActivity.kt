@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.psipro.app.auth.AuthManager
 import com.psipro.app.databinding.ActivityMainBinding
+import com.psipro.app.ui.LgpdConsentActivity
 import com.psipro.app.utils.AuthErrorHelper
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.text.HtmlCompat
@@ -148,7 +149,17 @@ class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
                                 .apply()
                             AuthManager.getInstance().notifyLoginSuccess()
                             Toast.makeText(this@MainActivity, "Login realizado com sucesso!", Toast.LENGTH_SHORT).show()
-                            startDashboard()
+                            val aceitouNasConfigs = prefs.getBoolean("aceitou_lgpd", false)
+                            when {
+                                backendAuth.hasLgpdConsent() -> startDashboard()
+                                aceitouNasConfigs -> {
+                                    lifecycleScope.launch(Dispatchers.IO) {
+                                        backendAuth.recordLgpdConsent()
+                                        withContext(Dispatchers.Main) { startDashboard() }
+                                    }
+                                }
+                                else -> startLgpdConsent()
+                            }
                         } else {
                             val errorMsg = "Credenciais inválidas. Verifique seu e-mail e senha."
                             androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
@@ -193,6 +204,13 @@ class MainActivity : AppCompatActivity(), AuthManager.AuthStateListener {
 
     private fun startDashboard() {
         val intent = Intent(this, DashboardActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
+    }
+
+    private fun startLgpdConsent() {
+        val intent = Intent(this, LgpdConsentActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()

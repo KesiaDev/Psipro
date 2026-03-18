@@ -125,6 +125,11 @@
             android:theme="@style/Theme.Psipro" />
         
         <activity
+            android:name=".ui.LgpdConsentActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Psipro" />
+
+        <activity
             android:name=".ui.SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.Psipro.NoActionBar">

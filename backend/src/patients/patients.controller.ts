@@ -136,6 +136,15 @@ export class PatientsController {
     );
   }
 
+  @Patch(':id/anonymize')
+  anonymize(
+    @Param('id') id: string,
+    @CurrentUser() user: { sub: string },
+    @CurrentClinicId() clinicId: string,
+  ) {
+    return this.patientsService.anonymize(id, clinicId, user.sub);
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: string,

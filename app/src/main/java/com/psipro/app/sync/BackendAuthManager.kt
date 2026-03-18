@@ -137,6 +137,37 @@ class BackendAuthManager @Inject constructor(
 
     fun isBackendAuthenticated(): Boolean = !store.getAccessToken().isNullOrBlank()
 
+    /**
+     * Registra aceite LGPD no backend e localmente.
+     * Deve ser chamado após o usuário aceitar o termo.
+     */
+    suspend fun recordLgpdConsent(): Boolean {
+        return try {
+            val resp = api.recordConsent()
+            if (resp.isSuccessful) {
+                store.setLgpdConsent(true)
+                Log.i(TAG, "LGPD consent recorded")
+                true
+            } else {
+                Log.w(TAG, "recordConsent failed: http=${resp.code()}")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "recordConsent exception", e)
+            false
+        }
+    }
+
+    /**
+     * Verifica se o consentimento LGPD está OK (local E backend quando disponível).
+     * Após /auth/me, usar lgpdAcceptedAt da resposta para atualizar store.
+     */
+    fun hasLgpdConsent(): Boolean = store.hasLgpdConsent()
+
+    fun setLgpdConsentLocal(accepted: Boolean) {
+        store.setLgpdConsent(accepted)
+    }
+
     companion object {
         private const val TAG = "BackendAuthManager"
     }

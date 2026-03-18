@@ -123,7 +123,7 @@ export class PatientsService {
     this.auditService.log({
       userId,
       clinicId,
-      action: 'patient_creation',
+      action: 'CREATE',
       entity: 'Patient',
       entityId: patient.id,
       metadata: { name: patient.name },
@@ -295,7 +295,7 @@ export class PatientsService {
     this.auditService.log({
       userId,
       clinicId,
-      action: 'patient_update',
+      action: 'UPDATE',
       entity: 'Patient',
       entityId: id,
       metadata: { name: updated.name },
@@ -314,18 +314,56 @@ export class PatientsService {
       throw new NotFoundException('Paciente não encontrado');
     }
 
-    await this.prisma.patient.updateMany({
-      where: { id, clinicId },
+    await this.prisma.patient.update({
+      where: { id },
       data: { deletedAt: new Date() },
     });
 
     this.auditService.log({
       userId,
       clinicId,
-      action: 'patient_deletion',
+      action: 'DELETE',
       entity: 'Patient',
       entityId: id,
       metadata: { name: patient.name },
+    }).catch(() => {});
+
+    return { success: true };
+  }
+
+  async anonymize(id: string, clinicId: string, userId: string) {
+    const patient = await this.prisma.patient.findFirst({
+      where: whereNotDeleted('patient', { id, clinicId }),
+      select: { name: true },
+    });
+
+    if (!patient) {
+      throw new NotFoundException('Paciente não encontrado');
+    }
+
+    await this.prisma.patient.update({
+      where: { id },
+      data: {
+        name: 'ANONYMIZED',
+        cpf: null,
+        phone: null,
+        email: null,
+        birthDate: null,
+        address: null,
+        emergencyContact: null,
+        observations: null,
+        consentGiven: false,
+        consentAt: null,
+      },
+    });
+
+    this.auditService.log({
+      userId,
+      clinicId,
+      action: 'ANONYMIZE',
+      entity: 'Patient',
+      entityId: id,
+      metadata: { previousName: patient.name },
     }).catch(() => {});
 
     return { success: true };

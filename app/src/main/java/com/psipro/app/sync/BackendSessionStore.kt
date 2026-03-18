@@ -55,6 +55,11 @@ class BackendSessionStore @Inject constructor(
         prefs.edit().putString(KEY_PROFESSIONAL_TYPE, professionalType ?: "").apply()
     }
 
+    fun hasLgpdConsent(): Boolean = prefs.getBoolean(KEY_LGPD_CONSENT, false)
+    fun setLgpdConsent(accepted: Boolean) {
+        prefs.edit().putBoolean(KEY_LGPD_CONSENT, accepted).apply()
+    }
+
     fun getLastPatientsSyncAtIso(): String? = prefs.getString(KEY_LAST_PATIENTS_SYNC_AT, null)
     fun setLastPatientsSyncAtIso(iso: String?) {
         prefs.edit().putString(KEY_LAST_PATIENTS_SYNC_AT, iso).apply()
@@ -97,6 +102,7 @@ class BackendSessionStore @Inject constructor(
     fun clear() {
         tokenManager.clearTokens()
         prefs.edit()
+            .remove(KEY_LGPD_CONSENT)
             .remove(KEY_LAST_PATIENTS_SYNC_AT)
             .remove(KEY_LAST_APPOINTMENTS_SYNC_AT)
             .remove(KEY_LAST_SESSIONS_SYNC_AT)
@@ -109,6 +115,7 @@ class BackendSessionStore @Inject constructor(
     companion object {
         private const val PREFS_NAME = "psipro_backend_session"
         private const val KEY_PROFESSIONAL_TYPE = "professional_type"
+        private const val KEY_LGPD_CONSENT = "lgpd_consent"
         private const val KEY_LAST_PATIENTS_SYNC_AT = "patients_last_sync_at"
         private const val KEY_LAST_APPOINTMENTS_SYNC_AT = "appointments_last_sync_at"
         private const val KEY_LAST_SESSIONS_SYNC_AT = "sessions_last_sync_at"

@@ -242,6 +242,7 @@ export class AuthService {
         clinicId: true,
         role: true,
         professionalType: true,
+        lgpdAcceptedAt: true,
       },
     });
 
@@ -281,7 +282,20 @@ export class AuthService {
       professionalType,
       email: user.email,
       clinicId,
+      lgpdAcceptedAt: user.lgpdAcceptedAt?.toISOString() ?? null,
     };
+  }
+
+  /**
+   * POST /auth/consent
+   * Registra aceite do termo LGPD pelo usuário.
+   */
+  async recordLgpdConsent(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { lgpdAcceptedAt: new Date() },
+    });
+    return { success: true, message: 'Consentimento LGPD registrado' };
   }
 
   /**

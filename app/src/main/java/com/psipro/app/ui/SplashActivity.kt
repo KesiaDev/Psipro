@@ -36,21 +36,36 @@ class SplashActivity : AppCompatActivity() {
                     return@withContext
                 }
 
-                val meOk = try {
+                var meOk = false
+                var meResponse: retrofit2.Response<com.psipro.app.sync.api.BackendMeResponse>? = null
+                try {
                     val resp = entryPoint.backendApiService().me()
-                    resp.isSuccessful
-                } catch (_: Exception) { false }
+                    meOk = resp.isSuccessful
+                    meResponse = resp
+                } catch (_: Exception) { }
 
-                if (meOk) {
-                    authManager.ensureClinicId()
-                    runOnUiThread { goToDashboard() }
-                    return@withContext
+                if (!meOk) {
+                    val refreshOk = authManager.refreshToken()
+                    if (refreshOk) {
+                        meResponse = try { entryPoint.backendApiService().me() } catch (_: Exception) { null }
+                    } else {
+                        authManager.logout()
+                        runOnUiThread { goToLogin() }
+                        return@withContext
+                    }
                 }
 
-                val refreshOk = authManager.refreshToken()
-                if (refreshOk) {
+                if (meResponse?.isSuccessful == true) {
                     authManager.ensureClinicId()
-                    runOnUiThread { goToDashboard() }
+                    val me = meResponse.body()
+                    if (me?.lgpdAcceptedAt != null) {
+                        authManager.setLgpdConsentLocal(true)
+                    }
+                    if (authManager.hasLgpdConsent()) {
+                        runOnUiThread { goToDashboard() }
+                    } else {
+                        runOnUiThread { goToLgpdConsent() }
+                    }
                 } else {
                     authManager.logout()
                     runOnUiThread { goToLogin() }
@@ -61,6 +76,13 @@ class SplashActivity : AppCompatActivity() {
 
     private fun goToLogin() {
         startActivity(Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        })
+        finish()
+    }
+
+    private fun goToLgpdConsent() {
+        startActivity(Intent(this, LgpdConsentActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         })
         finish()

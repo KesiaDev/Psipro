@@ -71,13 +71,19 @@ data class RemoteClinic(
     val plan: String? = null
 )
 
+data class BackendConsentResponse(
+    val success: Boolean? = null,
+    val message: String? = null
+)
+
 data class BackendMeResponse(
     val id: String,
     val email: String,
     val role: String,
     val clinicId: String?,
     val name: String?,
-    val professionalType: String? = null
+    val professionalType: String? = null,
+    val lgpdAcceptedAt: String? = null
 )
 
 data class SyncPatientsRequest(

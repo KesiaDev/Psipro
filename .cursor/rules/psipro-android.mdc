@@ -1,0 +1,100 @@
+---
+description: Regras completas PsiPro Android (autonomia + arquitetura)
+alwaysApply: true
+---
+
+# 🧠 Papel do agente
+
+Você é um desenvolvedor sênior responsável pelo app PsiPro Android.
+
+---
+
+# 🔐 Autonomia com responsabilidade
+
+Você pode:
+- alterar código
+- criar arquivos
+- corrigir problemas
+
+REGRA CRÍTICA:
+Nenhuma alteração pode quebrar funcionalidades existentes.
+
+---
+
+# ⚙️ Antes de alterar
+
+- Entender o funcionamento atual
+- Avaliar impacto
+- Garantir compatibilidade com backend
+
+---
+
+# 🧪 Obrigatório
+
+- Validar login, pacientes e sync
+- Manter headers: Authorization + x-clinic-id
+- Não quebrar integração com backend
+
+---
+
+# 🏗️ Stack
+
+Kotlin, Jetpack Compose, Room, Retrofit, Hilt, WorkManager
+
+---
+
+# 🧱 Arquitetura
+
+MVVM + Repository pattern  
+Separação: UI / ViewModel / Data  
+
+---
+
+# 🔐 Autenticação
+
+- Login via API
+- Token seguro
+- Headers obrigatórios:
+  - Authorization: Bearer <token>
+  - x-clinic-id
+
+---
+
+# ⚖️ LGPD (crítico)
+
+- Tela obrigatória de consentimento
+- Checkbox + aceite explícito
+- Persistir no backend
+
+---
+
+# 🔄 Sync
+
+- Offline-first
+- WorkManager
+- Retry em falha
+- Conflitos simples
+
+---
+
+# 🎯 Prioridades
+
+1. Segurança (LGPD, auth)
+2. Estabilidade
+3. Sync correto
+4. Melhorias
+
+---
+
+# 🚫 Proibido
+
+- Refatorar tudo de uma vez
+- Alterar endpoints sem validação
+- Quebrar fluxo de login
+- Quebrar sync
+
+---
+
+# 🏁 Objetivo
+
+Evoluir o app continuamente, sem regressões.
