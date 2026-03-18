@@ -39,11 +39,8 @@ export class RolesGuard implements CanActivate {
 
     const effectiveRole = await this.getEffectiveRole(userId, clinicId);
 
-    console.log('RolesGuard - User effective role:', effectiveRole, '| Required roles:', requiredRoles);
-
     const hasRole = requiredRoles.some((r) => this.roleIncludes(effectiveRole, r));
     if (!hasRole) {
-      console.log('RolesGuard - 403: role', effectiveRole, 'não está em', requiredRoles);
       throw new ForbiddenException('Sem permissão para este recurso');
     }
 

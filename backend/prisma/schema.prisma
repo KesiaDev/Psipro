@@ -569,6 +569,28 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+// Consentimento LGPD — registro de aceite do paciente/usuário
+model LgpdConsent {
+  id        String   @id @default(uuid())
+  userId    String   // Usuário (psicólogo) que registrou o consentimento
+  clinicId  String   // Clínica vinculada
+  patientId String?  // Paciente que consentiu (null = consentimento do profissional)
+  type      String   // data_processing | marketing | research | all
+  version   String   @default("1.0") // Versão do termo aceito
+  accepted  Boolean  @default(true)
+  ipAddress String?
+  userAgent String?
+  revokedAt DateTime? // null = consentimento ativo
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([clinicId])
+  @@index([patientId])
+  @@index([clinicId, patientId])
+  @@map("lgpd_consents")
+}
+
 // Solicitações de acesso beta
 model BetaRequest {
   id         String   @id @default(uuid())

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
 import { whereNotDeleted } from '../prisma/soft-delete.helper';
 
 export interface CreateFinancialRecordDto {
@@ -28,7 +29,7 @@ export interface UpdateFinancialRecordDto {
 
 @Injectable()
 export class FinancialService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private auditService: AuditService) {}
 
   async getSummary(userId: string, clinicId: string) {
     const now = new Date();
@@ -175,8 +176,6 @@ export class FinancialService {
       },
       orderBy: { date: 'desc' },
     });
-    // DEBUG: remover depois de validar fluxo
-    console.log('FinancialRecords Debug:', { userId, clinicId, total: records.length });
     return records.map((r) => ({
       id: r.id,
       user_id: r.userId,
@@ -186,9 +185,9 @@ export class FinancialService {
       description: r.description ?? '',
       amount: Number(r.amount),
       payment_method: null,
-      status: 'paid' as const,
+      status: r.type === 'receita' ? 'paid' : 'expense',
       due_date: r.date.toISOString().split('T')[0],
-      paid_at: r.date.toISOString(),
+      paid_at: r.type === 'receita' ? r.date.toISOString() : null,
       created_at: r.createdAt.toISOString(),
       updated_at: r.updatedAt.toISOString(),
       patient_name: null,
@@ -234,7 +233,16 @@ export class FinancialService {
       where: { id, userId, clinicId: clinicId ?? null },
     });
     if (!existing) throw new Error('Registro não encontrado');
-    return this.prisma.financialRecord.delete({ where: { id } });
+    const deleted = await this.prisma.financialRecord.delete({ where: { id } });
+    await this.auditService.log({
+      userId,
+      clinicId: clinicId ?? '',
+      action: 'financial_record_deleted',
+      entity: 'FinancialRecord',
+      entityId: id,
+      metadata: { type: existing.type, amount: Number(existing.amount) },
+    });
+    return deleted;
   }
 }
 
