@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
-import { FinancialService, CreateFinancialRecordDto, UpdateFinancialRecordDto } from './financial.service';
+import { FinancialService, CreateFinancialRecordDto, UpdateFinancialRecordDto, CreateChargeDto, UpdateChargeDto, PayChargeDto } from './financial.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { ClinicGuard } from '../common/guards/clinic.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -58,6 +58,60 @@ export class FinancialController {
     @CurrentClinicId() clinicId: string,
   ) {
     return this.financialService.getPatientFinancial(patientId, user.sub, clinicId);
+  }
+
+  // ─── Charges (cobranças vinculadas a sessões/pacientes) ───────────────────
+
+  @Get('charges')
+  findAllCharges(@CurrentUser() user: any, @CurrentClinicId() clinicId: string) {
+    return this.financialService.findAllCharges(user.sub, clinicId);
+  }
+
+  @Get('charges/:id')
+  findOneCharge(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @CurrentClinicId() clinicId: string,
+  ) {
+    return this.financialService.findOneCharge(id, user.sub, clinicId);
+  }
+
+  @Post('charges')
+  createCharge(
+    @CurrentUser() user: any,
+    @CurrentClinicId() clinicId: string,
+    @Body() dto: CreateChargeDto,
+  ) {
+    return this.financialService.createCharge(user.sub, clinicId, dto);
+  }
+
+  @Patch('charges/:id')
+  updateCharge(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @CurrentClinicId() clinicId: string,
+    @Body() dto: UpdateChargeDto,
+  ) {
+    return this.financialService.updateCharge(id, user.sub, clinicId, dto);
+  }
+
+  @Patch('charges/:id/pay')
+  payCharge(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @CurrentClinicId() clinicId: string,
+    @Body() dto: PayChargeDto,
+  ) {
+    return this.financialService.payCharge(id, user.sub, clinicId, dto);
+  }
+
+  @Delete('charges/:id')
+  deleteCharge(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @CurrentClinicId() clinicId: string,
+  ) {
+    return this.financialService.deleteCharge(id, user.sub, clinicId);
   }
 }
 

@@ -27,6 +27,27 @@ export interface UpdateFinancialRecordDto {
   paid_at?: string | null;
 }
 
+export interface CreateChargeDto {
+  patientId: string;
+  sessionId?: string | null;
+  amount: number;
+  method?: string | null;
+  dueDate?: string | null;
+  notes?: string | null;
+}
+
+export interface UpdateChargeDto {
+  amount?: number;
+  method?: string | null;
+  dueDate?: string | null;
+  notes?: string | null;
+}
+
+export interface PayChargeDto {
+  method?: string | null;
+  paidAt?: string | null;
+}
+
 @Injectable()
 export class FinancialService {
   constructor(private prisma: PrismaService, private auditService: AuditService) {}
@@ -243,6 +264,132 @@ export class FinancialService {
       metadata: { type: existing.type, amount: Number(existing.amount) },
     });
     return deleted;
+  }
+
+  // ─── Charges (cobranças vinculadas a sessões/pacientes) ───────────────────
+
+  async findAllCharges(userId: string, clinicId: string) {
+    const charges = await this.prisma.payment.findMany({
+      where: whereNotDeleted('payment', { userId, clinicId }),
+      orderBy: { date: 'desc' },
+      include: { patient: { select: { name: true } } },
+    });
+    return charges.map((c) => this.mapCharge(c));
+  }
+
+  async findOneCharge(id: string, userId: string, clinicId: string) {
+    const charge = await this.prisma.payment.findFirst({
+      where: whereNotDeleted('payment', { id, userId, clinicId }),
+      include: { patient: { select: { name: true } } },
+    });
+    if (!charge) throw new Error('Cobrança não encontrada');
+    return this.mapCharge(charge);
+  }
+
+  async createCharge(userId: string, clinicId: string, dto: CreateChargeDto) {
+    const patient = await this.prisma.patient.findFirst({
+      where: { id: dto.patientId, clinicId, deletedAt: null },
+    });
+    if (!patient) throw new Error('Paciente não encontrado ou sem acesso');
+
+    const charge = await this.prisma.payment.create({
+      data: {
+        userId,
+        clinicId,
+        patientId: dto.patientId,
+        sessionId: dto.sessionId ?? null,
+        amount: dto.amount,
+        date: dto.dueDate ? new Date(dto.dueDate) : new Date(),
+        method: dto.method ?? null,
+        status: 'pendente',
+        notes: dto.notes ?? null,
+      },
+      include: { patient: { select: { name: true } } },
+    });
+    return this.mapCharge(charge);
+  }
+
+  async updateCharge(id: string, userId: string, clinicId: string, dto: UpdateChargeDto) {
+    const existing = await this.prisma.payment.findFirst({
+      where: whereNotDeleted('payment', { id, userId, clinicId }),
+    });
+    if (!existing) throw new Error('Cobrança não encontrada');
+    const charge = await this.prisma.payment.update({
+      where: { id },
+      data: {
+        ...(dto.amount !== undefined && { amount: dto.amount }),
+        ...(dto.method !== undefined && { method: dto.method }),
+        ...(dto.dueDate !== undefined && { date: new Date(dto.dueDate) }),
+        ...(dto.notes !== undefined && { notes: dto.notes }),
+      },
+      include: { patient: { select: { name: true } } },
+    });
+    return this.mapCharge(charge);
+  }
+
+  async payCharge(id: string, userId: string, clinicId: string, dto: PayChargeDto) {
+    const existing = await this.prisma.payment.findFirst({
+      where: whereNotDeleted('payment', { id, userId, clinicId }),
+    });
+    if (!existing) throw new Error('Cobrança não encontrada');
+    if (existing.status === 'pago') throw new Error('Cobrança já foi paga');
+
+    const paidAt = dto.paidAt ? new Date(dto.paidAt) : new Date();
+    const charge = await this.prisma.payment.update({
+      where: { id },
+      data: {
+        status: 'pago',
+        date: paidAt,
+        ...(dto.method && { method: dto.method }),
+      },
+      include: { patient: { select: { name: true } } },
+    });
+    await this.auditService.log({
+      userId,
+      clinicId,
+      action: 'charge_paid',
+      entity: 'Payment',
+      entityId: id,
+      metadata: { amount: Number(existing.amount), method: dto.method ?? existing.method },
+    });
+    return this.mapCharge(charge);
+  }
+
+  async deleteCharge(id: string, userId: string, clinicId: string) {
+    const existing = await this.prisma.payment.findFirst({
+      where: whereNotDeleted('payment', { id, userId, clinicId }),
+    });
+    if (!existing) throw new Error('Cobrança não encontrada');
+    await this.prisma.payment.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+    await this.auditService.log({
+      userId,
+      clinicId,
+      action: 'charge_deleted',
+      entity: 'Payment',
+      entityId: id,
+      metadata: { amount: Number(existing.amount), status: existing.status },
+    });
+    return { deleted: true, id };
+  }
+
+  private mapCharge(c: any) {
+    return {
+      id: c.id,
+      patient_id: c.patientId,
+      patient_name: c.patient?.name ?? null,
+      session_id: c.sessionId ?? null,
+      amount: Number(c.amount),
+      method: c.method ?? null,
+      status: c.status,
+      due_date: c.date.toISOString().split('T')[0],
+      paid_at: c.status === 'pago' ? c.date.toISOString() : null,
+      notes: c.notes ?? null,
+      created_at: c.createdAt.toISOString(),
+      updated_at: c.updatedAt.toISOString(),
+    };
   }
 }
 
