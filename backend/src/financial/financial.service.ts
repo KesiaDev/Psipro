@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { whereNotDeleted } from '../prisma/soft-delete.helper';
@@ -282,15 +282,16 @@ export class FinancialService {
       where: whereNotDeleted('payment', { id, userId, clinicId }),
       include: { patient: { select: { name: true } } },
     });
-    if (!charge) throw new Error('Cobrança não encontrada');
+    if (!charge) throw new NotFoundException('Cobrança não encontrada');
     return this.mapCharge(charge);
   }
 
   async createCharge(userId: string, clinicId: string, dto: CreateChargeDto) {
+    if (!dto.patientId) throw new BadRequestException('patientId é obrigatório');
     const patient = await this.prisma.patient.findFirst({
       where: { id: dto.patientId, clinicId, deletedAt: null },
     });
-    if (!patient) throw new Error('Paciente não encontrado ou sem acesso');
+    if (!patient) throw new NotFoundException('Paciente não encontrado ou sem acesso');
 
     const charge = await this.prisma.payment.create({
       data: {
@@ -313,7 +314,7 @@ export class FinancialService {
     const existing = await this.prisma.payment.findFirst({
       where: whereNotDeleted('payment', { id, userId, clinicId }),
     });
-    if (!existing) throw new Error('Cobrança não encontrada');
+    if (!existing) throw new NotFoundException('Cobrança não encontrada');
     const charge = await this.prisma.payment.update({
       where: { id },
       data: {
@@ -331,8 +332,8 @@ export class FinancialService {
     const existing = await this.prisma.payment.findFirst({
       where: whereNotDeleted('payment', { id, userId, clinicId }),
     });
-    if (!existing) throw new Error('Cobrança não encontrada');
-    if (existing.status === 'pago') throw new Error('Cobrança já foi paga');
+    if (!existing) throw new NotFoundException('Cobrança não encontrada');
+    if (existing.status === 'pago') throw new BadRequestException('Cobrança já foi paga');
 
     const paidAt = dto.paidAt ? new Date(dto.paidAt) : new Date();
     const charge = await this.prisma.payment.update({
@@ -359,7 +360,7 @@ export class FinancialService {
     const existing = await this.prisma.payment.findFirst({
       where: whereNotDeleted('payment', { id, userId, clinicId }),
     });
-    if (!existing) throw new Error('Cobrança não encontrada');
+    if (!existing) throw new NotFoundException('Cobrança não encontrada');
     await this.prisma.payment.update({
       where: { id },
       data: { deletedAt: new Date() },
