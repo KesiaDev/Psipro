@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -58,7 +59,17 @@ export class AppointmentsController {
   }
 
   @Put(':id')
-  update(
+  updatePut(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @CurrentClinicId() clinicId: string,
+    @Body() dto: UpdateAppointmentDto,
+  ) {
+    return this.appointmentsService.update(id, user.sub, dto, clinicId);
+  }
+
+  @Patch(':id')
+  updatePatch(
     @Param('id') id: string,
     @CurrentUser() user: any,
     @CurrentClinicId() clinicId: string,
