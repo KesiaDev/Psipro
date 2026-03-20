@@ -59,6 +59,14 @@ export class CreatePatientDto {
 
   @IsOptional()
   @IsString()
+  gender?: string;
+
+  @IsOptional()
+  @IsString()
+  profession?: string;
+
+  @IsOptional()
+  @IsString()
   @IsIn(['app', 'web'])
   source?: string;
 

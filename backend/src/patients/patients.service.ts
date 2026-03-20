@@ -283,6 +283,7 @@ export class PatientsService {
     if (updatePatientDto.type !== undefined) data.type = updatePatientDto.type;
     if (updatePatientDto.sharedWith !== undefined) data.sharedWith = updatePatientDto.sharedWith;
     if (updatePatientDto.anamnesis !== undefined) data.anamnesis = updatePatientDto.anamnesis as object | null;
+    if (updatePatientDto.progress !== undefined) data.progress = updatePatientDto.progress;
     if (updatePatientDto.source) {
       (data as any).origin = updatePatientDto.source === 'app' ? 'ANDROID' : 'WEB';
     }

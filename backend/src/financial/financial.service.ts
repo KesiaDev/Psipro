@@ -49,6 +49,31 @@ export interface PayChargeDto {
   paidAt?: string | null;
 }
 
+/** Mapeia status do dashboard (en) para backend (pt) */
+const STATUS_TO_BACKEND: Record<string, string> = {
+  pending: 'pendente',
+  paid: 'pago',
+  overdue: 'atrasado',
+  cancelled: 'cancelado',
+  pendente: 'pendente',
+  pago: 'pago',
+  atrasado: 'atrasado',
+  cancelado: 'cancelado',
+};
+
+/** Mapeia status do backend (pt) para dashboard (en) */
+const STATUS_TO_DASHBOARD: Record<string, string> = {
+  pendente: 'pending',
+  pago: 'paid',
+  atrasado: 'overdue',
+  cancelado: 'cancelled',
+};
+
+function mapStatusToBackend(status: string | undefined): string | undefined {
+  if (!status) return undefined;
+  return STATUS_TO_BACKEND[status.toLowerCase()] ?? status;
+}
+
 @Injectable()
 export class FinancialService {
   constructor(private prisma: PrismaService, private auditService: AuditService) {}
@@ -201,28 +226,34 @@ export class FinancialService {
       },
       orderBy: { date: 'desc' },
     });
-    return records.map((r) => ({
-      id: r.id,
-      user_id: r.userId,
-      patient_id: r.patientId ?? null,
-      session_id: r.sessionId ?? null,
-      type: r.type === 'receita' ? 'income' : 'expense',
-      category: r.category ?? '',
-      description: r.description ?? '',
-      amount: Number(r.amount),
-      payment_method: r.paymentMethod ?? null,
-      status: (r.status ?? 'pago') as 'pendente' | 'pago',
-      due_date: r.date.toISOString().split('T')[0],
-      paid_at: r.status === 'pago' ? r.date.toISOString() : null,
-      created_at: r.createdAt.toISOString(),
-      updated_at: r.updatedAt.toISOString(),
-      patient_name: r.patient?.name ?? null,
-    }));
+    return records.map((r) => {
+      const backendStatus = r.status ?? 'pendente';
+      const dashboardStatus = STATUS_TO_DASHBOARD[backendStatus] ?? backendStatus;
+      return {
+        id: r.id,
+        user_id: r.userId,
+        patient_id: r.patientId ?? null,
+        session_id: r.sessionId ?? null,
+        type: r.type === 'receita' ? 'income' : 'expense',
+        category: r.category ?? '',
+        description: r.description ?? '',
+        amount: Number(r.amount),
+        payment_method: r.paymentMethod ?? null,
+        status: dashboardStatus,
+        due_date: r.date.toISOString().split('T')[0],
+        paid_at: backendStatus === 'pago' ? r.date.toISOString() : null,
+        created_at: r.createdAt.toISOString(),
+        updated_at: r.updatedAt.toISOString(),
+        patient_name: r.patient?.name ?? null,
+      };
+    });
   }
 
   async createRecord(userId: string, clinicId: string | null, dto: CreateFinancialRecordDto) {
     const date = dto.due_date ? new Date(dto.due_date) : new Date();
     const type = dto.type === 'income' ? 'receita' : 'despesa';
+    const rawStatus = dto.status ?? 'pending';
+    const status = mapStatusToBackend(rawStatus) ?? 'pendente';
     return this.prisma.financialRecord.create({
       data: {
         userId,
@@ -234,7 +265,7 @@ export class FinancialService {
         category: dto.category ?? null,
         patientId: dto.patient_id ?? null,
         sessionId: dto.session_id ?? null,
-        status: dto.status ?? 'pendente',
+        status,
         paymentMethod: dto.payment_method ?? null,
       },
     });
@@ -246,6 +277,7 @@ export class FinancialService {
     });
     if (!existing) throw new Error('Registro não encontrado');
     const updateDate = dto.paid_at ? new Date(dto.paid_at) : dto.due_date ? new Date(dto.due_date) : undefined;
+    const status = dto.status !== undefined ? (mapStatusToBackend(dto.status) ?? dto.status) : undefined;
     return this.prisma.financialRecord.update({
       where: { id },
       data: {
@@ -253,7 +285,7 @@ export class FinancialService {
         ...(dto.category !== undefined && { category: dto.category }),
         ...(dto.description !== undefined && { description: dto.description }),
         ...(dto.amount !== undefined && { amount: dto.amount }),
-        ...(dto.status !== undefined && { status: dto.status }),
+        ...(status !== undefined && { status }),
         ...(dto.payment_method !== undefined && { paymentMethod: dto.payment_method }),
         ...(updateDate !== undefined && { date: updateDate }),
       },

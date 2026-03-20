@@ -110,5 +110,11 @@ export class UpdatePatientDto {
   @ValidateIf((_o, v) => v != null)
   @IsObject()
   anamnesis?: object | null;
+
+  /** Evolução clínica: improving | stable | attention */
+  @IsOptional()
+  @IsString()
+  @IsIn(['improving', 'stable', 'attention'])
+  progress?: string;
 }
 

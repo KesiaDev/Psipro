@@ -235,6 +235,9 @@ model Patient {
   observations String?
   status      String   @default("Ativo") // Ativo | Inativo
   type        String?  // Adulto | Infantil | Casal
+  gender      String?  // male | female | other (ficha de acolhimento)
+  profession  String?  // Profissão (ficha de acolhimento)
+  progress    String?  // improving | stable | attention (evolução clínica)
   
   // Compartilhamento (IDs dos psicólogos que podem ver/atender)
   sharedWith  String[] @default([])

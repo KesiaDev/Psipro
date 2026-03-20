@@ -124,6 +124,47 @@ export class SessionsService {
     return session;
   }
 
+  /** Formato esperado pelo dashboard (snake_case, aliases) */
+  formatForDashboard(session: {
+    id: string;
+    userId: string;
+    patientId: string;
+    date: Date;
+    duration: number;
+    type?: string | null;
+    status: string;
+    notes?: string | null;
+    clinicalData?: unknown;
+    summary?: string | null;
+    themes?: unknown;
+    emotions?: unknown;
+    actionItems?: unknown;
+    riskFlags?: unknown;
+    patient?: { id: string; name: string } | null;
+  }) {
+    const clinical = (session.clinicalData as Record<string, unknown>) ?? null;
+    return {
+      id: session.id,
+      patient_id: session.patientId,
+      patient_name: session.patient?.name ?? null,
+      professional_id: session.userId,
+      scheduled_at: session.date.toISOString(),
+      start_at: session.date.toISOString(),
+      duration_minutes: session.duration ?? 60,
+      type: session.type ?? null,
+      status: session.status,
+      notes: session.notes ?? null,
+      clinical,
+      aiAnalysis: {
+        summary: session.summary ?? null,
+        themes: Array.isArray(session.themes) ? session.themes : [],
+        emotions: Array.isArray(session.emotions) ? session.emotions : [],
+        actionItems: Array.isArray(session.actionItems) ? session.actionItems : [],
+        riskFlags: Array.isArray(session.riskFlags) ? session.riskFlags : [],
+      },
+    };
+  }
+
   async update(
     id: string,
     userId: string,

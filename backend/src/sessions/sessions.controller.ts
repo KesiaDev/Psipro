@@ -60,12 +60,13 @@ export class SessionsController {
   }
 
   @Get(':id')
-  findOne(
+  async findOne(
     @Param('id') id: string,
     @CurrentUser() user: any,
     @CurrentClinicId() clinicId: string,
   ) {
-    return this.sessionsService.findOne(id, user.sub, clinicId);
+    const session = await this.sessionsService.findOne(id, user.sub, clinicId);
+    return this.sessionsService.formatForDashboard(session);
   }
 
   @Patch(':id')
