@@ -5,12 +5,13 @@ import { whereNotDeleted } from '../prisma/soft-delete.helper';
 
 export interface CreateFinancialRecordDto {
   patient_id?: string | null;
+  session_id?: string | null;
   type: 'income' | 'expense';
-  category: string;
-  description: string;
-  amount: number;
+  category?: string | null;
+  description?: string | null;
+  amount?: number; // Aceita 0 ou omitido para registros pendentes
   payment_method?: string | null;
-  status?: string;
+  status?: string; // pendente | pago
   due_date?: string | null;
   paid_at?: string | null;
 }
@@ -195,23 +196,27 @@ export class FinancialService {
         userId,
         clinicId: clinicId || null,
       },
+      include: {
+        patient: { select: { id: true, name: true } },
+      },
       orderBy: { date: 'desc' },
     });
     return records.map((r) => ({
       id: r.id,
       user_id: r.userId,
-      patient_id: null,
+      patient_id: r.patientId ?? null,
+      session_id: r.sessionId ?? null,
       type: r.type === 'receita' ? 'income' : 'expense',
       category: r.category ?? '',
       description: r.description ?? '',
       amount: Number(r.amount),
-      payment_method: null,
-      status: r.type === 'receita' ? 'paid' : 'expense',
+      payment_method: r.paymentMethod ?? null,
+      status: (r.status ?? 'pago') as 'pendente' | 'pago',
       due_date: r.date.toISOString().split('T')[0],
-      paid_at: r.type === 'receita' ? r.date.toISOString() : null,
+      paid_at: r.status === 'pago' ? r.date.toISOString() : null,
       created_at: r.createdAt.toISOString(),
       updated_at: r.updatedAt.toISOString(),
-      patient_name: null,
+      patient_name: r.patient?.name ?? null,
     }));
   }
 
@@ -224,9 +229,13 @@ export class FinancialService {
         clinicId: clinicId ?? null,
         date,
         type,
-        amount: dto.amount,
-        description: dto.description,
+        amount: dto.amount ?? 0,
+        description: dto.description ?? null,
         category: dto.category ?? null,
+        patientId: dto.patient_id ?? null,
+        sessionId: dto.session_id ?? null,
+        status: dto.status ?? 'pendente',
+        paymentMethod: dto.payment_method ?? null,
       },
     });
   }
@@ -244,6 +253,8 @@ export class FinancialService {
         ...(dto.category !== undefined && { category: dto.category }),
         ...(dto.description !== undefined && { description: dto.description }),
         ...(dto.amount !== undefined && { amount: dto.amount }),
+        ...(dto.status !== undefined && { status: dto.status }),
+        ...(dto.payment_method !== undefined && { paymentMethod: dto.payment_method }),
         ...(updateDate !== undefined && { date: updateDate }),
       },
     });

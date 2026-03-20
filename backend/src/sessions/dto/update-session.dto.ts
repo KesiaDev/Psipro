@@ -1,4 +1,4 @@
-import { IsString, IsDateString, IsInt, IsOptional } from 'class-validator';
+import { IsString, IsDateString, IsInt, IsOptional, IsObject } from 'class-validator';
 
 export class UpdateSessionDto {
   @IsOptional()
@@ -20,4 +20,14 @@ export class UpdateSessionDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  /** Tipo da sessão (ex: Consulta) - aceito pelo dashboard */
+  @IsOptional()
+  @IsString()
+  type?: string;
+
+  /** Prontuário clínico (estado emocional, evolução, técnicas, etc.) - aceito pelo dashboard */
+  @IsOptional()
+  @IsObject()
+  clinical?: Record<string, unknown>;
 }

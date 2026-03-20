@@ -263,6 +263,7 @@ model Patient {
   payments    Payment[]
   documents   Document[]
   anamnesePreenchidas AnamnesePreenchida[]
+  financialRecords FinancialRecord[]
 
   @@index([clinicId])
   @@index([deletedAt])
@@ -376,7 +377,9 @@ model Session {
   date          DateTime
   duration      Int      @default(60)
   status        String   @default("realizada") // realizada | falta | cancelada
+  type          String?  // Consulta | Retorno | etc
   notes         String?  // Anotações da sessão
+  clinicalData  Json?    // Prontuário: estado emocional, evolução, técnicas, tarefas, risco
 
   // Inteligência Clínica (transcrição + insights IA)
   transcript    String?  // Transcrição de voz da sessão
@@ -399,6 +402,7 @@ model Session {
   patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
   appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
   payment       Payment?
+  financialRecord FinancialRecord?
 
   @@index([userId])
   @@index([deletedAt])
@@ -449,15 +453,19 @@ model Payment {
 
 // Registro financeiro consolidado
 model FinancialRecord {
-  id          String   @id @default(uuid())
-  userId      String
-  clinicId    String?  // Isolamento multi-tenant (nullable para migração)
-  date        DateTime
-  type        String   // receita | despesa
-  amount      Decimal  @db.Decimal(10, 2)
-  description String?
-  category    String?
-  
+  id            String   @id @default(uuid())
+  userId        String
+  clinicId      String?  // Isolamento multi-tenant (nullable para migração)
+  date          DateTime
+  type          String   // receita | despesa
+  amount        Decimal  @db.Decimal(10, 2)
+  description   String?
+  category      String?
+  patientId     String?  // Paciente (opcional, para sessões/agendamentos)
+  sessionId     String?  @unique // Vínculo com sessão (cobrança pendente)
+  status        String?  @default("pendente") // pendente | pago
+  paymentMethod String?  // PIX | Dinheiro | Cartão | etc
+
   // Sincronização
   source      String   @default("app")
   createdAt   DateTime @default(now())
@@ -466,10 +474,15 @@ model FinancialRecord {
   // Relações
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   clinic      Clinic?  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  patient     Patient? @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  session     Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([clinicId])
   @@index([date])
+  @@index([patientId])
+  @@index([sessionId])
+  @@index([status])
   @@map("financial_records")
 }
 

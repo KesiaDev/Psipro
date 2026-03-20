@@ -1,9 +1,12 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { VoiceService, extractAnamnesisText } from '../voice/voice.service';
 import { whereNotDeleted } from '../prisma/soft-delete.helper';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
+
+const PRISMA_UNIQUE_VIOLATION = 'P2002';
 
 @Injectable()
 export class SessionsService {
@@ -151,6 +154,8 @@ export class SessionsService {
     if (updateSessionDto.date !== undefined) data.date = new Date(updateSessionDto.date);
     if (updateSessionDto.duration !== undefined) data.duration = updateSessionDto.duration;
     if (updateSessionDto.notes !== undefined) data.notes = updateSessionDto.notes;
+    if (updateSessionDto.type !== undefined) data.type = updateSessionDto.type;
+    if (updateSessionDto.clinical !== undefined) data.clinicalData = updateSessionDto.clinical as object;
     if (updateSessionDto.professionalId !== undefined) data.userId = effectiveUserId;
 
     return this.prisma.session.update({
@@ -202,22 +207,68 @@ export class SessionsService {
     }
 
     const { professionalId: _, ...sessionData } = createSessionDto;
-    return this.prisma.session.create({
-      data: {
-        ...sessionData,
-        userId: effectiveUserId,
-        date: new Date(createSessionDto.date),
-        source: createSessionDto.source || 'app',
-      },
-      include: {
-        patient: {
-          select: {
-            id: true,
-            name: true,
+    const sessionDate = new Date(createSessionDto.date);
+    const patientId = createSessionDto.patientId;
+    const clinicIdFromPatient = patient.clinicId ?? clinicId;
+
+    const session = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.session.create({
+        data: {
+          ...sessionData,
+          userId: effectiveUserId,
+          date: sessionDate,
+          source: createSessionDto.source || 'app',
+        },
+        include: {
+          patient: {
+            select: {
+              id: true,
+              name: true,
+            },
           },
         },
-      },
+      });
+
+      // Cobrança pendente automática: psicólogo vê na lista e preenche valor/forma de pagamento depois
+      const createPaymentWithRetry = async (retryCount = 0): Promise<void> => {
+        const maxResult = await tx.payment.aggregate({
+          where: { patientId, userId: effectiveUserId, deletedAt: null },
+          _max: { sessionNumber: true },
+        });
+        const sessionNumber = (maxResult._max.sessionNumber ?? 0) + 1;
+
+        try {
+          await tx.payment.create({
+            data: {
+              userId: effectiveUserId,
+              patientId,
+              clinicId: clinicIdFromPatient,
+              sessionId: created.id,
+              sessionNumber,
+              amount: new Prisma.Decimal(0),
+              date: sessionDate,
+              status: 'pendente',
+              source: createSessionDto.source || 'app',
+            },
+          });
+        } catch (err: unknown) {
+          const isUniqueViolation =
+            err &&
+            typeof err === 'object' &&
+            'code' in err &&
+            (err as { code?: string }).code === PRISMA_UNIQUE_VIOLATION;
+          if (isUniqueViolation && retryCount < 1) {
+            return createPaymentWithRetry(retryCount + 1);
+          }
+          throw err;
+        }
+      };
+      await createPaymentWithRetry();
+
+      return created;
     });
+
+    return session;
   }
 
   async updateVoiceNote(

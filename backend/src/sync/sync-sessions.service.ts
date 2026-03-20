@@ -1,7 +1,10 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { whereNotDeleted } from '../prisma/soft-delete.helper';
 import { SyncSessionDto } from './dto/sync-session.dto';
+
+const PRISMA_UNIQUE_VIOLATION = 'P2002';
 
 @Injectable()
 export class SyncSessionsService {
@@ -71,7 +74,7 @@ export class SyncSessionsService {
         }
 
         if (!existing) {
-          await tx.session.create({
+          const createdSession = await tx.session.create({
             data: {
               id: s.id,
               userId: s.professionalId,
@@ -84,6 +87,42 @@ export class SyncSessionsService {
               lastSyncedAt: new Date(),
             },
           });
+
+          // Cobrança pendente automática ao registrar sessão via sync
+          const createPaymentWithRetry = async (retryCount = 0): Promise<void> => {
+            const maxResult = await tx.payment.aggregate({
+              where: { patientId: s.patientId, userId: s.professionalId, deletedAt: null },
+              _max: { sessionNumber: true },
+            });
+            const sessionNumber = (maxResult._max.sessionNumber ?? 0) + 1;
+
+            try {
+              await tx.payment.create({
+                data: {
+                  userId: s.professionalId,
+                  patientId: s.patientId,
+                  clinicId,
+                  sessionId: createdSession.id,
+                  sessionNumber,
+                  amount: new Prisma.Decimal(0),
+                  date,
+                  status: 'pendente',
+                  source: 'app',
+                },
+              });
+            } catch (err: unknown) {
+              const isUniqueViolation =
+                err &&
+                typeof err === 'object' &&
+                'code' in err &&
+                (err as { code?: string }).code === PRISMA_UNIQUE_VIOLATION;
+              if (isUniqueViolation && retryCount < 1) {
+                return createPaymentWithRetry(retryCount + 1);
+              }
+              throw err;
+            }
+          };
+          await createPaymentWithRetry();
           continue;
         }
 
