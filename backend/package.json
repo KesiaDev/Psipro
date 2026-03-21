@@ -31,7 +31,8 @@
     "prisma:migrate-existing": "ts-node prisma/migrate-existing-data.ts",
     "prisma:migrate-to-clinic-user": "ts-node prisma/migrate-to-clinic-user.ts",
     "cleanup:soft-deleted": "ts-node scripts/cleanup-soft-deleted.ts",
-    "list-users": "ts-node scripts/list-users.ts"
+    "list-users": "ts-node scripts/list-users.ts",
+    "delete-clinic:claudia-cruz": "ts-node scripts/delete-clinic-by-name.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

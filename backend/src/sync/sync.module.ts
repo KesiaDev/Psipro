@@ -9,8 +9,10 @@ import { SyncAppointmentsService } from './sync-appointments.service';
 import { SyncSessionsService } from './sync-sessions.service';
 import { SyncPaymentsService } from './sync-payments.service';
 import { SyncDocumentsService } from './sync-documents.service';
+import { GoogleCalendarModule } from '../integrations/google-calendar/google-calendar.module';
 
 @Module({
+  imports: [GoogleCalendarModule],
   controllers: [
     SyncController,
     SyncAppointmentsController,

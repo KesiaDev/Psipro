@@ -1,6 +1,8 @@
 package com.psipro.app
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -22,7 +24,7 @@ class VoiceTest {
     @Test
     fun voice_botaoGravarVisivel() {
         composeTestRule.setContent { StubScreens.VoiceScreen() }
-        composeTestRule.waitUntil(timeout = 3000) {
+        composeTestRule.waitUntil(timeoutMillis = 3000) {
             composeTestRule.onAllNodesWithText("Gravar").fetchSemanticsNodes().isNotEmpty() ||
             composeTestRule.onAllNodesWithContentDescription("Gravar áudio").fetchSemanticsNodes().isNotEmpty()
         }
@@ -31,7 +33,7 @@ class VoiceTest {
     @Test
     fun voice_transcricaoVisivel() {
         composeTestRule.setContent { StubScreens.TranscriptScreen() }
-        composeTestRule.waitUntil(timeout = 3000) {
+        composeTestRule.waitUntil(timeoutMillis = 3000) {
             composeTestRule.onAllNodesWithText("Transcrição").fetchSemanticsNodes().isNotEmpty() ||
             composeTestRule.onAllNodesWithText("Insights").fetchSemanticsNodes().isNotEmpty()
         }

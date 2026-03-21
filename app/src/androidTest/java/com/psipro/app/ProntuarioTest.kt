@@ -1,6 +1,7 @@
 package com.psipro.app
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
@@ -21,7 +22,7 @@ class ProntuarioTest {
     @Test
     fun visualizacaoProntuario_abreTela() {
         composeTestRule.setContent { StubScreens.ProntuarioScreen() }
-        composeTestRule.waitUntil(timeout = 5000) {
+        composeTestRule.waitUntil(timeoutMillis = 5000) {
             composeTestRule.onAllNodesWithText("Prontuário").fetchSemanticsNodes().isNotEmpty()
         }
     }

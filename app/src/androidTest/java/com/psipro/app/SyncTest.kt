@@ -1,6 +1,7 @@
 package com.psipro.app
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -21,7 +22,7 @@ class SyncTest {
     @Test
     fun sync_indicatorVisivelQuandoSincronizando() {
         composeTestRule.setContent { StubScreens.SyncScreen() }
-        composeTestRule.waitUntil(timeout = 3000) {
+        composeTestRule.waitUntil(timeoutMillis = 3000) {
             composeTestRule.onAllNodesWithText("Sincronizando").fetchSemanticsNodes().isNotEmpty() ||
             composeTestRule.onAllNodesWithText("Sync").fetchSemanticsNodes().isNotEmpty()
         }

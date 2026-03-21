@@ -1,6 +1,7 @@
 package com.psipro.app
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.printToLog
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -26,7 +27,7 @@ class AccessibilityTest {
     @Test
     fun accessibility_elementosComContentDescription() {
         composeTestRule.setContent { StubScreens.VoiceScreen() }
-        composeTestRule.waitUntil(timeout = 3000) {
+        composeTestRule.waitUntil(timeoutMillis = 3000) {
             composeTestRule.onAllNodesWithContentDescription("Gravar áudio").fetchSemanticsNodes().isNotEmpty()
         }
     }

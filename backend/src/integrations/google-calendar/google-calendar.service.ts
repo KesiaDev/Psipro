@@ -190,9 +190,16 @@ export class GoogleCalendarService {
   }
 
   private async getCalendarClient(userId: string, clinicId?: string | null) {
-    const integration = await this.prisma.userIntegration.findFirst({
+    // 1) Tenta primeiro com clinicId exato (integração da clínica)
+    let integration = await this.prisma.userIntegration.findFirst({
       where: { userId, provider: PROVIDER, clinicId: clinicId ?? null },
     });
+    // 2) Se não encontrar e clinicId foi passado, tenta integração user-level (clinicId=null)
+    if (!integration && clinicId) {
+      integration = await this.prisma.userIntegration.findFirst({
+        where: { userId, provider: PROVIDER, clinicId: null },
+      });
+    }
     if (!integration || integration.status !== 'connected') {
       return null;
     }

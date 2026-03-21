@@ -2,10 +2,14 @@ import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/com
 import { PrismaService } from '../prisma/prisma.service';
 import { whereNotDeleted } from '../prisma/soft-delete.helper';
 import { SyncAppointmentDto } from './dto/sync-appointment.dto';
+import { GoogleCalendarService } from '../integrations/google-calendar/google-calendar.service';
 
 @Injectable()
 export class SyncAppointmentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private googleCalendar: GoogleCalendarService,
+  ) {}
 
   /**
    * GET - Retorna agendamentos da clínica para sincronização.
@@ -52,8 +56,20 @@ export class SyncAppointmentsService {
    * Backend é source of truth; registros com updatedAt mais recente vencem.
    * Retorna lista atualizada da clínica após sync.
    */
-  async syncAppointments(userId: string, clinicId: string, incoming: SyncAppointmentDto[]) {
-    const results = await this.prisma.$transaction(async (tx) => {
+  async syncAppointments(_userId: string, clinicId: string, incoming: SyncAppointmentDto[]) {
+    const toSyncToGoogle: Array<{
+      professionalId: string;
+      clinicId: string;
+      id: string;
+      patientId: string;
+      scheduledAt: Date;
+      duration: number;
+      type: string | null;
+      notes: string | null;
+      patientName: string;
+    }> = [];
+
+    await this.prisma.$transaction(async (tx) => {
       const processed: Array<{
         id: string;
         clinicId: string | null;
@@ -117,6 +133,17 @@ export class SyncAppointmentsService {
               lastSyncedAt: new Date(),
             },
           });
+          toSyncToGoogle.push({
+            professionalId: a.professionalId,
+            clinicId,
+            id: created.id,
+            patientId: created.patientId,
+            scheduledAt: created.scheduledAt,
+            duration: created.duration,
+            type: created.type,
+            notes: created.notes,
+            patientName: patient.name,
+          });
           processed.push({
             id: created.id,
             clinicId: created.clinicId,
@@ -147,6 +174,17 @@ export class SyncAppointmentsService {
               status: a.status ?? existing.status,
               lastSyncedAt: new Date(),
             },
+          });
+          toSyncToGoogle.push({
+            professionalId: a.professionalId,
+            clinicId,
+            id: updated.id,
+            patientId: updated.patientId,
+            scheduledAt: updated.scheduledAt,
+            duration: updated.duration,
+            type: updated.type,
+            notes: updated.notes,
+            patientName: patient.name,
           });
           processed.push({
             id: updated.id,
@@ -180,6 +218,28 @@ export class SyncAppointmentsService {
 
       return processed;
     });
+
+    // Sincroniza com Google Calendar (após commit da transação)
+    if (this.googleCalendar.isConfigured() && toSyncToGoogle.length > 0) {
+      for (const item of toSyncToGoogle) {
+        this.googleCalendar
+          .syncAppointmentToGoogle(
+            item.professionalId,
+            item.clinicId,
+            {
+              id: item.id,
+              patientId: item.patientId,
+              scheduledAt: item.scheduledAt,
+              duration: item.duration,
+              type: item.type,
+              notes: item.notes,
+              patientName: item.patientName,
+            },
+            null,
+          )
+          .catch(() => {});
+      }
+    }
 
     // Retornar lista atualizada da clínica após sync (incluindo os processados + demais do backend)
     return this.getAppointments(clinicId);

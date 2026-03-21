@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { whereNotDeleted } from '../prisma/soft-delete.helper';
@@ -6,13 +6,17 @@ import { whereNotDeleted } from '../prisma/soft-delete.helper';
 export interface CreateFinancialRecordDto {
   patient_id?: string | null;
   session_id?: string | null;
+  patientId?: string | null; // aceita camelCase do dashboard
+  sessionId?: string | null; // aceita camelCase do dashboard
   type: 'income' | 'expense';
   category?: string | null;
   description?: string | null;
   amount?: number; // Aceita 0 ou omitido para registros pendentes
   payment_method?: string | null;
+  paymentMethod?: string | null; // aceita camelCase
   status?: string; // pendente | pago
   due_date?: string | null;
+  dueDate?: string | null; // aceita camelCase
   paid_at?: string | null;
 }
 
@@ -250,32 +254,72 @@ export class FinancialService {
   }
 
   async createRecord(userId: string, clinicId: string | null, dto: CreateFinancialRecordDto) {
-    const date = dto.due_date ? new Date(dto.due_date) : new Date();
+    if (!dto.type || !['income', 'expense'].includes(dto.type)) {
+      throw new BadRequestException('type deve ser "income" ou "expense"');
+    }
+    const dueDate = dto.due_date ?? dto.dueDate;
+    const date = dueDate ? new Date(dueDate) : new Date();
+    if (Number.isNaN(date.getTime())) {
+      throw new BadRequestException('due_date inválido');
+    }
     const type = dto.type === 'income' ? 'receita' : 'despesa';
     const rawStatus = dto.status ?? 'pending';
     const status = mapStatusToBackend(rawStatus) ?? 'pendente';
-    return this.prisma.financialRecord.create({
-      data: {
-        userId,
-        clinicId: clinicId ?? null,
-        date,
-        type,
-        amount: dto.amount ?? 0,
-        description: dto.description ?? null,
-        category: dto.category ?? null,
-        patientId: dto.patient_id ?? null,
-        sessionId: dto.session_id ?? null,
-        status,
-        paymentMethod: dto.payment_method ?? null,
-      },
-    });
+    const effectiveClinicId = clinicId ?? null;
+    const patientId = dto.patient_id ?? dto.patientId ?? null;
+    const sessionId = dto.session_id ?? dto.sessionId ?? null;
+    const paymentMethod = dto.payment_method ?? dto.paymentMethod ?? null;
+
+    if (patientId && effectiveClinicId) {
+      const patient = await this.prisma.patient.findFirst({
+        where: whereNotDeleted('patient', { id: patientId, clinicId: effectiveClinicId }),
+      });
+      if (!patient) {
+        throw new BadRequestException('Paciente não encontrado ou não pertence à clínica');
+      }
+    }
+    if (sessionId) {
+      const existingForSession = await this.prisma.financialRecord.findFirst({
+        where: { sessionId },
+      });
+      if (existingForSession) {
+        throw new ConflictException('Já existe registro financeiro para esta sessão');
+      }
+    }
+
+    try {
+      return await this.prisma.financialRecord.create({
+        data: {
+          userId,
+          clinicId: effectiveClinicId,
+          date,
+          type,
+          amount: dto.amount ?? 0,
+          description: dto.description ?? null,
+          category: dto.category ?? null,
+          patientId,
+          sessionId,
+          status,
+          paymentMethod,
+        },
+      });
+    } catch (err: unknown) {
+      const prisma = err as { code?: string };
+      if (prisma?.code === 'P2002') {
+        throw new ConflictException('Registro duplicado (ex: sessão já vinculada a outro registro)');
+      }
+      if (prisma?.code === 'P2003') {
+        throw new BadRequestException('Paciente ou sessão inválidos ou sem acesso');
+      }
+      throw err;
+    }
   }
 
   async updateRecord(id: string, userId: string, clinicId: string | null, dto: UpdateFinancialRecordDto) {
     const existing = await this.prisma.financialRecord.findFirst({
       where: { id, userId, clinicId: clinicId ?? null },
     });
-    if (!existing) throw new Error('Registro não encontrado');
+    if (!existing) throw new NotFoundException('Registro não encontrado');
     const updateDate = dto.paid_at ? new Date(dto.paid_at) : dto.due_date ? new Date(dto.due_date) : undefined;
     const status = dto.status !== undefined ? (mapStatusToBackend(dto.status) ?? dto.status) : undefined;
     return this.prisma.financialRecord.update({
@@ -296,7 +340,7 @@ export class FinancialService {
     const existing = await this.prisma.financialRecord.findFirst({
       where: { id, userId, clinicId: clinicId ?? null },
     });
-    if (!existing) throw new Error('Registro não encontrado');
+    if (!existing) throw new NotFoundException('Registro não encontrado');
     const deleted = await this.prisma.financialRecord.delete({ where: { id } });
     await this.auditService.log({
       userId,

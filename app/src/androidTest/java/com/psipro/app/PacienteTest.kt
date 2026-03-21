@@ -1,6 +1,7 @@
 package com.psipro.app
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
@@ -30,7 +31,7 @@ class PacienteTest {
     @Test
     fun listarPacientes_exibeLista() {
         composeTestRule.setContent { StubScreens.ListaPacientesScreen() }
-        composeTestRule.waitUntil(timeout = 5000) {
+        composeTestRule.waitUntil(timeoutMillis = 5000) {
             composeTestRule.onAllNodesWithText("Pacientes").fetchSemanticsNodes().isNotEmpty()
         }
     }
