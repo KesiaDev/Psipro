@@ -89,6 +89,15 @@ async function bootstrap() {
       res.setHeader('Cache-Control', 'no-cache');
       res.send(fs.readFileSync(filePath));
     };
+    // Rota curta: /i/:code → serve o formulário com o código embutido no path
+    expressApp.get('/i/:code', (_req: any, res: any) => {
+      const filePath = path.join(publicDir, 'intake.html');
+      if (!fs.existsSync(filePath)) { res.status(404).send('Not found'); return; }
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.send(fs.readFileSync(filePath));
+    });
+    // Rota legada com query string (mantida para tokens antigos)
     expressApp.get('/intake', servePublic('intake.html', 'text/html; charset=utf-8'));
     expressApp.get('/intake.js', servePublic('intake.js', 'application/javascript; charset=utf-8'));
   }

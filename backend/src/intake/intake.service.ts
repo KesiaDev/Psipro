@@ -6,7 +6,12 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, AuditRequest } from '../audit/audit.service';
 import { CreateIntakeDto } from './dto/create-intake.dto';
-import { randomUUID } from 'crypto';
+import { randomBytes } from 'crypto';
+
+/** Gera código curto de 12 chars hex (ex: a3f2b1c4d5e6) */
+function shortCode(): string {
+  return randomBytes(6).toString('hex');
+}
 
 const INTAKE_TOKEN_TTL_DAYS = 7;
 
@@ -23,7 +28,7 @@ export class IntakeService {
 
     const intakeToken = await this.prisma.intakeToken.create({
       data: {
-        token: randomUUID(),
+        token: shortCode(),
         clinicId,
         userId,
         expiresAt,
@@ -35,7 +40,7 @@ export class IntakeService {
       (process.env.RAILWAY_PUBLIC_DOMAIN
         ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
         : 'https://psipro-backend-production.up.railway.app');
-    const link = `${webAppUrl}/intake?token=${intakeToken.token}`;
+    const link = `${webAppUrl}/i/${intakeToken.token}`;
 
     return {
       token: intakeToken.token,

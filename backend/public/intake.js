@@ -12,8 +12,11 @@
     { id: 6, icon: '🔐', title: 'Consentimento',      sub: 'Privacidade e LGPD' },
   ];
 
-  var params = new URLSearchParams(window.location.search);
-  var TOKEN = params.get('token');
+  // Suporta /i/:code (path) e /intake?token=... (legado)
+  var pathMatch = window.location.pathname.match(/^\/i\/([a-zA-Z0-9_-]+)$/);
+  var TOKEN = pathMatch
+    ? pathMatch[1]
+    : new URLSearchParams(window.location.search).get('token');
 
   var state = {
     step: 1, loading: false, nameError: '',
