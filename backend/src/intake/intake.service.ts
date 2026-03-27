@@ -32,7 +32,9 @@ export class IntakeService {
 
     const webAppUrl =
       process.env.WEB_APP_URL ||
-      'https://psipro-web-production.up.railway.app';
+      (process.env.RAILWAY_PUBLIC_DOMAIN
+        ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+        : 'https://psipro-backend-production.up.railway.app');
     const link = `${webAppUrl}/intake?token=${intakeToken.token}`;
 
     return {

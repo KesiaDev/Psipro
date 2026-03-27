@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
+import * as path from 'path';
+import * as fs from 'fs';
 import { AppModule } from './app.module';
 import { loggingMiddleware } from './logger/logging.middleware';
 import { SystemHealthService } from './system-health/system-health.service';
@@ -28,7 +30,7 @@ function getMappedRoutes(expressApp: any): string[] {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.use(
     helmet({
@@ -77,6 +79,20 @@ async function bootstrap() {
   const httpAdapter = app.getHttpAdapter();
   const expressApp = (httpAdapter as { getInstance?: () => any }).getInstance?.();
   const systemHealthService = app.get(SystemHealthService);
+  // Servir formulário público de intake (sem JWT, sem prefixo /api)
+  if (expressApp) {
+    const publicDir = path.resolve(process.cwd(), 'public');
+    const servePublic = (file: string, contentType: string) => (_req: any, res: any) => {
+      const filePath = path.join(publicDir, file);
+      if (!fs.existsSync(filePath)) { res.status(404).send('Not found'); return; }
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'no-cache');
+      res.send(fs.readFileSync(filePath));
+    };
+    expressApp.get('/intake', servePublic('intake.html', 'text/html; charset=utf-8'));
+    expressApp.get('/intake.js', servePublic('intake.js', 'application/javascript; charset=utf-8'));
+  }
+
   if (expressApp && systemHealthService) {
     expressApp.get('/api/system-health', async (_req: any, res: any) => {
       try {
