@@ -243,9 +243,6 @@ model Patient {
   
   // Compartilhamento (IDs dos psicólogos que podem ver/atender)
   sharedWith  String[] @default([])
-  
-  gender      String?  // Masculino | Feminino | Outro
-  profession  String?  // Profissão do paciente
 
   // Anamnese (formulário livre do detalhe do paciente - dashboard)
   anamnesis   Json?    // { items: [{ key, label, value, isCustom }], updatedAt }
