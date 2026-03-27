@@ -11,6 +11,7 @@ import { patientService, type Patient } from "@/app/services/patientService";
 import { useClinic } from "@/app/contexts/ClinicContext";
 import { useToast } from "@/app/contexts/ToastContext";
 import Skeleton from "@/app/components/Skeleton";
+import { api } from "@/app/services/api";
 
 export default function PacientesPage() {
   const router = useRouter();
@@ -24,6 +25,9 @@ export default function PacientesPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
+  const [intakeLink, setIntakeLink] = useState<string | null>(null);
+  const [generatingIntake, setGeneratingIntake] = useState(false);
+  const [intakeCopied, setIntakeCopied] = useState(false);
 
   const isImportEnabled = true;
 
@@ -89,6 +93,30 @@ export default function PacientesPage() {
     } finally {
       setCreating(false);
     }
+  };
+
+  const handleGenerateIntakeLink = async () => {
+    setGeneratingIntake(true);
+    try {
+      const data = await api.post<{ token: string; link: string; expiresAt: string }>(
+        "/patients/intake-token",
+        {}
+      );
+      setIntakeLink(data.link);
+      setIntakeCopied(false);
+    } catch (error) {
+      const err = error as { message?: string };
+      showError(err?.message || "Erro ao gerar link de intake");
+    } finally {
+      setGeneratingIntake(false);
+    }
+  };
+
+  const handleCopyIntakeLink = async () => {
+    if (!intakeLink) return;
+    await navigator.clipboard.writeText(intakeLink);
+    setIntakeCopied(true);
+    setTimeout(() => setIntakeCopied(false), 3000);
   };
 
   const handleImportPatients = async (file: File, mapping: Record<string, string>) => {
@@ -172,6 +200,21 @@ export default function PacientesPage() {
             className="px-5 py-2.5 text-sm font-medium text-psipro-text-secondary bg-psipro-surface border border-psipro-border rounded-lg hover:bg-psipro-surface-elevated hover:border-psipro-primary/30 transition-all shadow-sm cursor-pointer"
           >
             Novo paciente
+          </button>
+          <button
+            type="button"
+            onClick={handleGenerateIntakeLink}
+            disabled={generatingIntake}
+            className="px-5 py-2.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-60 rounded-lg transition-all shadow-sm cursor-pointer flex items-center gap-2"
+          >
+            {generatingIntake ? (
+              <>
+                <span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                Gerando...
+              </>
+            ) : (
+              <>🔗 Gerar Link de Intake</>
+            )}
           </button>
         </div>
 
@@ -350,6 +393,49 @@ export default function PacientesPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Modal de Link de Intake */}
+      {intakeLink && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6">
+            <div className="text-center mb-4">
+              <span className="text-4xl">🔗</span>
+              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mt-2">
+                Link de Intake Gerado!
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Envie este link para o paciente pelo WhatsApp ou e-mail.
+                Válido por <strong>7 dias</strong>.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-3 mb-4">
+              <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 break-all select-all">
+                {intakeLink}
+              </span>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleCopyIntakeLink}
+                className={`flex-1 py-3 rounded-xl font-medium text-sm transition-all ${
+                  intakeCopied
+                    ? "bg-green-100 text-green-700 border border-green-300"
+                    : "bg-psipro-primary text-psipro-text hover:opacity-90"
+                }`}
+              >
+                {intakeCopied ? "✓ Copiado!" : "Copiar link"}
+              </button>
+              <button
+                onClick={() => { setIntakeLink(null); setIntakeCopied(false); }}
+                className="flex-1 py-3 rounded-xl font-medium text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Modal de Importação */}
