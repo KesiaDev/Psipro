@@ -27,6 +27,8 @@ import { IntegrationsModule } from './integrations/integrations.module';
 import { SystemHealthModule } from './system-health/system-health.module';
 import { HealthModule } from './health/health.module';
 import { LgpdModule } from './lgpd/lgpd.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { IntakeModule } from './intake/intake.module';
 
 /**
  * PsiPro Backend
@@ -66,6 +68,8 @@ import { LgpdModule } from './lgpd/lgpd.module';
     SystemHealthModule,
     HealthModule,
     LgpdModule,
+    SubscriptionsModule,
+    IntakeModule,
   ],
 })
 export class AppModule {}

@@ -78,6 +78,7 @@ model Clinic {
   subscriptions    Subscription[]
   anamneseModels   AnamneseModel[]
   integrations     UserIntegration[]
+  intakeTokens     IntakeToken[]
 
   @@map("clinics")
 }
@@ -154,7 +155,8 @@ model User {
   documents      Document[]
   auditLogs      AuditLog[]
   integrations   UserIntegration[]
-  handoffTokens   HandoffToken[]
+  handoffTokens  HandoffToken[]
+  intakeTokens   IntakeToken[]
 
   @@index([clinicId])
   @@map("users")
@@ -242,6 +244,9 @@ model Patient {
   // Compartilhamento (IDs dos psicólogos que podem ver/atender)
   sharedWith  String[] @default([])
   
+  gender      String?  // Masculino | Feminino | Outro
+  profession  String?  // Profissão do paciente
+
   // Anamnese (formulário livre do detalhe do paciente - dashboard)
   anamnesis   Json?    // { items: [{ key, label, value, isCustom }], updatedAt }
 
@@ -352,6 +357,7 @@ model Appointment {
   source      String   @default("app")
   syncHash    String?
   lastSyncedAt DateTime?
+  reminderSentAt DateTime? // WhatsApp/SMS reminder sent timestamp
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deletedAt   DateTime? // Soft delete
@@ -557,7 +563,7 @@ model Subscription {
 
   clinic                Clinic             @relation(fields: [clinicId], references: [id], onDelete: Cascade)
 
-  @@index([clinicId])
+  @@unique([clinicId])
   @@map("subscriptions")
 }
 
@@ -605,6 +611,25 @@ model LgpdConsent {
   @@index([patientId])
   @@index([clinicId, patientId])
   @@map("lgpd_consents")
+}
+
+// Token de intake público — gerado pelo terapeuta, preenchido pelo paciente (sem JWT)
+model IntakeToken {
+  id        String    @id @default(uuid())
+  token     String    @unique @default(uuid())
+  clinicId  String
+  userId    String    // Terapeuta que gerou o token
+  expiresAt DateTime  // now() + 7 dias
+  usedAt    DateTime? // Null = ainda não usado
+  createdAt DateTime  @default(now())
+
+  clinic    Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([clinicId])
+  @@index([expiresAt])
+  @@map("intake_tokens")
 }
 
 // Solicitações de acesso beta
