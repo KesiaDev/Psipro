@@ -78,10 +78,10 @@ export class IntakeService {
         email: dto.email ?? null,
         phone: dto.phone ?? null,
         anamnesis: dto.anamnesis
-          ? {
+          ? ({
               items: dto.anamnesis.items,
               updatedAt: dto.anamnesis.updatedAt ?? new Date().toISOString(),
-            }
+            } as object)
           : null,
         consentGiven: true,
         consentAt: new Date(),
