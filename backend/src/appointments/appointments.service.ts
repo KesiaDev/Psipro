@@ -129,7 +129,7 @@ export class AppointmentsService {
   async update(id: string, userId: string, dto: UpdateAppointmentDto, clinicId: string) {
     const existing = await this.prisma.appointment.findFirst({
       where: whereNotDeleted('appointment', { id, userId, clinicId }),
-      include: { session: { where: { deletedAt: null }, include: { payment: { where: { deletedAt: null } } } } },
+      include: { session: { include: { payment: true } } },
     });
     if (!existing) {
       throw new NotFoundException('Agendamento não encontrado');
@@ -170,7 +170,7 @@ export class AppointmentsService {
       if (newStatus && becomesRealizada && !wasRealizada) {
         const existingSessionForAppointment = await tx.session.findFirst({
           where: { appointmentId: updatedApt.id, deletedAt: null },
-          include: { payment: { where: { deletedAt: null } } },
+          include: { payment: true },
         });
         if (existingSessionForAppointment) {
           return { updated: updatedApt, paymentCreated: false, paymentCancelled: false, cancelledPaymentId: null };
@@ -230,7 +230,7 @@ export class AppointmentsService {
       }
 
       // B2: status → CANCELADO: cancelar cobrança vinculada
-      if (newStatus && becomesCancelado && existing.session?.payment) {
+      if (newStatus && becomesCancelado && existing.session?.payment && !existing.session.payment.deletedAt) {
         cancelledPaymentId = existing.session.payment.id;
         await tx.payment.update({
           where: { id: cancelledPaymentId },
@@ -305,13 +305,12 @@ export class AppointmentsService {
           },
         },
         session: {
-          where: { deletedAt: null },
           include: {
             payment: {
-              where: { deletedAt: null },
               select: {
                 status: true,
                 date: true,
+                deletedAt: true,
               },
             },
           },
@@ -328,10 +327,13 @@ export class AppointmentsService {
     return appointments.map((a) => {
       const startsAt = a.scheduledAt;
       const endsAt = new Date(a.scheduledAt.getTime() + (a.duration ?? 60) * 60 * 1000);
-      const paymentStatus = a.session?.payment?.status ?? 'pendente';
+      const session = a.session?.deletedAt ? null : a.session;
+      const payment = session?.payment?.deletedAt ? null : session?.payment;
+      const paymentStatus = payment?.status ?? 'pendente';
 
       return {
         ...a,
+        session,
         startsAt,
         endsAt,
         paymentStatus,
