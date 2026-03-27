@@ -6,7 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, AuditRequest } from '../audit/audit.service';
 import { CreateIntakeDto } from './dto/create-intake.dto';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 const INTAKE_TOKEN_TTL_DAYS = 7;
 
@@ -23,7 +23,7 @@ export class IntakeService {
 
     const intakeToken = await this.prisma.intakeToken.create({
       data: {
-        token: uuidv4(),
+        token: randomUUID(),
         clinicId,
         userId,
         expiresAt,
