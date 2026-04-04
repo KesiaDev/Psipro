@@ -80,6 +80,71 @@ export class LgpdService {
     return updated;
   }
 
+  /** GET /api/lgpd/export — portabilidade de dados Art. 18, II LGPD */
+  async exportData(userId: string, clinicId: string) {
+    const [user, patients, sessions, appointments, consents, auditLogs] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, name: true, email: true, createdAt: true, lgpdAcceptedAt: true },
+      }),
+      this.prisma.patient.findMany({
+        where: { clinicOwnerId: userId, deletedAt: null },
+        select: {
+          id: true, name: true, phone: true, email: true, birthDate: true,
+          gender: true, profession: true, status: true, createdAt: true,
+          anamnesis: true, consentGiven: true, consentAt: true,
+        },
+      }),
+      this.prisma.session.findMany({
+        where: { userId, deletedAt: null },
+        select: {
+          id: true, date: true, duration: true, status: true,
+          notes: true, source: true, createdAt: true,
+          patient: { select: { id: true, name: true } },
+        },
+      }),
+      this.prisma.appointment.findMany({
+        where: { userId, deletedAt: null },
+        select: {
+          id: true, scheduledAt: true, duration: true, type: true,
+          status: true, createdAt: true,
+          patient: { select: { id: true, name: true } },
+        },
+      }),
+      this.prisma.lgpdConsent.findMany({
+        where: { userId },
+        select: { id: true, type: true, version: true, accepted: true, createdAt: true, revokedAt: true },
+      }),
+      this.prisma.auditLog.findMany({
+        where: { userId },
+        select: { id: true, action: true, entity: true, entityId: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+        take: 200,
+      }),
+    ]);
+
+    await this.auditService.log({
+      userId,
+      clinicId,
+      action: 'lgpd_data_export',
+      entity: 'User',
+      entityId: userId,
+      metadata: { exportedAt: new Date().toISOString() },
+    });
+
+    return {
+      exportedAt: new Date().toISOString(),
+      requestedBy: userId,
+      legalBasis: 'LGPD Art. 18, II — Portabilidade de dados',
+      profile: user,
+      patients: { total: patients.length, data: patients },
+      sessions: { total: sessions.length, data: sessions },
+      appointments: { total: appointments.length, data: appointments },
+      consents: { total: consents.length, data: consents },
+      auditLog: { total: auditLogs.length, data: auditLogs },
+    };
+  }
+
   async anonymizePatient(patientId: string, clinicId: string, userId: string) {
     const patient = await this.prisma.patient.findFirst({
       where: { id: patientId, clinicId, deletedAt: null },

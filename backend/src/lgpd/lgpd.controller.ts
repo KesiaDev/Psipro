@@ -59,6 +59,15 @@ export class LgpdController {
     return this.lgpdService.revokeConsent(consentId, clinicId, user.sub);
   }
 
+  /** GET /api/lgpd/export — portabilidade de dados Art. 18, II LGPD */
+  @Get('export')
+  exportData(
+    @CurrentUser() user: { sub: string },
+    @CurrentClinicId() clinicId: string,
+  ) {
+    return this.lgpdService.exportData(user.sub, clinicId);
+  }
+
   /** POST /api/lgpd/anonymize/:patientId — anonimiza dados do paciente */
   @Post('anonymize/:patientId')
   anonymizePatient(
