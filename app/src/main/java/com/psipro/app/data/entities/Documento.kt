@@ -1,5 +1,6 @@
 package com.psipro.app.data.entities
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -16,7 +17,7 @@ import java.util.Date
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("patientId")]
+    indices = [Index("patientId"), Index("backendId")]
 )
 data class Documento(
     @PrimaryKey(autoGenerate = true)
@@ -25,6 +26,7 @@ data class Documento(
     /** ID do documento no backend (UUID). Usado para sync app↔web. */
     val backendId: String? = null,
     /** Marca alterações locais pendentes de envio ao backend. */
+    @ColumnInfo(defaultValue = "1")
     val dirty: Boolean = true,
     val titulo: String,
     val tipo: TipoDocumento,
