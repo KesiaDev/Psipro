@@ -136,6 +136,7 @@ class DashboardActivity : AppCompatActivity() {
                     val intent = Intent(this, NotificationsActivity::class.java)
                     startActivity(intent)
                 }
+                R.id.nav_chat_whatsapp -> WebNavigator.openChat(this)
                 R.id.nav_plataforma_web -> openWebWithSso { WebNavigator.openDashboard(this) }
                 R.id.nav_relatorios_web -> openWebWithSso { WebNavigator.openRelatoriosOnWeb(this) }
                 R.id.nav_sync_patients -> {

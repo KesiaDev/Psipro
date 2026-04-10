@@ -41,6 +41,11 @@ object WebNavigator {
         openWithSso(context, "/relatorios")
     }
 
+    /** Abre o Chat WhatsApp (PsiPro Chat) via Chrome Custom Tabs. */
+    fun openChat(context: Context) {
+        openUrl(context, "https://psipro-chat-production.up.railway.app")
+    }
+
     private fun openWithSso(context: Context, returnPath: String) {
         val base = BASE_URL.trim().trimEnd('/')
         val loginUrl = "$base/login"

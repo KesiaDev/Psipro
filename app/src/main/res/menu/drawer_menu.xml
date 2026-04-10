@@ -3,6 +3,7 @@
     <item android:id="@+id/navigation_schedule" android:title="Agenda" android:icon="@drawable/ic_calendar" />
     <item android:id="@+id/navigation_patients" android:title="Pacientes" android:icon="@drawable/ic_people" />
     <item android:id="@+id/nav_notificacoes" android:title="Notificações" android:icon="@drawable/ic_notifications" />
+    <item android:id="@+id/nav_chat_whatsapp" android:title="Chat WhatsApp" android:icon="@drawable/ic_message" android:titleTextAppearance="@style/DrawerMenuBold" />
     <item android:id="@+id/nav_plataforma_web" android:title="@string/platform_web" android:icon="@drawable/ic_language" android:titleTextAppearance="@style/DrawerMenuBold" />
     <item android:id="@+id/nav_relatorios_web" android:title="@string/relatorios" android:icon="@drawable/ic_notification_report" android:titleTextAppearance="@style/DrawerMenuBold" />
     <item android:id="@+id/nav_sync_patients" android:title="@string/sync_patients" android:icon="@drawable/ic_summary_check" android:titleTextAppearance="@style/DrawerMenuBold" />
