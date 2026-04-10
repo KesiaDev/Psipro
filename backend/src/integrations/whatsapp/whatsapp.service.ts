@@ -33,13 +33,18 @@ export class WhatsAppService {
     return digits.startsWith('55') ? digits : `55${digits}`;
   }
 
+  /** Remove barras finais (trimEnd não aceita delimitador em lib dom padrão). */
+  private trimTrailingSlashes(s: string): string {
+    return s.trim().replace(/\/+$/, '');
+  }
+
   private async sendEvolutionMessage(
     apiUrl: string,
     instanceToken: string,
     phone: string,
     message: string,
   ): Promise<boolean> {
-    const url = `${apiUrl.trim().trimEnd('/')}/send/text`;
+    const url = `${this.trimTrailingSlashes(apiUrl)}/send/text`;
     const number = this.normalizePhone(phone);
     try {
       const res = await fetch(url, {
@@ -62,7 +67,7 @@ export class WhatsAppService {
 
   private async testEvolutionConnection(apiUrl: string, instanceToken: string): Promise<boolean> {
     try {
-      const url = `${apiUrl.trim().trimEnd('/')}/instance/all`;
+      const url = `${this.trimTrailingSlashes(apiUrl)}/instance/all`;
       const res = await fetch(url, { headers: { apikey: instanceToken } });
       return res.ok;
     } catch {
@@ -272,7 +277,7 @@ export class WhatsAppService {
       },
       include: {
         patient: { select: { name: true, phone: true } },
-        user: { select: { id: true, firstName: true, lastName: true } },
+        user: { select: { id: true, name: true } },
       },
     });
 
@@ -280,7 +285,7 @@ export class WhatsAppService {
 
     for (const appt of appointments) {
       if (!appt.patient?.phone) continue;
-      const therapistName = `${appt.user.firstName ?? ''} ${appt.user.lastName ?? ''}`.trim() || 'Terapeuta';
+      const therapistName = (appt.user.name ?? '').trim() || 'Terapeuta';
 
       const sent = await this.sendReminderToPatient(
         appt.userId,
