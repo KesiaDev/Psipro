@@ -120,7 +120,8 @@ model User {
   phone     String?
   cpf       String?  @unique
   license   String?  // CRP, etc
-  
+  specialties String? // texto livre (ex.: áreas de atuação)
+
   // @deprecated Use ClinicUser. Mantido para migração. Fonte de verdade: ClinicUser.
   clinicId  String?
   clinic    Clinic?  @relation("PrimaryClinic", fields: [clinicId], references: [id], onDelete: Restrict)

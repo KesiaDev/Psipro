@@ -13,6 +13,7 @@ import { AuditService, type AuditRequest } from '../audit/audit.service';
 import { RefreshTokenService } from './refresh-token.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from '../users/dto/update-profile.dto';
 
 const ACCESS_TOKEN_EXPIRY = '15m';
 const BCRYPT_SALT_ROUNDS = 12;
@@ -238,6 +239,9 @@ export class AuthService {
         id: true,
         email: true,
         name: true,
+        phone: true,
+        license: true,
+        specialties: true,
         isIndependent: true,
         clinicId: true,
         role: true,
@@ -275,12 +279,18 @@ export class AuthService {
     // Compatibilidade: usuários antigos sem professionalType assumem psychologist
     const professionalType = user.professionalType ?? 'psychologist';
 
+    const license = user.license ?? null;
     return {
       id: user.id,
       name: user.name,
+      fullName: user.name,
       role,
       professionalType,
       email: user.email,
+      phone: user.phone ?? null,
+      license,
+      crp: license,
+      specialties: user.specialties ?? null,
       clinicId,
       lgpdAcceptedAt: user.lgpdAcceptedAt?.toISOString() ?? null,
     };
@@ -333,14 +343,20 @@ export class AuthService {
   }
 
   /**
-   * Atualiza perfil do usuário (nome, email, phone, license).
+   * Atualiza perfil do usuário (compatível com `name`/`fullName`, `license`/`crp`, etc.).
    */
-  async updateProfile(userId: string, data: { name?: string; email?: string; phone?: string; license?: string }) {
+  async updateProfile(userId: string, data: UpdateProfileDto) {
     const updateData: Record<string, unknown> = {};
-    if (data.name != null) updateData.name = data.name;
-    if (data.email != null) updateData.email = data.email;
-    if (data.phone != null) updateData.phone = data.phone;
-    if (data.license != null) updateData.license = data.license;
+    const resolvedName = data.name ?? data.fullName;
+    if (resolvedName !== undefined) updateData.name = resolvedName;
+    const resolvedLicense = data.license ?? data.crp;
+    if (resolvedLicense !== undefined) updateData.license = resolvedLicense;
+    if (data.email !== undefined) updateData.email = data.email;
+    if (data.phone !== undefined) updateData.phone = data.phone;
+    if (data.professionalType !== undefined) {
+      updateData.professionalType = data.professionalType;
+    }
+    if (data.specialties !== undefined) updateData.specialties = data.specialties;
 
     if (Object.keys(updateData).length === 0) {
       return this.validateToken(userId);
