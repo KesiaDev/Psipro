@@ -30,7 +30,16 @@ function getMappedRoutes(expressApp: any): string[] {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true,
+    bodyParser: true,
+  });
+
+  // Aumenta limit para webhook do Evolution GO (envia histórico/mídia em base64)
+  app.use('/api/integrations/whatsapp/webhook', (req: any, res: any, next: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require('express').json({ limit: '50mb' })(req, res, next);
+  });
 
   app.use(
     helmet({

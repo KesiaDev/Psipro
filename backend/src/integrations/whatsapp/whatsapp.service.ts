@@ -339,26 +339,70 @@ export class WhatsAppService {
     return this.sendMessage(cfg, phone, message);
   }
 
+  // ─── Normaliza payload do Evolution GO / Evolution API ─────────────────────
+
+  private normalizeEvolutionPayload(
+    payload: any,
+  ): { event: string; instanceName: string; data: any } | null {
+    if (!payload) return null;
+
+    // Formato Evolution API (Node): { event, instance, data }
+    if (payload.event && payload.instance && payload.data) {
+      return { event: payload.event, instanceName: payload.instance, data: payload.data };
+    }
+
+    // Formato Evolution GO: { event, data: { instanceName, ... } }
+    if (payload.event && payload.data?.instanceName) {
+      return { event: payload.event, instanceName: payload.data.instanceName, data: payload.data };
+    }
+
+    // Formato Evolution GO alternativo: { type/event, instance: { instanceName }, ... }
+    if (payload.instance?.instanceName) {
+      return {
+        event: payload.event ?? payload.type ?? 'Message',
+        instanceName: payload.instance.instanceName,
+        data: payload,
+      };
+    }
+
+    // Formato plano (alguns builds do Evolution GO): { event, sender, body }
+    if (payload.event && (payload.sender || payload.phone)) {
+      return {
+        event: payload.event,
+        instanceName: payload.instanceName ?? payload.instance ?? '',
+        data: payload,
+      };
+    }
+
+    // Log do payload desconhecido para diagnóstico
+    this.logger.warn(`[webhook] Formato desconhecido: ${JSON.stringify(payload).slice(0, 200)}`);
+    return null;
+  }
+
   // ─── Webhook: recebe eventos do Evolution GO ───────────────────────────────
 
   async handleWebhook(payload: any): Promise<void> {
-    const event: string = payload?.event ?? '';
-    const instanceName: string = payload?.instance ?? '';
-    const data = payload?.data;
+    // Evolution GO (Go) usa formato diferente do Evolution API (Node)
+    // Normaliza para estrutura interna comum
+    const normalized = this.normalizeEvolutionPayload(payload);
+    if (!normalized) return;
 
-    if (event !== 'messages.upsert' || !data) return;
+    const { event, instanceName, data } = normalized;
+    const MESSAGE_EVENTS = ['messages.upsert', 'message', 'Message', 'MESSAGES_UPSERT'];
+    if (!MESSAGE_EVENTS.includes(event)) return;
 
     const key = data.key ?? {};
-    const remoteJid: string = key.remoteJid ?? '';
-    const fromMe: boolean = key.fromMe ?? false;
-    const remoteId: string = key.id ?? '';
-    const pushName: string = data.pushName ?? '';
-    const timestampRaw = data.messageTimestamp ?? data.timestamp;
+    // Evolution GO pode ter remoteJid direto no data ou dentro de key
+    const remoteJid: string = key.remoteJid ?? data.remoteJid ?? data.phone ?? '';
+    const fromMe: boolean = key.fromMe ?? data.fromMe ?? false;
+    const remoteId: string = key.id ?? data.id ?? data.messageId ?? `${Date.now()}`;
+    const pushName: string = data.pushName ?? data.senderName ?? data.name ?? '';
+    const timestampRaw = data.messageTimestamp ?? data.timestamp ?? data.dateTime;
     const timestamp = timestampRaw
-      ? new Date(Number(timestampRaw) * 1000)
+      ? new Date(Number(timestampRaw) * (timestampRaw < 1e12 ? 1000 : 1)) // suporta segundos e ms
       : new Date();
 
-    // Extrai texto da mensagem (suporte a vários tipos)
+    // Extrai texto da mensagem (suporte a vários tipos e formatos)
     const msgObj = data.message ?? {};
     const content: string =
       msgObj.conversation ??
@@ -366,6 +410,9 @@ export class WhatsAppService {
       msgObj.imageMessage?.caption ??
       msgObj.videoMessage?.caption ??
       msgObj.documentMessage?.title ??
+      data.body ??          // Evolution GO plano
+      data.text ??          // alternativo
+      data.caption ??       // alternativo
       '[mensagem não textual]';
 
     const messageType = msgObj.conversation || msgObj.extendedTextMessage
