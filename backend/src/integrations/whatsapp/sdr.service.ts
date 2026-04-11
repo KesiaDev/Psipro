@@ -47,7 +47,7 @@ export class SdrService {
       where: { id: conversationId },
       select: { sdrState: true },
     });
-    const state: SdrState = (conv?.sdrState as SdrState) ?? { state: 'idle' };
+    const state: SdrState = (conv?.sdrState as unknown as SdrState) ?? { state: 'idle' };
 
     // Reseta conversa se ficou mais de 24h sem interação
     if (state.lastInteractionAt) {
