@@ -77,25 +77,34 @@ export class WhatsAppService {
     instanceName?: string,
   ): Promise<boolean> {
     const base = this.trimTrailingSlashes(apiUrl);
-    const headers = { apikey: instanceToken };
+    const token = instanceToken.trim();
+    const headers = { apikey: token };
 
-    const tryFetch = async (path: string): Promise<boolean> => {
+    const tryFetch = async (fullPath: string): Promise<{ ok: boolean; status: number }> => {
       try {
-        const res = await fetch(`${base}${path}`, { method: 'GET', headers });
-        return res.ok;
+        const res = await fetch(`${base}${fullPath}`, { method: 'GET', headers });
+        return { ok: res.ok, status: res.status };
       } catch {
-        return false;
+        return { ok: false, status: 0 };
       }
     };
 
     const name = instanceName?.trim();
+    const paths: string[] = [];
     if (name) {
-      const okState = await tryFetch(`/instance/connectionState/${encodeURIComponent(name)}`);
-      if (okState) return true;
+      paths.push(`/instance/connectionState/${encodeURIComponent(name)}`);
+      paths.push(`/instance/connectionState/${name}`);
+    }
+    paths.push('/instance/all');
+    if (name) {
+      paths.push(`/api/instance/connectionState/${encodeURIComponent(name)}`);
     }
 
-    const okAll = await tryFetch('/instance/all');
-    if (okAll) return true;
+    for (const p of paths) {
+      const { ok, status } = await tryFetch(p);
+      this.logger.log(`[Evolution test] GET ${p} -> ${status}`);
+      if (ok) return true;
+    }
 
     return false;
   }

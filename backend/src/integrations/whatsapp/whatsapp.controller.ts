@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Delete, Body, Req, UseGuards, Logger } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Logger,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -25,6 +35,7 @@ export class WhatsAppController {
 
   /** POST /api/integrations/whatsapp/connect */
   @Post('connect')
+  @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   async connect(
     @CurrentUser() user: { id: string },
@@ -32,8 +43,11 @@ export class WhatsAppController {
     @Body() body: ConnectWhatsAppDto,
   ) {
     const clinicId = (req.headers['x-clinic-id'] as string)?.trim() || null;
+    const inferredEvolution = Boolean(body.evolutionApiUrl?.trim() || body.evolutionInstanceToken?.trim());
+    const provider: WhatsAppConfig['provider'] =
+      body.provider ?? (inferredEvolution ? 'evolution' : 'zapi');
     const cfg: WhatsAppConfig = {
-      provider: body.provider ?? 'zapi',
+      provider,
       evolutionApiUrl: body.evolutionApiUrl,
       evolutionInstanceToken: body.evolutionInstanceToken,
       evolutionInstanceName: body.evolutionInstanceName,
