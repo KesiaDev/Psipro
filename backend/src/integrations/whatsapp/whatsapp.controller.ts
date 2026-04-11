@@ -3,23 +3,8 @@ import { Request } from 'express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { WhatsAppService, WhatsAppConfig } from './whatsapp.service';
-
-class ConnectWhatsAppDto {
-  provider?: 'zapi' | 'evolution';
-  // Evolution GO
-  evolutionApiUrl?: string;
-  evolutionInstanceToken?: string;
-  // Z-API (legado)
-  instanceId?: string;
-  token?: string;
-  clientToken?: string;
-  phoneNumber?: string;
-}
-
-class SendMessageDto {
-  phone: string;
-  message: string;
-}
+import { ConnectWhatsAppDto } from './dto/connect-whatsapp.dto';
+import { SendWhatsAppMessageDto } from './dto/send-whatsapp-message.dto';
 
 @Controller('integrations/whatsapp')
 export class WhatsAppController {
@@ -79,7 +64,7 @@ export class WhatsAppController {
   async sendMessage(
     @CurrentUser() user: { id: string },
     @Req() req: Request,
-    @Body() body: SendMessageDto,
+    @Body() body: SendWhatsAppMessageDto,
   ) {
     const clinicId = (req.headers['x-clinic-id'] as string)?.trim() || null;
     const sent = await this.whatsApp.sendCustomMessage(user.id, clinicId, body.phone, body.message);
