@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -23,7 +23,7 @@ export class AppointmentsService {
     private prisma: PrismaService,
     private auditService: AuditService,
     private googleCalendar: GoogleCalendarService,
-    private whatsApp: WhatsAppService,
+    @Inject(forwardRef(() => WhatsAppService)) private whatsApp: WhatsAppService,
   ) {}
 
   private async checkScheduleConflict(
