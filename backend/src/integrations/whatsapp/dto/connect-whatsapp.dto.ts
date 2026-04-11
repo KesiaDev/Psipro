@@ -20,6 +20,13 @@ export class ConnectWhatsAppDto {
   @MaxLength(2048)
   evolutionApiUrl?: string;
 
+  /** Alias de `evolutionApiUrl` (alguns clientes enviam só isto) */
+  @IsOptional()
+  @Transform(emptyToUndef)
+  @IsString()
+  @MaxLength(2048)
+  evolutionUrl?: string;
+
   @IsOptional()
   @Transform(emptyToUndef)
   @IsString()
@@ -32,6 +39,13 @@ export class ConnectWhatsAppDto {
   @IsString()
   @MaxLength(128)
   evolutionInstanceName?: string;
+
+  /** Alias de `evolutionInstanceName` */
+  @IsOptional()
+  @Transform(emptyToUndef)
+  @IsString()
+  @MaxLength(128)
+  instanceName?: string;
 
   @IsOptional()
   @Transform(emptyToUndef)

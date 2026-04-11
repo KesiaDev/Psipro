@@ -68,8 +68,10 @@ export class WhatsAppService {
   }
 
   /**
-   * Valida URL + token. Com token de instância, `/instance/all` muitas vezes responde 401/404
-   * (exige API global). Preferir `/instance/connectionState/{nome}` quando `instanceName` existir.
+   * Valida URL + token da instância.
+   * - **Evolution GO** (Go): `GET /instance/status` + header `apikey` — não usa `connectionState`.
+   * - **Evolution API** (Node v2): `GET /instance/connectionState/{nome}`.
+   * Rotas sob `/manager/*` devolvem HTML do painel; não contam como sucesso.
    */
   private async testEvolutionConnection(
     apiUrl: string,
@@ -78,31 +80,58 @@ export class WhatsAppService {
   ): Promise<boolean> {
     const base = this.trimTrailingSlashes(apiUrl);
     const token = instanceToken.trim();
-    const headers = { apikey: token };
+    const headers: Record<string, string> = { apikey: token };
 
-    const tryFetch = async (fullPath: string): Promise<{ ok: boolean; status: number }> => {
+    const probe = async (path: string): Promise<{ ok: boolean; status: number }> => {
       try {
-        const res = await fetch(`${base}${fullPath}`, { method: 'GET', headers });
-        return { ok: res.ok, status: res.status };
+        const res = await fetch(`${base}${path}`, { method: 'GET', headers });
+        const ct = (res.headers.get('content-type') ?? '').toLowerCase();
+        if (res.ok && ct.includes('text/html')) {
+          this.logger.warn(
+            `[Evolution test] GET ${path} -> ${res.status} (HTML do Manager/SPA; ignorado)`,
+          );
+          return { ok: false, status: res.status };
+        }
+        const ok = res.ok && !ct.includes('text/html');
+        return { ok, status: res.status };
       } catch {
         return { ok: false, status: 0 };
       }
     };
 
     const name = instanceName?.trim();
-    const paths: string[] = [];
-    if (name) {
-      paths.push(`/instance/connectionState/${encodeURIComponent(name)}`);
-      paths.push(`/instance/connectionState/${name}`);
-    }
-    paths.push('/instance/all');
-    if (name) {
-      paths.push(`/api/instance/connectionState/${encodeURIComponent(name)}`);
+
+    // 1) Evolution GO — documentação: GET /instance/status com token da instância
+    {
+      const { ok, status } = await probe('/instance/status');
+      this.logger.log(`[Evolution test] Evolution GO GET /instance/status -> ${status}`);
+      if (ok) return true;
     }
 
-    for (const p of paths) {
-      const { ok, status } = await tryFetch(p);
-      this.logger.log(`[Evolution test] GET ${p} -> ${status}`);
+    // 2) Evolution API (Node) v2
+    if (name) {
+      for (const p of [
+        `/instance/connectionState/${encodeURIComponent(name)}`,
+        `/instance/connectionState/${name}`,
+      ]) {
+        const { ok, status } = await probe(p);
+        this.logger.log(`[Evolution test] Evolution API GET ${p} -> ${status}`);
+        if (ok) return true;
+      }
+    }
+
+    // 3) Lista (normalmente exige API global; às vezes aceita token de instância)
+    {
+      const { ok, status } = await probe('/instance/all');
+      this.logger.log(`[Evolution test] GET /instance/all -> ${status}`);
+      if (ok) return true;
+    }
+
+    if (name) {
+      const { ok, status } = await probe(
+        `/api/instance/connectionState/${encodeURIComponent(name)}`,
+      );
+      this.logger.log(`[Evolution test] GET /api/instance/connectionState/... -> ${status}`);
       if (ok) return true;
     }
 
@@ -185,7 +214,7 @@ export class WhatsAppService {
         return {
           success: false,
           error:
-            'Não foi possível conectar ao Evolution GO. Verifique URL base (https://… sem /manager), token da instância e o nome técnico da instância (igual ao Evolution Manager).',
+            'Não foi possível validar a Evolution. Confira a URL base (host da API, sem /manager), o token da instância (apikey no Manager) e o nome técnico se usar Evolution API Node. Evolution GO usa GET /instance/status — token incorreto costuma retornar 401.',
         };
       }
     } else {

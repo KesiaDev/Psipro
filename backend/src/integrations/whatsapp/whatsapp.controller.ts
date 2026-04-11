@@ -43,14 +43,15 @@ export class WhatsAppController {
     @Body() body: ConnectWhatsAppDto,
   ) {
     const clinicId = (req.headers['x-clinic-id'] as string)?.trim() || null;
-    const inferredEvolution = Boolean(body.evolutionApiUrl?.trim() || body.evolutionInstanceToken?.trim());
+    const evolutionUrl = body.evolutionApiUrl ?? body.evolutionUrl;
+    const inferredEvolution = Boolean(evolutionUrl?.trim() || body.evolutionInstanceToken?.trim());
     const provider: WhatsAppConfig['provider'] =
       body.provider ?? (inferredEvolution ? 'evolution' : 'zapi');
     const cfg: WhatsAppConfig = {
       provider,
-      evolutionApiUrl: body.evolutionApiUrl,
+      evolutionApiUrl: evolutionUrl,
       evolutionInstanceToken: body.evolutionInstanceToken,
-      evolutionInstanceName: body.evolutionInstanceName,
+      evolutionInstanceName: body.evolutionInstanceName ?? body.instanceName,
       instanceId: body.instanceId,
       token: body.token,
       clientToken: body.clientToken,
