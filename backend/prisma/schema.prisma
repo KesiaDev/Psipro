@@ -645,6 +645,7 @@ model WhatsAppConversation {
   unreadCount   Int       @default(0)
   lastMessageAt DateTime?
   lastMessagePreview String?
+  sdrState      Json?     // Estado da conversa SDR: { state, patientId, offeredSlots, ... }
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

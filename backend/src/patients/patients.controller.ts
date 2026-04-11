@@ -7,6 +7,7 @@ import {
   Body,
   Patch,
   Param,
+  Query,
   UseGuards,
   UseInterceptors,
   UploadedFile,
@@ -39,6 +40,11 @@ export class PatientsController {
   @Get()
   findAll(@CurrentClinicId() clinicId: string) {
     return this.patientsService.findAll(clinicId);
+  }
+
+  @Get('by-phone')
+  findByPhone(@Query('phone') phone: string, @CurrentClinicId() clinicId: string) {
+    return this.patientsService.findByPhone(phone, clinicId);
   }
 
   @Get('count')

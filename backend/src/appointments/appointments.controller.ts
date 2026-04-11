@@ -7,6 +7,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
@@ -28,6 +29,21 @@ export class AppointmentsController {
   @Get()
   findAll(@CurrentUser() user: any, @CurrentClinicId() clinicId: string) {
     return this.appointmentsService.findAll(user.sub, clinicId);
+  }
+
+  @Get('available-slots')
+  getAvailableSlots(
+    @CurrentUser() user: any,
+    @CurrentClinicId() clinicId: string,
+    @Query('date') date: string,
+    @Query('duration') duration?: string,
+  ) {
+    return this.appointmentsService.getAvailableSlots(
+      user.sub,
+      clinicId,
+      date,
+      duration ? parseInt(duration, 10) : 60,
+    );
   }
 
   @Get('today')

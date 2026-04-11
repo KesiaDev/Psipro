@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { GoogleCalendarService } from '../integrations/google-calendar/google-calendar.service';
+import { WhatsAppService } from '../integrations/whatsapp/whatsapp.service';
 import { whereNotDeleted } from '../prisma/soft-delete.helper';
 
 /** Código de erro Prisma para violação de unique constraint */
@@ -22,6 +23,7 @@ export class AppointmentsService {
     private prisma: PrismaService,
     private auditService: AuditService,
     private googleCalendar: GoogleCalendarService,
+    private whatsApp: WhatsAppService,
   ) {}
 
   private async checkScheduleConflict(
@@ -119,6 +121,19 @@ export class AppointmentsService {
             patientName: created.patient?.name,
           },
           null,
+        )
+        .catch(() => {});
+    }
+
+    // Enviar confirmação WhatsApp ao paciente (se integração estiver ativa e paciente tiver telefone)
+    if (patient.phone) {
+      const therapistName = (created.user as any)?.name ?? 'Terapeuta';
+      this.whatsApp
+        .sendConfirmationToPatient(
+          effectiveUserId,
+          clinicId,
+          { name: patient.name, phone: patient.phone },
+          { scheduledAt: created.scheduledAt, therapistName },
         )
         .catch(() => {});
     }
@@ -444,6 +459,62 @@ export class AppointmentsService {
       throw new NotFoundException('Agendamento não encontrado');
     }
     return apt;
+  }
+
+  /**
+   * Retorna horários disponíveis para um profissional em uma data.
+   * Horário comercial: 08:00 às 20:00. Slots de `durationMinutes` minutos.
+   */
+  async getAvailableSlots(
+    userId: string,
+    clinicId: string,
+    date: string, // YYYY-MM-DD
+    durationMinutes = 60,
+  ): Promise<Array<{ startTime: string; endTime: string; isoDateTime: string }>> {
+    // Carrega consultas existentes do profissional no dia
+    const dayStart = new Date(`${date}T00:00:00.000Z`);
+    const dayEnd = new Date(`${date}T23:59:59.999Z`);
+
+    const existing = await this.prisma.appointment.findMany({
+      where: {
+        userId,
+        clinicId,
+        scheduledAt: { gte: dayStart, lte: dayEnd },
+        status: { notIn: ['cancelada', 'cancelado'] },
+        deletedAt: null,
+      },
+      select: { scheduledAt: true, duration: true },
+    });
+
+    const slots: Array<{ startTime: string; endTime: string; isoDateTime: string }> = [];
+    // Horário comercial 08:00-20:00 (Brasília = UTC-3)
+    const START_HOUR = 8;
+    const END_HOUR = 20;
+
+    for (let hour = START_HOUR; hour + durationMinutes / 60 <= END_HOUR; hour += durationMinutes / 60) {
+      const slotStart = new Date(`${date}T${String(Math.floor(hour)).padStart(2, '0')}:${String((hour % 1) * 60).padStart(2, '0')}:00.000Z`);
+      // Ajusta para UTC-3 (Brasil)
+      slotStart.setHours(slotStart.getHours() + 3);
+      const slotEnd = new Date(slotStart.getTime() + durationMinutes * 60 * 1000);
+
+      const conflict = existing.some((a) => {
+        const aStart = a.scheduledAt.getTime();
+        const aEnd = aStart + (a.duration ?? 60) * 60 * 1000;
+        return aStart < slotEnd.getTime() && aEnd > slotStart.getTime();
+      });
+
+      if (!conflict && slotStart > new Date()) {
+        const fmt = (d: Date) =>
+          `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+        slots.push({
+          startTime: fmt(slotStart),
+          endTime: fmt(slotEnd),
+          isoDateTime: slotStart.toISOString(),
+        });
+      }
+    }
+
+    return slots;
   }
 
   async delete(id: string, userId: string, clinicId: string) {

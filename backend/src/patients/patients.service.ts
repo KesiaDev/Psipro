@@ -369,4 +369,26 @@ export class PatientsService {
 
     return { success: true };
   }
+
+  /** Busca paciente pelo número de telefone (normalizado). Usado pelo SDR. */
+  async findByPhone(phone: string, clinicId: string) {
+    const digits = phone.replace(/\D/g, '');
+    // Tenta com e sem código do país 55
+    const variants = [digits, digits.startsWith('55') ? digits.slice(2) : `55${digits}`];
+
+    return this.prisma.patient.findFirst({
+      where: {
+        clinicId,
+        deletedAt: null,
+        OR: variants.map((v) => ({ phone: { contains: v } })),
+      },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        email: true,
+        status: true,
+      },
+    });
+  }
 }

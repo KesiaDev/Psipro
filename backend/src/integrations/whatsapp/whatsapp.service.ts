@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, forwardRef, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import type { SdrService } from './sdr.service';
 
 const PROVIDER = 'whatsapp';
 
@@ -26,6 +27,7 @@ export class WhatsAppService {
   constructor(
     private config: ConfigService,
     private prisma: PrismaService,
+    @Inject(forwardRef(() => 'SdrService')) private sdr?: SdrService,
   ) {}
 
   // ─── Evolution GO helpers ───────────────────────────────────────────────────
@@ -457,6 +459,21 @@ export class WhatsAppService {
     });
 
     this.logger.log(`[webhook] Mensagem salva: ${instanceName} ← ${remoteJid} (fromMe=${fromMe})`);
+
+    // Aciona SDR apenas para mensagens recebidas (não enviadas pelo terapeuta)
+    if (!fromMe && this.sdr && content !== '[mensagem não textual]') {
+      this.sdr
+        .processIncomingMessage({
+          userId,
+          clinicId,
+          conversationId: conversation.id,
+          remoteJid,
+          contactPhone: contactPhone,
+          contactName: pushName || null,
+          messageText: content,
+        })
+        .catch((err) => this.logger.error('[SDR] Erro ao processar mensagem', err));
+    }
   }
 
   // ─── Conversas e mensagens ─────────────────────────────────────────────────
@@ -510,6 +527,61 @@ export class WhatsAppService {
 
   // ─── Cron: lembretes automáticos 24h antes ─────────────────────────────────
 
+  /** Envia lembrete genérico para uma janela de horas futura */
+  private async sendRemindersForWindow(
+    windowHours: number,
+    toleranceHours = 1,
+    label: string,
+  ): Promise<void> {
+    const now = new Date();
+    const windowStart = new Date(now.getTime() + (windowHours - toleranceHours) * 3_600_000);
+    const windowEnd = new Date(now.getTime() + (windowHours + toleranceHours) * 3_600_000);
+    const flagField = `reminder${label}SentAt`;
+
+    const appointments = await this.prisma.appointment.findMany({
+      where: {
+        scheduledAt: { gte: windowStart, lte: windowEnd },
+        status: { in: ['agendada', 'confirmada'] },
+        deletedAt: null,
+        ...(label === '24h' ? { reminderSentAt: null } : {}),
+      },
+      include: {
+        patient: { select: { name: true, phone: true } },
+        user: { select: { id: true, name: true } },
+      },
+    });
+
+    this.logger.log(`[cron-${label}] ${appointments.length} consultas para lembrete em ${windowHours}h`);
+
+    for (const appt of appointments) {
+      if (!appt.patient?.phone) continue;
+      const therapistName = (appt.user.name ?? '').trim() || 'Terapeuta';
+      const date = new Date(appt.scheduledAt);
+      const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+
+      let message: string;
+      if (label === '12h') {
+        message =
+          `Olá, ${appt.patient.name}! 👋\n\n` +
+          `Lembrete: você tem uma consulta *hoje* com *${therapistName}* às *${timeStr}*. 🗓️\n\n` +
+          `Até logo!`;
+      } else {
+        message =
+          `Olá, ${appt.patient.name}! ⏰\n\n` +
+          `Sua consulta com *${therapistName}* é em *2 horas* (${timeStr}). Não se esqueça! 😊`;
+      }
+
+      const integration = await this.prisma.userIntegration.findFirst({
+        where: { userId: appt.userId, provider: PROVIDER, status: 'connected' },
+      });
+      if (!integration) continue;
+
+      const cfg = integration.config as WhatsAppConfig;
+      await this.sendMessage(cfg, appt.patient.phone, message).catch(() => {});
+      this.logger.log(`[cron-${label}] Lembrete enviado para ${appt.patient.name}`);
+    }
+  }
+
   @Cron(CronExpression.EVERY_HOUR)
   async sendScheduledReminders(): Promise<void> {
     const now = new Date();
@@ -550,5 +622,17 @@ export class WhatsAppService {
         this.logger.log(`[cron] Lembrete enviado para ${appt.patient.name}`);
       }
     }
+  }
+
+  /** Lembrete 12h antes (roda a cada hora, janela ±1h) */
+  @Cron(CronExpression.EVERY_HOUR)
+  async sendReminders12h(): Promise<void> {
+    await this.sendRemindersForWindow(12, 1, '12h');
+  }
+
+  /** Lembrete 2h antes (roda a cada 30 minutos) */
+  @Cron('*/30 * * * *')
+  async sendReminders2h(): Promise<void> {
+    await this.sendRemindersForWindow(2, 0.5, '2h');
   }
 }
