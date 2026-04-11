@@ -10,6 +10,8 @@ export interface WhatsAppConfig {
   // Evolution GO
   evolutionApiUrl?: string;
   evolutionInstanceToken?: string;
+  /** Nome técnico da instância no Evolution (ex.: TerapeutaClaudiaCruz) — necessário para testar com token de instância */
+  evolutionInstanceName?: string;
   // Z-API (legado)
   instanceId?: string;
   token?: string;
@@ -65,14 +67,37 @@ export class WhatsAppService {
     }
   }
 
-  private async testEvolutionConnection(apiUrl: string, instanceToken: string): Promise<boolean> {
-    try {
-      const url = `${this.trimTrailingSlashes(apiUrl)}/instance/all`;
-      const res = await fetch(url, { headers: { apikey: instanceToken } });
-      return res.ok;
-    } catch {
-      return false;
+  /**
+   * Valida URL + token. Com token de instância, `/instance/all` muitas vezes responde 401/404
+   * (exige API global). Preferir `/instance/connectionState/{nome}` quando `instanceName` existir.
+   */
+  private async testEvolutionConnection(
+    apiUrl: string,
+    instanceToken: string,
+    instanceName?: string,
+  ): Promise<boolean> {
+    const base = this.trimTrailingSlashes(apiUrl);
+    const headers = { apikey: instanceToken };
+
+    const tryFetch = async (path: string): Promise<boolean> => {
+      try {
+        const res = await fetch(`${base}${path}`, { method: 'GET', headers });
+        return res.ok;
+      } catch {
+        return false;
+      }
+    };
+
+    const name = instanceName?.trim();
+    if (name) {
+      const okState = await tryFetch(`/instance/connectionState/${encodeURIComponent(name)}`);
+      if (okState) return true;
     }
+
+    const okAll = await tryFetch('/instance/all');
+    if (okAll) return true;
+
+    return false;
   }
 
   // ─── Z-API helpers (legado) ─────────────────────────────────────────────────
@@ -142,8 +167,18 @@ export class WhatsAppService {
     // Testa conexão
     let testOk: boolean;
     if (cfg.provider === 'evolution' || cfg.evolutionApiUrl) {
-      testOk = await this.testEvolutionConnection(cfg.evolutionApiUrl!, cfg.evolutionInstanceToken!);
-      if (!testOk) return { success: false, error: 'Não foi possível conectar ao Evolution GO. Verifique a URL e o token.' };
+      testOk = await this.testEvolutionConnection(
+        cfg.evolutionApiUrl!,
+        cfg.evolutionInstanceToken!,
+        cfg.evolutionInstanceName,
+      );
+      if (!testOk) {
+        return {
+          success: false,
+          error:
+            'Não foi possível conectar ao Evolution GO. Verifique URL base (https://… sem /manager), token da instância e o nome técnico da instância (igual ao Evolution Manager).',
+        };
+      }
     } else {
       testOk = await this.testZApiConnection(cfg);
       if (!testOk) return { success: false, error: 'Não foi possível conectar à Z-API. Verifique as credenciais.' };
@@ -176,7 +211,11 @@ export class WhatsAppService {
 
   async testConnection(cfg: WhatsAppConfig): Promise<boolean> {
     if (cfg.provider === 'evolution' || cfg.evolutionApiUrl) {
-      return this.testEvolutionConnection(cfg.evolutionApiUrl!, cfg.evolutionInstanceToken!);
+      return this.testEvolutionConnection(
+        cfg.evolutionApiUrl!,
+        cfg.evolutionInstanceToken!,
+        cfg.evolutionInstanceName,
+      );
     }
     return this.testZApiConnection(cfg);
   }

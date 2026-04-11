@@ -36,6 +36,7 @@ export class WhatsAppController {
       provider: body.provider ?? 'zapi',
       evolutionApiUrl: body.evolutionApiUrl,
       evolutionInstanceToken: body.evolutionInstanceToken,
+      evolutionInstanceName: body.evolutionInstanceName,
       instanceId: body.instanceId,
       token: body.token,
       clientToken: body.clientToken,

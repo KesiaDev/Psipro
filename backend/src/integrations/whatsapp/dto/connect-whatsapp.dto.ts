@@ -1,4 +1,8 @@
+import { Transform } from 'class-transformer';
 import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
+
+const emptyToUndef = ({ value }: { value: unknown }) =>
+  value === '' || value === null ? undefined : value;
 
 /**
  * Corpo de POST /api/integrations/whatsapp/connect.
@@ -6,35 +10,49 @@ import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
  */
 export class ConnectWhatsAppDto {
   @IsOptional()
+  @Transform(emptyToUndef)
   @IsIn(['zapi', 'evolution'])
   provider?: 'zapi' | 'evolution';
 
   @IsOptional()
+  @Transform(emptyToUndef)
   @IsString()
   @MaxLength(2048)
   evolutionApiUrl?: string;
 
   @IsOptional()
+  @Transform(emptyToUndef)
   @IsString()
   @MaxLength(512)
   evolutionInstanceToken?: string;
 
+  /** Igual a "Nome da instância" no Evolution Manager (ex.: TerapeutaClaudiaCruz) */
   @IsOptional()
+  @Transform(emptyToUndef)
+  @IsString()
+  @MaxLength(128)
+  evolutionInstanceName?: string;
+
+  @IsOptional()
+  @Transform(emptyToUndef)
   @IsString()
   @MaxLength(128)
   instanceId?: string;
 
   @IsOptional()
+  @Transform(emptyToUndef)
   @IsString()
   @MaxLength(512)
   token?: string;
 
   @IsOptional()
+  @Transform(emptyToUndef)
   @IsString()
   @MaxLength(512)
   clientToken?: string;
 
   @IsOptional()
+  @Transform(emptyToUndef)
   @IsString()
   @MaxLength(32)
   phoneNumber?: string;
