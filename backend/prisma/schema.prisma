@@ -158,6 +158,7 @@ model User {
   integrations   UserIntegration[]
   handoffTokens  HandoffToken[]
   intakeTokens   IntakeToken[]
+  whatsappConversations WhatsAppConversation[]
 
   @@index([clinicId])
   @@map("users")
@@ -628,6 +629,54 @@ model IntakeToken {
   @@index([clinicId])
   @@index([expiresAt])
   @@map("intake_tokens")
+}
+
+// ─── WhatsApp Chat (Evolution GO) ─────────────────────────────────────────────
+
+// Conversa = um contato (phone/JID) com a instância Evolution de uma clínica/usuário
+model WhatsAppConversation {
+  id            String    @id @default(uuid())
+  userId        String    // Terapeuta/dono da instância
+  clinicId      String?   // Clínica (se houver)
+  instanceName  String    // Nome da instância Evolution GO (ex: TerapeutaClaudiaCruz)
+  remoteJid     String    // JID do contato (ex: 5511999999999@s.whatsapp.net)
+  contactName   String?   // Nome exibido (pushName do WhatsApp)
+  contactPhone  String?   // Número normalizado sem @s.whatsapp.net
+  unreadCount   Int       @default(0)
+  lastMessageAt DateTime?
+  lastMessagePreview String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  messages      WhatsAppMessage[]
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, instanceName, remoteJid])
+  @@index([userId])
+  @@index([clinicId])
+  @@index([userId, instanceName])
+  @@index([lastMessageAt])
+  @@map("whatsapp_conversations")
+}
+
+// Mensagem individual de uma conversa
+model WhatsAppMessage {
+  id             String   @id @default(uuid())
+  conversationId String
+  remoteId       String   // ID da mensagem no Evolution/WhatsApp (para deduplicação)
+  fromMe         Boolean  @default(false) // true = enviada pelo terapeuta
+  content        String   // Texto da mensagem
+  messageType    String   @default("text") // text | image | audio | document | sticker
+  status         String   @default("received") // received | sent | delivered | read | failed
+  timestamp      DateTime // Horário real da mensagem (do WhatsApp)
+  createdAt      DateTime @default(now())
+
+  conversation   WhatsAppConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, remoteId])
+  @@index([conversationId])
+  @@index([conversationId, timestamp])
+  @@map("whatsapp_messages")
 }
 
 // Solicitações de acesso beta

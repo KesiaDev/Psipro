@@ -5,7 +5,9 @@ import {
   Get,
   HttpCode,
   Logger,
+  Param,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -85,5 +87,47 @@ export class WhatsAppController {
     const clinicId = (req.headers['x-clinic-id'] as string)?.trim() || null;
     const sent = await this.whatsApp.sendCustomMessage(user.id, clinicId, body.phone, body.message);
     return { sent };
+  }
+
+  /**
+   * POST /api/integrations/whatsapp/webhook
+   * Chamado pelo Evolution GO ao receber eventos (sem autenticação JWT — IP/token externo).
+   */
+  @Post('webhook')
+  @HttpCode(200)
+  async receiveWebhook(@Body() payload: any) {
+    this.logger.log(`[webhook] Evento recebido: ${payload?.event} | instância: ${payload?.instance}`);
+    await this.whatsApp.handleWebhook(payload);
+    return { ok: true };
+  }
+
+  /** GET /api/integrations/whatsapp/conversations — lista conversas do usuário */
+  @Get('conversations')
+  @UseGuards(JwtAuthGuard)
+  async getConversations(
+    @CurrentUser() user: { id: string },
+    @Req() req: Request,
+  ) {
+    const clinicId = (req.headers['x-clinic-id'] as string)?.trim() || null;
+    return this.whatsApp.getConversations(user.id, clinicId);
+  }
+
+  /** GET /api/integrations/whatsapp/conversations/:id/messages — mensagens de uma conversa */
+  @Get('conversations/:id/messages')
+  @UseGuards(JwtAuthGuard)
+  async getMessages(
+    @CurrentUser() user: { id: string },
+    @Param('id') conversationId: string,
+    @Query('take') take?: string,
+    @Query('skip') skip?: string,
+  ) {
+    const messages = await this.whatsApp.getMessages(
+      user.id,
+      conversationId,
+      take ? parseInt(take, 10) : 50,
+      skip ? parseInt(skip, 10) : 0,
+    );
+    if (messages === null) return { error: 'Conversa não encontrada' };
+    return messages;
   }
 }

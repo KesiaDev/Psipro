@@ -337,6 +337,177 @@ export class WhatsAppService {
     return this.sendMessage(cfg, phone, message);
   }
 
+  // ─── Webhook: recebe eventos do Evolution GO ───────────────────────────────
+
+  async handleWebhook(payload: any): Promise<void> {
+    const event: string = payload?.event ?? '';
+    const instanceName: string = payload?.instance ?? '';
+    const data = payload?.data;
+
+    if (event !== 'messages.upsert' || !data) return;
+
+    const key = data.key ?? {};
+    const remoteJid: string = key.remoteJid ?? '';
+    const fromMe: boolean = key.fromMe ?? false;
+    const remoteId: string = key.id ?? '';
+    const pushName: string = data.pushName ?? '';
+    const timestampRaw = data.messageTimestamp ?? data.timestamp;
+    const timestamp = timestampRaw
+      ? new Date(Number(timestampRaw) * 1000)
+      : new Date();
+
+    // Extrai texto da mensagem (suporte a vários tipos)
+    const msgObj = data.message ?? {};
+    const content: string =
+      msgObj.conversation ??
+      msgObj.extendedTextMessage?.text ??
+      msgObj.imageMessage?.caption ??
+      msgObj.videoMessage?.caption ??
+      msgObj.documentMessage?.title ??
+      '[mensagem não textual]';
+
+    const messageType = msgObj.conversation || msgObj.extendedTextMessage
+      ? 'text'
+      : msgObj.imageMessage ? 'image'
+      : msgObj.audioMessage ? 'audio'
+      : msgObj.videoMessage ? 'video'
+      : msgObj.documentMessage ? 'document'
+      : msgObj.stickerMessage ? 'sticker'
+      : 'text';
+
+    if (!remoteJid || !remoteId || !instanceName) return;
+
+    // Encontra o usuário dono desta instância pelo config salvo
+    const integration = await this.prisma.userIntegration.findFirst({
+      where: {
+        provider: PROVIDER,
+        status: 'connected',
+        config: { path: ['evolutionInstanceName'], equals: instanceName },
+      },
+    });
+
+    // Fallback: tenta por instanceToken que inclua o nome (busca all e filtra)
+    let userId: string | null = integration?.userId ?? null;
+    let clinicId: string | null = integration?.clinicId ?? null;
+
+    if (!userId) {
+      const allIntegrations = await this.prisma.userIntegration.findMany({
+        where: { provider: PROVIDER, status: 'connected' },
+      });
+      const found = allIntegrations.find((i) => {
+        const cfg = i.config as any;
+        return (
+          cfg?.evolutionInstanceName === instanceName ||
+          cfg?.instanceName === instanceName
+        );
+      });
+      if (found) {
+        userId = found.userId;
+        clinicId = found.clinicId ?? null;
+      }
+    }
+
+    if (!userId) {
+      this.logger.warn(`[webhook] Instância desconhecida: ${instanceName}`);
+      return;
+    }
+
+    // Normaliza número do contato
+    const contactPhone = remoteJid.split('@')[0];
+
+    // Upsert da conversa
+    const conversation = await this.prisma.whatsAppConversation.upsert({
+      where: {
+        userId_instanceName_remoteJid: { userId, instanceName, remoteJid },
+      },
+      create: {
+        userId,
+        clinicId,
+        instanceName,
+        remoteJid,
+        contactName: pushName || null,
+        contactPhone,
+        lastMessageAt: timestamp,
+        lastMessagePreview: content.slice(0, 100),
+        unreadCount: fromMe ? 0 : 1,
+      },
+      update: {
+        contactName: pushName || undefined,
+        lastMessageAt: timestamp,
+        lastMessagePreview: content.slice(0, 100),
+        unreadCount: fromMe
+          ? undefined
+          : { increment: 1 },
+      },
+    });
+
+    // Upsert da mensagem (ignora duplicatas pelo remoteId)
+    await this.prisma.whatsAppMessage.upsert({
+      where: { conversationId_remoteId: { conversationId: conversation.id, remoteId } },
+      create: {
+        conversationId: conversation.id,
+        remoteId,
+        fromMe,
+        content,
+        messageType,
+        status: fromMe ? 'sent' : 'received',
+        timestamp,
+      },
+      update: {},
+    });
+
+    this.logger.log(`[webhook] Mensagem salva: ${instanceName} ← ${remoteJid} (fromMe=${fromMe})`);
+  }
+
+  // ─── Conversas e mensagens ─────────────────────────────────────────────────
+
+  async getConversations(userId: string, clinicId?: string | null) {
+    return this.prisma.whatsAppConversation.findMany({
+      where: { userId, clinicId: clinicId ?? null },
+      orderBy: { lastMessageAt: 'desc' },
+      select: {
+        id: true,
+        instanceName: true,
+        remoteJid: true,
+        contactName: true,
+        contactPhone: true,
+        unreadCount: true,
+        lastMessageAt: true,
+        lastMessagePreview: true,
+      },
+    });
+  }
+
+  async getMessages(userId: string, conversationId: string, take = 50, skip = 0) {
+    // Verifica que a conversa pertence ao usuário
+    const conv = await this.prisma.whatsAppConversation.findFirst({
+      where: { id: conversationId, userId },
+    });
+    if (!conv) return null;
+
+    // Zera unread
+    await this.prisma.whatsAppConversation.update({
+      where: { id: conversationId },
+      data: { unreadCount: 0 },
+    });
+
+    return this.prisma.whatsAppMessage.findMany({
+      where: { conversationId },
+      orderBy: { timestamp: 'asc' },
+      take,
+      skip,
+      select: {
+        id: true,
+        remoteId: true,
+        fromMe: true,
+        content: true,
+        messageType: true,
+        status: true,
+        timestamp: true,
+      },
+    });
+  }
+
   // ─── Cron: lembretes automáticos 24h antes ─────────────────────────────────
 
   @Cron(CronExpression.EVERY_HOUR)
