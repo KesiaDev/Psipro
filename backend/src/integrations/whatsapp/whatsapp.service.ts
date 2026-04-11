@@ -507,6 +507,16 @@ export class WhatsAppService {
 
     this.logger.log(`[webhook] Mensagem salva: ${instanceName} ← ${remoteJid} (fromMe=${fromMe})`);
 
+    // Relay para o psipro-chat (Supabase) — não bloqueia e ignora falhas
+    const chatWebhookUrl = process.env.PSIPRO_CHAT_WEBHOOK_URL;
+    if (chatWebhookUrl) {
+      fetch(chatWebhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).catch((err) => this.logger.warn(`[webhook] Relay para psipro-chat falhou: ${err.message}`));
+    }
+
     // Aciona SDR apenas para mensagens recebidas (não enviadas pelo terapeuta)
     if (!fromMe && this.sdr && content !== '[mensagem não textual]') {
       this.sdr
