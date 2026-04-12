@@ -374,6 +374,28 @@ export class WhatsAppService {
       };
     }
 
+    // Formato Whatsmeow/WuzAPI (Evolution GO Go): { event, instance, data: { Info: { Chat, ID, ... }, Text, ... } }
+    // O instanceName já foi injetado pelo controller no campo 'instance'
+    if (payload.instance && payload.data?.Info) {
+      const info = payload.data.Info;
+      // Reconstrói data no formato esperado pelo handler
+      const remoteJid = info.Chat ?? info.MessageSource?.Chat ?? '';
+      const fromMe = info.IsFromMe ?? info.MessageSource?.IsFromMe ?? false;
+      const messageId = info.ID ?? '';
+      const text = payload.data.Text?.Text ?? payload.data.Body ?? '';
+      const reconstructed = {
+        key: { remoteJid, fromMe, id: messageId },
+        message: { conversation: text },
+        messageTimestamp: info.Timestamp ? Math.floor(new Date(info.Timestamp).getTime() / 1000) : Math.floor(Date.now() / 1000),
+        pushName: payload.data.Info?.PushName ?? '',
+      };
+      return {
+        event: 'messages.upsert',
+        instanceName: typeof payload.instance === 'string' ? payload.instance : payload.instance?.instanceName ?? '',
+        data: reconstructed,
+      };
+    }
+
     // Log do payload desconhecido para diagnóstico
     this.logger.warn(`[webhook] Formato desconhecido: ${JSON.stringify(payload).slice(0, 200)}`);
     return null;
@@ -507,10 +529,26 @@ export class WhatsAppService {
 
     this.logger.log(`[webhook] Mensagem salva: ${instanceName} ← ${remoteJid} (fromMe=${fromMe})`);
 
-    // Relay para o psipro-chat (Supabase) — não bloqueia e ignora falhas
+    // Relay para o psipro-chat (Supabase) — normaliza para formato esperado pelo evolution-webhook
     const chatWebhookUrl = process.env.PSIPRO_CHAT_WEBHOOK_URL;
     const supabaseAnonKey = process.env.SUPABASE_ANON_KEY ?? '';
     if (chatWebhookUrl) {
+      // O Supabase evolution-webhook espera { event, instance, data }
+      // Mapeia evento interno para o formato Evolution API v2
+      const eventMap: Record<string, string> = {
+        'Message': 'messages.upsert',
+        'message': 'messages.upsert',
+        'MESSAGES_UPSERT': 'messages.upsert',
+        'messages.upsert': 'messages.upsert',
+        'messages.update': 'messages.update',
+        'connection.update': 'connection.update',
+      };
+      const normalizedEvent = eventMap[event] ?? event;
+      const supabasePayload = {
+        event: normalizedEvent,
+        instance: instanceName,
+        data: data,
+      };
       fetch(chatWebhookUrl, {
         method: 'POST',
         headers: {
@@ -519,7 +557,7 @@ export class WhatsAppService {
             ? { 'Authorization': `Bearer ${supabaseAnonKey}`, 'apikey': supabaseAnonKey }
             : {}),
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(supabasePayload),
       }).catch((err) => this.logger.warn(`[webhook] Relay para psipro-chat falhou: ${err.message}`));
     }
 

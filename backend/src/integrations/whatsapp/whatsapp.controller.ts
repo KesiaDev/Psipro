@@ -101,6 +101,20 @@ export class WhatsAppController {
     return { ok: true };
   }
 
+  /**
+   * POST /api/integrations/whatsapp/webhook/:instanceName
+   * Endpoint com instanceName na URL — garante identificação mesmo sem campo no payload.
+   */
+  @Post('webhook/:instanceName')
+  @HttpCode(200)
+  async receiveWebhookWithInstance(@Param('instanceName') instanceName: string, @Body() payload: any) {
+    this.logger.log(`[webhook] Evento recebido: ${payload?.event} | instância: ${instanceName} (URL)`);
+    // Injeta instanceName no payload para que normalizeEvolutionPayload o encontre
+    const enriched = { ...payload, instance: instanceName };
+    await this.whatsApp.handleWebhook(enriched);
+    return { ok: true };
+  }
+
   /** GET /api/integrations/whatsapp/conversations — lista conversas do usuário */
   @Get('conversations')
   @UseGuards(JwtAuthGuard)
