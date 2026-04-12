@@ -509,10 +509,16 @@ export class WhatsAppService {
 
     // Relay para o psipro-chat (Supabase) — não bloqueia e ignora falhas
     const chatWebhookUrl = process.env.PSIPRO_CHAT_WEBHOOK_URL;
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY ?? '';
     if (chatWebhookUrl) {
       fetch(chatWebhookUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(supabaseAnonKey
+            ? { 'Authorization': `Bearer ${supabaseAnonKey}`, 'apikey': supabaseAnonKey }
+            : {}),
+        },
         body: JSON.stringify(payload),
       }).catch((err) => this.logger.warn(`[webhook] Relay para psipro-chat falhou: ${err.message}`));
     }
