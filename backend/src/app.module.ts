@@ -28,6 +28,7 @@ import { SystemHealthModule } from './system-health/system-health.module';
 import { HealthModule } from './health/health.module';
 import { LgpdModule } from './lgpd/lgpd.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { BookingModule } from './booking/booking.module';
 import { IntakeModule } from './intake/intake.module';
 
 /**
@@ -70,6 +71,7 @@ import { IntakeModule } from './intake/intake.module';
     LgpdModule,
     SubscriptionsModule,
     IntakeModule,
+    BookingModule,
   ],
 })
 export class AppModule {}
