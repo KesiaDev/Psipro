@@ -369,9 +369,15 @@ export class AppointmentsService {
       where.userId = userId;
     }
 
+    // Calcular início e fim do dia no fuso horário de Brasília (BRT = UTC-3)
     const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const BRT_OFFSET_MS = 3 * 60 * 60 * 1000; // UTC-3
+    const nowBRT = new Date(now.getTime() - BRT_OFFSET_MS);
+    const startOfDayBRT = new Date(nowBRT.getUTCFullYear(), nowBRT.getUTCMonth(), nowBRT.getUTCDate(), 0, 0, 0, 0);
+    const endOfDayBRT = new Date(nowBRT.getUTCFullYear(), nowBRT.getUTCMonth(), nowBRT.getUTCDate(), 23, 59, 59, 999);
+    // Converter de volta para UTC para a query no banco (os timestamps são armazenados em UTC)
+    const startOfDay = new Date(startOfDayBRT.getTime() + BRT_OFFSET_MS);
+    const endOfDay = new Date(endOfDayBRT.getTime() + BRT_OFFSET_MS);
 
     const appointments = await this.prisma.appointment.findMany({
       where: {
@@ -386,7 +392,9 @@ export class AppointmentsService {
     });
 
     const appointmentsFormatted = appointments.map((a) => {
-      const time = a.scheduledAt.toTimeString().slice(0, 5);
+      // Converter UTC para BRT antes de exibir a hora
+      const scheduledAtBRT = new Date(a.scheduledAt.getTime() - BRT_OFFSET_MS);
+      const time = `${String(scheduledAtBRT.getUTCHours()).padStart(2, '0')}:${String(scheduledAtBRT.getUTCMinutes()).padStart(2, '0')}`;
       const statusMap: Record<string, string> = {
         agendada: 'scheduled',
         confirmada: 'confirmed',
@@ -436,10 +444,11 @@ export class AppointmentsService {
       take: 10,
     });
 
+    const BRT_OFFSET_MS = 3 * 60 * 60 * 1000;
     return appointments.map((a) => ({
       id: a.id,
       patient: a.patient?.name ?? '—',
-      time: a.scheduledAt.toTimeString().slice(0, 5),
+      time: (() => { const brt = new Date(a.scheduledAt.getTime() - BRT_OFFSET_MS); return `${String(brt.getUTCHours()).padStart(2,'0')}:${String(brt.getUTCMinutes()).padStart(2,'0')}`; })(),
       type: a.type ?? 'Consulta',
       status: a.status,
       scheduledAt: a.scheduledAt.toISOString(),
