@@ -1,8 +1,13 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { randomBytes } from 'crypto';
+
+const INTAKE_TTL_DAYS = 7;
 
 @Injectable()
 export class BookingService {
+  private readonly logger = new Logger(BookingService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   /**
@@ -107,6 +112,39 @@ export class BookingService {
     return availableDays;
   }
 
+  /** Gera token de anamnese vinculado ao profissional configurado. */
+  private async generateIntakeToken(userId: string, clinicId: string | null): Promise<string | null> {
+    if (!clinicId) return null;
+    try {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + INTAKE_TTL_DAYS);
+      const token = randomBytes(6).toString('hex');
+      await this.prisma.intakeToken.create({
+        data: { token, clinicId, userId, expiresAt },
+      });
+      const base =
+        process.env.WEB_APP_URL ||
+        (process.env.RAILWAY_PUBLIC_DOMAIN
+          ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+          : 'https://psipro-backend-production.up.railway.app');
+      return `${base}/i/${token}`;
+    } catch (err: any) {
+      this.logger.warn(`[booking] Falha ao gerar token de anamnese: ${err.message}`);
+      return null;
+    }
+  }
+
+  /** Dispara webhook N8N (fire-and-forget) com os dados do agendamento. */
+  private fireN8NWebhook(payload: Record<string, unknown>): void {
+    const url = process.env.N8N_BOOKING_WEBHOOK_URL;
+    if (!url) return;
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).catch((err) => this.logger.warn(`[booking] N8N webhook falhou: ${err.message}`));
+  }
+
   /**
    * Cria um agendamento público (paciente não precisa ter conta no psipro).
    */
@@ -177,11 +215,25 @@ export class BookingService {
       },
     });
 
+    // Gera link de anamnese (não bloqueia o agendamento se falhar)
+    const intakeLink = await this.generateIntakeToken(userId, clinicId);
+
+    // Dispara N8N para enviar WhatsApp + e-mail ao paciente e notificar terapeuta
+    this.fireN8NWebhook({
+      appointmentId: appointment.id,
+      patientName: patient.name,
+      patientEmail: patient.email ?? null,
+      patientPhone: patient.phone ?? null,
+      scheduledAt: appointment.scheduledAt.toISOString(),
+      intakeLink,
+    });
+
     return {
       success: true,
       appointmentId: appointment.id,
       scheduledAt: appointment.scheduledAt.toISOString(),
       patientName: patient.name,
+      intakeLink,
     };
   }
 }
