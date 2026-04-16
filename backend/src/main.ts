@@ -54,6 +54,8 @@ async function bootstrap() {
     'http://psipro-dashboard-production.up.railway.app',
     /^https:\/\/.*\.railway\.app$/,
     /^https:\/\/.*\.up\.railway\.app$/,
+    'https://www.terapeutaclaudiacruz.com.br',
+    'https://terapeutaclaudiacruz.com.br',
     'http://localhost:5173',
     'http://localhost:3000',
   ];
