@@ -404,6 +404,16 @@ export class WhatsAppService {
   // ─── Webhook: recebe eventos do Evolution GO ───────────────────────────────
 
   async handleWebhook(payload: any): Promise<void> {
+    // Relay para N8N secretária (fire-and-forget, payload bruto antes da normalização)
+    const n8nSecretariaUrl = process.env.N8N_SECRETARIA_WEBHOOK_URL;
+    if (n8nSecretariaUrl) {
+      fetch(n8nSecretariaUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).catch((err) => this.logger.warn(`[webhook] Relay N8N secretária falhou: ${err.message}`));
+    }
+
     // Evolution GO (Go) usa formato diferente do Evolution API (Node)
     // Normaliza para estrutura interna comum
     const normalized = this.normalizeEvolutionPayload(payload);
