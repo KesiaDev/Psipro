@@ -77,7 +77,12 @@ export class BookingService {
 
       if (!conflict && slotStart > new Date()) {
         const fmt = (d: Date) =>
-          `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+          d.toLocaleTimeString('pt-BR', {
+            timeZone: 'America/Sao_Paulo',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          });
         slots.push({
           startTime: fmt(slotStart),
           endTime: fmt(slotEnd),
