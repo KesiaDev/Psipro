@@ -90,6 +90,34 @@ export class WhatsAppController {
   }
 
   /**
+   * GET /api/integrations/whatsapp/evo-compat/instance/connectionState/:name
+   * Shim de compatibilidade: traduz o formato Evolution API Node para Evolution GO.
+   * Usado pelo psipro-chat (Supabase) que chama /instance/connectionState/{name}.
+   * Chama GET /instance/status no Evolution GO e converte a resposta.
+   * Sem autenticação JWT — chamado por Edge Functions com apikey no header.
+   */
+  @Get('evo-compat/instance/connectionState/:name')
+  async evoCompatConnectionState(
+    @Param('name') name: string,
+    @Req() req: Request,
+  ) {
+    const apikey = (req.headers['apikey'] as string) ?? '';
+    const evoProxyUrl = process.env.EVO_PROXY_URL ?? 'https://evo-proxy-production.up.railway.app';
+    try {
+      const res = await fetch(`${evoProxyUrl}/instance/status`, {
+        headers: { apikey },
+      });
+      if (res.ok) {
+        const data: any = await res.json();
+        if (data?.data?.Connected === true) {
+          return { state: 'open', instance: { instanceName: name, state: 'open' } };
+        }
+      }
+    } catch (_) { /* ignora */ }
+    return { state: 'close', instance: { instanceName: name, state: 'close' } };
+  }
+
+  /**
    * POST /api/integrations/whatsapp/webhook
    * Chamado pelo Evolution GO ao receber eventos (sem autenticação JWT — IP/token externo).
    */
