@@ -40,6 +40,7 @@ export class BookingController {
       isoDateTime: string;
       notes?: string;
       durationMinutes?: number;
+      isNewPatient?: boolean;
     },
   ) {
     return this.bookingService.createPublicBooking(body);

@@ -160,6 +160,7 @@ export class BookingService {
     isoDateTime: string;
     notes?: string;
     durationMinutes?: number;
+    isNewPatient?: boolean;
   }) {
     const { userId, clinicId } = await this.resolveProfessional();
 
@@ -220,8 +221,10 @@ export class BookingService {
       },
     });
 
-    // Gera link de anamnese (não bloqueia o agendamento se falhar)
-    const intakeLink = await this.generateIntakeToken(userId, clinicId);
+    // Gera link de anamnese apenas para pacientes novos
+    const intakeLink = dto.isNewPatient
+      ? await this.generateIntakeToken(userId, clinicId)
+      : null;
 
     // Dispara N8N para enviar WhatsApp + e-mail ao paciente e notificar terapeuta
     this.fireN8NWebhook({
