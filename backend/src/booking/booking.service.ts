@@ -15,21 +15,33 @@ export class BookingService {
    * Aceita PUBLIC_BOOKING_USER_ID direto OU busca por PUBLIC_BOOKING_USER_EMAIL.
    */
   private async resolveProfessional(): Promise<{ userId: string; clinicId: string | null }> {
-    const userId = process.env.PUBLIC_BOOKING_USER_ID;
-    const clinicId = process.env.PUBLIC_BOOKING_CLINIC_ID || null;
+    let resolvedUserId: string | null = process.env.PUBLIC_BOOKING_USER_ID || null;
 
-    if (userId) return { userId, clinicId };
-
-    const email = process.env.PUBLIC_BOOKING_USER_EMAIL;
-    if (email) {
-      const user = await this.prisma.user.findFirst({
-        where: { email },
-        select: { id: true },
-      });
-      if (user) return { userId: user.id, clinicId };
+    if (!resolvedUserId) {
+      const email = process.env.PUBLIC_BOOKING_USER_EMAIL;
+      if (email) {
+        const user = await this.prisma.user.findFirst({
+          where: { email },
+          select: { id: true },
+        });
+        if (user) resolvedUserId = user.id;
+      }
     }
 
-    throw new BadRequestException('Agendamento público não configurado.');
+    if (!resolvedUserId) throw new BadRequestException('Agendamento público não configurado.');
+
+    // Se PUBLIC_BOOKING_CLINIC_ID está configurado, usa direto
+    const envClinicId = process.env.PUBLIC_BOOKING_CLINIC_ID || null;
+    if (envClinicId) return { userId: resolvedUserId, clinicId: envClinicId };
+
+    // Auto-descoberta: busca a clínica em que o profissional é membro
+    const membership = await this.prisma.clinicMember.findFirst({
+      where: { userId: resolvedUserId },
+      select: { clinicId: true },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return { userId: resolvedUserId, clinicId: membership?.clinicId ?? null };
   }
 
   /**
