@@ -35,7 +35,7 @@ export class BookingService {
     if (envClinicId) return { userId: resolvedUserId, clinicId: envClinicId };
 
     // Auto-descoberta: busca a clínica em que o profissional é membro
-    const membership = await this.prisma.clinicMember.findFirst({
+    const membership = await this.prisma.clinicUser.findFirst({
       where: { userId: resolvedUserId },
       select: { clinicId: true },
       orderBy: { createdAt: 'asc' },
