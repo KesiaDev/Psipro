@@ -34,7 +34,14 @@ export class BookingService {
     const envClinicId = process.env.PUBLIC_BOOKING_CLINIC_ID || null;
     if (envClinicId) return { userId: resolvedUserId, clinicId: envClinicId };
 
-    // Auto-descoberta: busca a clínica em que o profissional é membro
+    // Auto-descoberta 1: clínica principal do usuário (User.clinicId)
+    const user = await this.prisma.user.findUnique({
+      where: { id: resolvedUserId },
+      select: { clinicId: true },
+    });
+    if (user?.clinicId) return { userId: resolvedUserId, clinicId: user.clinicId };
+
+    // Auto-descoberta 2: primeiro vínculo em ClinicUser
     const membership = await this.prisma.clinicUser.findFirst({
       where: { userId: resolvedUserId },
       select: { clinicId: true },
