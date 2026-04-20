@@ -287,12 +287,15 @@ export class WhatsAppService {
     const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     const message =
-      `Olá ${patient.name}! 👋\n\n` +
+      `Olá, *${patient.name}*! 👋\n\n` +
       `Lembrete da sua consulta com *${appointment.therapistName}*:\n\n` +
       `📅 *${dateStr}*\n` +
       `⏰ *${timeStr}*\n\n` +
-      `Em caso de dúvidas ou necessidade de reagendamento, entre em contato.\n\n` +
-      `_Mensagem automática enviada pelo PsiPro_ 🧠`;
+      `Responda esta mensagem com:\n` +
+      `✅ *1* para CONFIRMAR presença\n` +
+      `📅 *2* para REAGENDAR\n` +
+      `❌ *3* para CANCELAR\n\n` +
+      `_Mensagem automática — Terapeuta Claudia Cruz_ 💚`;
 
     return this.sendMessage(cfg, patient.phone, message);
   }
@@ -664,13 +667,19 @@ export class WhatsAppService {
       let message: string;
       if (label === '12h') {
         message =
-          `Olá, ${appt.patient.name}! 👋\n\n` +
-          `Lembrete: você tem uma consulta *hoje* com *${therapistName}* às *${timeStr}*. 🗓️\n\n` +
-          `Até logo!`;
+          `Olá, *${appt.patient.name}*! 👋\n\n` +
+          `Lembrete: você tem consulta *hoje* com *${therapistName}* às *${timeStr}*. 🗓️\n\n` +
+          `Responda esta mensagem com:\n` +
+          `✅ *1* para CONFIRMAR presença\n` +
+          `📅 *2* para REAGENDAR\n` +
+          `❌ *3* para CANCELAR\n\n` +
+          `_Terapeuta Claudia Cruz_ 💚`;
       } else {
         message =
-          `Olá, ${appt.patient.name}! ⏰\n\n` +
-          `Sua consulta com *${therapistName}* é em *2 horas* (${timeStr}). Não se esqueça! 😊`;
+          `Olá, *${appt.patient.name}*! ⏰\n\n` +
+          `Sua consulta com *${therapistName}* começa em *2 horas* (${timeStr}).\n\n` +
+          `Responda *3* se precisar CANCELAR ou *2* para REAGENDAR.\n\n` +
+          `_Terapeuta Claudia Cruz_ 💚`;
       }
 
       const integration = await this.prisma.userIntegration.findFirst({

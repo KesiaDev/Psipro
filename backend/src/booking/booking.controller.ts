@@ -29,6 +29,18 @@ export class BookingController {
     );
   }
 
+  /** GET /api/public/booking/next-appointment?phone=5549... */
+  @Get('next-appointment')
+  getNextAppointment(@Query('phone') phone: string) {
+    return this.bookingService.getNextAppointmentByPhone(phone);
+  }
+
+  /** POST /api/public/booking/cancel?phone=5549... */
+  @Post('cancel')
+  cancelAppointment(@Query('phone') phone: string) {
+    return this.bookingService.cancelAppointmentByPhone(phone);
+  }
+
   /** POST /api/public/booking */
   @Post()
   createBooking(

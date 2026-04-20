@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { randomBytes } from 'crypto';
 
@@ -262,5 +262,91 @@ export class BookingService {
       patientName: patient.name,
       intakeLink,
     };
+  }
+
+  /**
+   * Busca a próxima consulta agendada para um paciente pelo telefone.
+   * Usado pela Nina para cancelar/reagendar via WhatsApp.
+   */
+  async getNextAppointmentByPhone(phone: string) {
+    const { userId, clinicId } = await this.resolveProfessional();
+    const digits = phone.replace(/\D/g, '');
+
+    const patient = await this.prisma.patient.findFirst({
+      where: {
+        userId,
+        ...(clinicId ? { clinicId } : {}),
+        deletedAt: null,
+        OR: [
+          { phone: digits },
+          { phone: `+${digits}` },
+          { phone: `55${digits}` },
+          { phone: digits.startsWith('55') ? digits.slice(2) : digits },
+        ],
+      },
+    });
+
+    if (!patient) return { found: false, appointment: null };
+
+    const appt = await this.prisma.appointment.findFirst({
+      where: {
+        userId,
+        patientId: patient.id,
+        scheduledAt: { gt: new Date() },
+        status: { in: ['agendada', 'confirmada'] },
+        deletedAt: null,
+      },
+      orderBy: { scheduledAt: 'asc' },
+    });
+
+    if (!appt) return { found: true, appointment: null };
+
+    const date = new Date(appt.scheduledAt);
+    const dateStr = date.toLocaleDateString('pt-BR', {
+      weekday: 'long', day: '2-digit', month: 'long',
+      timeZone: 'America/Sao_Paulo',
+    });
+    const timeStr = date.toLocaleTimeString('pt-BR', {
+      hour: '2-digit', minute: '2-digit',
+      timeZone: 'America/Sao_Paulo',
+    });
+
+    return {
+      found: true,
+      appointment: {
+        id: appt.id,
+        scheduledAt: appt.scheduledAt.toISOString(),
+        dateStr,
+        timeStr,
+        patientName: patient.name,
+        status: appt.status,
+      },
+    };
+  }
+
+  /**
+   * Cancela a próxima consulta de um paciente pelo telefone.
+   * Usado pela Nina via WhatsApp.
+   */
+  async cancelAppointmentByPhone(phone: string) {
+    const result = await this.getNextAppointmentByPhone(phone);
+    if (!result.found || !result.appointment) {
+      throw new NotFoundException('Nenhuma consulta agendada encontrada para este número.');
+    }
+
+    await this.prisma.appointment.update({
+      where: { id: result.appointment.id },
+      data: { status: 'cancelada' },
+    });
+
+    // Notifica a Claudia via N8N
+    this.fireN8NWebhook({
+      type: 'cancellation',
+      appointmentId: result.appointment.id,
+      patientName: result.appointment.patientName,
+      scheduledAt: result.appointment.scheduledAt,
+    });
+
+    return { success: true, cancelledAppointment: result.appointment };
   }
 }
