@@ -356,7 +356,9 @@ model Appointment {
   source      String   @default("app")
   syncHash    String?
   lastSyncedAt DateTime?
-  reminderSentAt DateTime? // WhatsApp/SMS reminder sent timestamp
+  reminderSentAt    DateTime? // 24h reminder sent timestamp
+  reminder12hSentAt DateTime? // 12h reminder sent timestamp
+  reminder2hSentAt  DateTime? // 2h reminder sent timestamp
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deletedAt   DateTime? // Soft delete

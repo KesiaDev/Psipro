@@ -117,12 +117,97 @@ export class SdrService {
     }
   }
 
+  // ─── Lookup: próxima consulta do paciente pelo telefone ─────────────────────
+
+  private async findNextAppointmentByPhone(
+    phone: string,
+    userId: string,
+    clinicId: string | null,
+  ): Promise<{ appointmentId: string; patientId: string; dateStr: string; timeStr: string } | null> {
+    const digits = phone.replace(/\D/g, '');
+    const patient = await this.prisma.patient.findFirst({
+      where: {
+        userId,
+        ...(clinicId ? { clinicId } : {}),
+        deletedAt: null,
+        OR: [
+          { phone: digits },
+          { phone: `+${digits}` },
+          { phone: `55${digits}` },
+          { phone: digits.startsWith('55') ? digits.slice(2) : digits },
+        ],
+      },
+    });
+    if (!patient) return null;
+
+    const appt = await this.prisma.appointment.findFirst({
+      where: {
+        userId,
+        patientId: patient.id,
+        scheduledAt: { gt: new Date() },
+        status: { in: ['agendada', 'confirmada'] },
+        deletedAt: null,
+      },
+      orderBy: { scheduledAt: 'asc' },
+    });
+    if (!appt) return null;
+
+    const date = new Date(appt.scheduledAt);
+    const dateStr = date.toLocaleDateString('pt-BR', {
+      weekday: 'long', day: '2-digit', month: 'long', timeZone: 'America/Sao_Paulo',
+    });
+    const timeStr = date.toLocaleTimeString('pt-BR', {
+      hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo',
+    });
+    return { appointmentId: appt.id, patientId: patient.id, dateStr, timeStr };
+  }
+
   // ─── Idle: classifica intenção ───────────────────────────────────────────────
 
   private async handleIdle(
     state: SdrState,
     ctx: { userId: string; clinicId: string | null; contactPhone: string; contactName: string | null; messageText: string },
   ): Promise<string | null> {
+    const { userId, clinicId, contactPhone, messageText } = ctx;
+
+    // Quick-reply de lembrete: 1=confirmar, 2=reagendar, 3=cancelar
+    const trimmed = messageText.trim();
+    if (/^[123]$/.test(trimmed)) {
+      const next = await this.findNextAppointmentByPhone(contactPhone, userId, clinicId);
+      if (next) {
+        if (trimmed === '1') {
+          await this.prisma.appointment.update({
+            where: { id: next.appointmentId },
+            data: { status: 'confirmada' },
+          });
+          return (
+            `✅ *Presença confirmada!*\n\n` +
+            `Te esperamos na consulta de *${next.dateStr}* às *${next.timeStr}*. 😊\n\n` +
+            `_Terapeuta Claudia Cruz_ 💚`
+          );
+        }
+        if (trimmed === '3') {
+          await this.prisma.appointment.update({
+            where: { id: next.appointmentId },
+            data: { status: 'cancelada' },
+          });
+          return (
+            `❌ Consulta cancelada com sucesso.\n\n` +
+            `Se quiser reagendar, é só me dizer! 📅`
+          );
+        }
+        if (trimmed === '2') {
+          state.patientId = next.patientId;
+          state.state = 'awaiting_date';
+          return (
+            `Vamos encontrar um novo horário! 📅\n\n` +
+            `Para qual *data* você gostaria de reagendar?\n` +
+            `_Ex: "amanhã", "sexta-feira", "20/05"_`
+          );
+        }
+      }
+    }
+
     const intent = await this.classifyIntent(ctx.messageText);
     this.logger.log(`[SDR] Intent: ${intent} | msg: "${ctx.messageText}"`);
 

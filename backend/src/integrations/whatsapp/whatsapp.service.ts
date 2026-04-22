@@ -641,14 +641,19 @@ export class WhatsAppService {
     const now = new Date();
     const windowStart = new Date(now.getTime() + (windowHours - toleranceHours) * 3_600_000);
     const windowEnd = new Date(now.getTime() + (windowHours + toleranceHours) * 3_600_000);
-    const flagField = `reminder${label}SentAt`;
+    const sentAtFilter =
+      label === '24h'
+        ? { reminderSentAt: null }
+        : label === '12h'
+        ? { reminder12hSentAt: null }
+        : { reminder2hSentAt: null };
 
     const appointments = await this.prisma.appointment.findMany({
       where: {
         scheduledAt: { gte: windowStart, lte: windowEnd },
         status: { in: ['agendada', 'confirmada'] },
         deletedAt: null,
-        ...(label === '24h' ? { reminderSentAt: null } : {}),
+        ...sentAtFilter,
       },
       include: {
         patient: { select: { name: true, phone: true } },
@@ -688,8 +693,15 @@ export class WhatsAppService {
       if (!integration) continue;
 
       const cfg = integration.config as WhatsAppConfig;
-      await this.sendMessage(cfg, appt.patient.phone, message).catch(() => {});
-      this.logger.log(`[cron-${label}] Lembrete enviado para ${appt.patient.name}`);
+      const sent = await this.sendMessage(cfg, appt.patient.phone, message).catch(() => false);
+      if (sent) {
+        const flagData =
+          label === '12h'
+            ? { reminder12hSentAt: new Date() }
+            : { reminder2hSentAt: new Date() };
+        await this.prisma.appointment.update({ where: { id: appt.id }, data: flagData });
+        this.logger.log(`[cron-${label}] Lembrete enviado para ${appt.patient.name}`);
+      }
     }
   }
 
