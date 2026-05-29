@@ -695,11 +695,11 @@ export class WhatsAppService {
       const cfg = integration.config as WhatsAppConfig;
       const sent = await this.sendMessage(cfg, appt.patient.phone, message).catch(() => false);
       if (sent) {
-        const flagData =
-          label === '12h'
-            ? { reminder12hSentAt: new Date() }
-            : { reminder2hSentAt: new Date() };
-        await this.prisma.appointment.update({ where: { id: appt.id }, data: flagData });
+        if (label === '12h') {
+          await this.prisma.appointment.update({ where: { id: appt.id }, data: { reminder12hSentAt: new Date() } });
+        } else {
+          await this.prisma.appointment.update({ where: { id: appt.id }, data: { reminder2hSentAt: new Date() } });
+        }
         this.logger.log(`[cron-${label}] Lembrete enviado para ${appt.patient.name}`);
       }
     }
