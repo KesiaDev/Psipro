@@ -16,7 +16,7 @@ import { RegisterDto } from './dto/register.dto';
 import { UpdateProfileDto } from '../users/dto/update-profile.dto';
 
 const ACCESS_TOKEN_EXPIRY = '15m';
-const BCRYPT_SALT_ROUNDS = 12;
+const BCRYPT_SALT_ROUNDS = 10;
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 min
 const HANDOFF_TOKEN_EXPIRY_SEC = 30;
